@@ -194,8 +194,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Nexoterra.World.NativeEnemyAnimation
   walkReferenceSpeed: 2
   animator: {fileID: 4352810125571878284}
-  grip: {x: 1.6169271, y: 3.0003476, z: -1.5936744}
-  gripRotation: {x: 0.63472605, y: -0.3584319, z: 0.095433205, w: -0.6778958}
+  grip: {x: 4.9994245, y: 0.81375057, z: -5.1075835}
+  gripRotation: {x: 0.37201703, y: -0.73191273, z: -0.5361624, w: -0.1960543}
+  weaponSocketOffset: {x: 0, y: -0.045, z: 0.035}
 --- !u!1 &7485056078628695196
 GameObject:
   m_ObjectHideFlags: 0
@@ -334,10 +335,22 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 2324905738156550739, guid: 0f78204d084a6c64388cc5fb8824f7b2, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: -0.09379177
+      objectReference: {fileID: 0}
+    - target: {fileID: 2324905738156550739, guid: 0f78204d084a6c64388cc5fb8824f7b2, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0.015543968
+      objectReference: {fileID: 0}
     - target: {fileID: 2338291489771971787, guid: 0f78204d084a6c64388cc5fb8824f7b2, type: 3}
       propertyPath: m_Name
       value: Sir_Black
       objectReference: {fileID: 0}
+    - target: {fileID: 3815660524482296134, guid: 0f78204d084a6c64388cc5fb8824f7b2, type: 3}
+      propertyPath: m_Controller
+      value: 
+      objectReference: {fileID: 9100000, guid: beb69273470f5b94386b4ffaa21c52a4, type: 2}
     - target: {fileID: 8815121121459256420, guid: 0f78204d084a6c64388cc5fb8824f7b2, type: 3}
       propertyPath: supportOffset.x
       value: -6.919125

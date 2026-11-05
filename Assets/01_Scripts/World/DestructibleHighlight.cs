@@ -7,6 +7,8 @@ namespace Nexoterra.World
   void Awake(){renderers=GetComponentsInChildren<Renderer>();prop=GetComponent<WorldDestructible>();block=new MaterialPropertyBlock();}
   void Update()
   {
+   if(renderers==null||block==null){renderers=GetComponentsInChildren<Renderer>();prop=GetComponent<WorldDestructible>();block=new MaterialPropertyBlock();}
+   if(renderers.Length==0)return;
    if(Time.time<next)return;next=Time.time+.05f;
    float pulse=prop&&(prop.IsDormant||prop.IsFalling)?0:.15f+.3f*(.5f+.5f*Mathf.Sin(Time.time*2.4f+transform.position.x));
    block.SetColor("_EmissionColor",new Color(1,.78f,.18f)*pulse);

@@ -12,7 +12,7 @@ namespace Nexoterra.World
         public Transform muzzle;
         public LineRenderer tracer;
         public Vector3 spawn;
-        public float walkSpeed=6, sprintSpeed=13;
+        public float walkSpeed=4.2f, sprintSpeed=7.2f;
         public int food, adopted;
         public Transform[] travelPoints;
         CharacterController motor;
@@ -49,7 +49,7 @@ namespace Nexoterra.World
             if(k.hKey.wasPressedThisFrame)help=!help;
             if(k.mKey.wasPressedThisFrame){map=!map;if(inventory&&inventory.IsOpen)inventory.SetOpen(false);if(map)Release();}
             if(inventoryOpen)map=false;
-            if(k.vKey.wasPressedThisFrame){bool chooseFemale=!female.activeSelf;female.SetActive(chooseFemale);male.SetActive(!chooseFemale);Notify(chooseFemale?"Personaje: Comando":"Personaje: Militar");}
+            if(k.vKey.wasPressedThisFrame){bool chooseFemale=!female.activeSelf;female.SetActive(chooseFemale);male.SetActive(!chooseFemale);Notify(chooseFemale?"Personaje: Comando":"Personaje: Jugador");}
             if(k.homeKey.wasPressedThisFrame||transform.position.y < -6)Teleport(spawn);
             if(k.tKey.wasPressedThisFrame&&travelPoints.Length>0){travelIndex=(travelIndex+1)%travelPoints.Length;Teleport(travelPoints[travelIndex].position);Notify("Visita de prueba: "+travelPoints[travelIndex].name);}
             Vector2 input=Vector2.zero;
@@ -99,6 +99,8 @@ namespace Nexoterra.World
         void Shoot()
         {
             if((abilities&&abilities.IsDodging)||!inventory||!muzzle||!view||(health&&health.IsDead)||(animationDriver&&animationDriver.IsReloading))return;
+            var nativeAnimation=GetComponent<NativePlayerAnimation>();
+            if(!nativeAnimation||!nativeAnimation.IsLoaded){Notify("Pulsa R para recargar antes de disparar");return;}
             // Keep the body upright while the projectile follows the crosshair in 3D.
             Vector3 facing=Quaternion.Euler(0,yaw,0)*Vector3.forward;
             visuals.rotation=Quaternion.LookRotation(facing);

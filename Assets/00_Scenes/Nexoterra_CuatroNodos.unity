@@ -6767,6 +6767,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4981984702049393066, guid: 26d0ad087be4c1a4bb1becce9767d459, type: 3}
+      propertyPath: m_Controller
+      value: 
+      objectReference: {fileID: 9100000, guid: beb69273470f5b94386b4ffaa21c52a4, type: 2}
     - target: {fileID: 8251942511221529528, guid: 26d0ad087be4c1a4bb1becce9767d459, type: 3}
       propertyPath: supportOffset.x
       value: -4.7315893
@@ -9276,7 +9280,7 @@ GameObject:
   m_Component:
   - component: {fileID: 98181180}
   - component: {fileID: 98181181}
-  m_Layer: 0
+  m_Layer: 2
   m_Name: "Volumen de agua \xB7 referencia futura"
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -10069,7 +10073,7 @@ GameObject:
   m_Component:
   - component: {fileID: 106499657}
   - component: {fileID: 106499658}
-  m_Layer: 0
+  m_Layer: 2
   m_Name: "Volumen de agua \xB7 referencia futura"
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -11296,7 +11300,7 @@ GameObject:
   m_Component:
   - component: {fileID: 126300374}
   - component: {fileID: 126300375}
-  m_Layer: 0
+  m_Layer: 2
   m_Name: "Volumen de agua \xB7 referencia futura"
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -16870,7 +16874,7 @@ GameObject:
   m_Component:
   - component: {fileID: 186839924}
   - component: {fileID: 186839925}
-  m_Layer: 0
+  m_Layer: 2
   m_Name: "Volumen de agua \xB7 referencia futura"
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -19794,7 +19798,7 @@ GameObject:
   m_Component:
   - component: {fileID: 222630430}
   - component: {fileID: 222630431}
-  m_Layer: 0
+  m_Layer: 2
   m_Name: "Volumen de agua \xB7 referencia futura"
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -27541,7 +27545,7 @@ GameObject:
   m_Component:
   - component: {fileID: 323239090}
   - component: {fileID: 323239091}
-  m_Layer: 0
+  m_Layer: 2
   m_Name: "Volumen de agua \xB7 referencia futura"
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -43737,6 +43741,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4981984702049393066, guid: 26d0ad087be4c1a4bb1becce9767d459, type: 3}
+      propertyPath: m_Controller
+      value: 
+      objectReference: {fileID: 9100000, guid: beb69273470f5b94386b4ffaa21c52a4, type: 2}
     - target: {fileID: 8251942511221529528, guid: 26d0ad087be4c1a4bb1becce9767d459, type: 3}
       propertyPath: supportOffset.x
       value: -4.7315893
@@ -54910,6 +54918,8 @@ GameObject:
   - component: {fileID: 650740814}
   - component: {fileID: 650740813}
   - component: {fileID: 650740815}
+  - component: {fileID: 650740817}
+  - component: {fileID: 650740816}
   m_Layer: 2
   m_Name: "Jugador \xB7 Militar y Comando"
   m_TagString: Untagged
@@ -55062,15 +55072,20 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Nexoterra.World.NativePlayerAnimation
   male: {fileID: 2071428235}
   female: {fileID: 1092470654}
-  walkReferenceSpeed: 2
-  runReferenceSpeed: 4.5
+  playerController: {fileID: 9100000, guid: beb69273470f5b94386b4ffaa21c52a4, type: 2}
+  walkReferenceSpeed: 2.8
+  runReferenceSpeed: 3.8
   rollClipDuration: 2.1000001
   weapon: {fileID: 444772938}
-  maleGrip: {x: -6.5539556, y: 1.995382, z: -3.804689}
-  femaleGrip: {x: -5.725004, y: 2.6823156, z: -4.9997587}
-  maleGripRotation: {x: -0.037707917, y: 0.6878004, z: 0.54253185, w: -0.48079938}
-  femaleGripRotation: {x: 0.057323355, y: -0.7254795, z: -0.5627807, w: 0.39200953}
+  maleGrip: {x: -4.9390936, y: 1.37019, z: 6.7582994}
+  femaleGrip: {x: -6.0762253, y: 1.0299671, z: 6.174337}
+  maleGripRotation: {x: 0.6225918, y: 0.21397716, z: 0.23411949, w: -0.7153892}
+  femaleGripRotation: {x: -0.578556, y: -0.2551213, z: -0.29453838, w: 0.71654314}
   gripHeightCorrection: 0
+  waterSensor: {fileID: 650740817}
+  reloadDuration: 1.6666667
+  shootDuration: 0.4116667
+  weaponSocketOffset: {x: 0, y: -0.025, z: 0.04}
 --- !u!114 &650740814
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -55102,6 +55117,34 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Nexoterra.World.EnemyControlEffects
   webPrefab: {fileID: 3497177062270716240, guid: 7b91e87a3cb20964e96c31c6fc980306, type: 3}
+--- !u!114 &650740816
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 650740804}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cb0a64bb4e1647b43809859ba0065df6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Nexoterra.World.PlayerAnimationDriver
+  male: {fileID: 0}
+  female: {fileID: 0}
+  reloadDuration: 1.6666667
+--- !u!114 &650740817
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 650740804}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a73c94d3c264f8645a8735e2da07a1de, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Nexoterra.World.WaterAnimationSensor
+  player: {fileID: 650740806}
 --- !u!1 &650802118
 GameObject:
   m_ObjectHideFlags: 0
@@ -55533,6 +55576,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4981984702049393066, guid: 26d0ad087be4c1a4bb1becce9767d459, type: 3}
+      propertyPath: m_Controller
+      value: 
+      objectReference: {fileID: 9100000, guid: beb69273470f5b94386b4ffaa21c52a4, type: 2}
     - target: {fileID: 8251942511221529528, guid: 26d0ad087be4c1a4bb1becce9767d459, type: 3}
       propertyPath: supportOffset.x
       value: -4.7315893
@@ -64309,6 +64356,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4981984702049393066, guid: 26d0ad087be4c1a4bb1becce9767d459, type: 3}
+      propertyPath: m_Controller
+      value: 
+      objectReference: {fileID: 9100000, guid: beb69273470f5b94386b4ffaa21c52a4, type: 2}
     - target: {fileID: 8251942511221529528, guid: 26d0ad087be4c1a4bb1becce9767d459, type: 3}
       propertyPath: supportOffset.x
       value: -4.7315893
@@ -72142,7 +72193,7 @@ GameObject:
   m_Component:
   - component: {fileID: 844602756}
   - component: {fileID: 844602757}
-  m_Layer: 0
+  m_Layer: 2
   m_Name: "Volumen de agua \xB7 referencia futura"
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -73337,7 +73388,7 @@ GameObject:
   m_Component:
   - component: {fileID: 862091311}
   - component: {fileID: 862091312}
-  m_Layer: 0
+  m_Layer: 2
   m_Name: "Volumen de agua \xB7 referencia futura"
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -77973,6 +78024,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4981984702049393066, guid: 26d0ad087be4c1a4bb1becce9767d459, type: 3}
+      propertyPath: m_Controller
+      value: 
+      objectReference: {fileID: 9100000, guid: beb69273470f5b94386b4ffaa21c52a4, type: 2}
     - target: {fileID: 8251942511221529528, guid: 26d0ad087be4c1a4bb1becce9767d459, type: 3}
       propertyPath: supportOffset.x
       value: -4.7315893
@@ -78402,6 +78457,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4981984702049393066, guid: 26d0ad087be4c1a4bb1becce9767d459, type: 3}
+      propertyPath: m_Controller
+      value: 
+      objectReference: {fileID: 9100000, guid: beb69273470f5b94386b4ffaa21c52a4, type: 2}
     - target: {fileID: 8251942511221529528, guid: 26d0ad087be4c1a4bb1becce9767d459, type: 3}
       propertyPath: supportOffset.x
       value: -4.7315893
@@ -92675,7 +92734,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1086866075}
   - component: {fileID: 1086866076}
-  m_Layer: 0
+  m_Layer: 2
   m_Name: "Volumen de agua \xB7 referencia futura"
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -93313,7 +93372,7 @@ PrefabInstance:
     - target: {fileID: 4883388182722168026, guid: 684030449d4d52242bc7793b7c18b61f, type: 3}
       propertyPath: m_Controller
       value: 
-      objectReference: {fileID: 9100000, guid: 7d058f64f3e942b489d0e963c2c548a9, type: 2}
+      objectReference: {fileID: 9100000, guid: beb69273470f5b94386b4ffaa21c52a4, type: 2}
     - target: {fileID: 4898065053439658395, guid: 684030449d4d52242bc7793b7c18b61f, type: 3}
       propertyPath: m_Layer
       value: 2
@@ -93472,31 +93531,31 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7959123848664319995, guid: 684030449d4d52242bc7793b7c18b61f, type: 3}
       propertyPath: supportOffset.x
-      value: 5.7872977
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7959123848664319995, guid: 684030449d4d52242bc7793b7c18b61f, type: 3}
       propertyPath: supportOffset.y
-      value: 2.7278726
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7959123848664319995, guid: 684030449d4d52242bc7793b7c18b61f, type: 3}
       propertyPath: supportOffset.z
-      value: -7.975419
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7959123848664319995, guid: 684030449d4d52242bc7793b7c18b61f, type: 3}
       propertyPath: supportRotation.w
-      value: 0.80637515
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7959123848664319995, guid: 684030449d4d52242bc7793b7c18b61f, type: 3}
       propertyPath: supportRotation.x
-      value: 0.12334786
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7959123848664319995, guid: 684030449d4d52242bc7793b7c18b61f, type: 3}
       propertyPath: supportRotation.y
-      value: 0.36708096
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7959123848664319995, guid: 684030449d4d52242bc7793b7c18b61f, type: 3}
       propertyPath: supportRotation.z
-      value: 0.44698712
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7975775711244530955, guid: 684030449d4d52242bc7793b7c18b61f, type: 3}
       propertyPath: m_Layer
@@ -111667,6 +111726,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4981984702049393066, guid: 26d0ad087be4c1a4bb1becce9767d459, type: 3}
+      propertyPath: m_Controller
+      value: 
+      objectReference: {fileID: 9100000, guid: beb69273470f5b94386b4ffaa21c52a4, type: 2}
     - target: {fileID: 8251942511221529528, guid: 26d0ad087be4c1a4bb1becce9767d459, type: 3}
       propertyPath: supportOffset.x
       value: -4.7315893
@@ -124163,7 +124226,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1457030641}
   - component: {fileID: 1457030642}
-  m_Layer: 0
+  m_Layer: 2
   m_Name: "Volumen de agua \xB7 referencia futura"
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -129635,6 +129698,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4981984702049393066, guid: 26d0ad087be4c1a4bb1becce9767d459, type: 3}
+      propertyPath: m_Controller
+      value: 
+      objectReference: {fileID: 9100000, guid: beb69273470f5b94386b4ffaa21c52a4, type: 2}
     - target: {fileID: 8251942511221529528, guid: 26d0ad087be4c1a4bb1becce9767d459, type: 3}
       propertyPath: supportOffset.x
       value: -4.7315893
@@ -132285,7 +132352,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1551087949}
   - component: {fileID: 1551087950}
-  m_Layer: 0
+  m_Layer: 2
   m_Name: "Volumen de agua \xB7 referencia futura"
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -133224,7 +133291,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1575003765}
   - component: {fileID: 1575003766}
-  m_Layer: 0
+  m_Layer: 2
   m_Name: "Volumen de agua \xB7 referencia futura"
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -138315,7 +138382,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1622599982}
   - component: {fileID: 1622599983}
-  m_Layer: 0
+  m_Layer: 2
   m_Name: "Volumen de agua \xB7 referencia futura"
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -139679,7 +139746,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1642324262}
   - component: {fileID: 1642324263}
-  m_Layer: 0
+  m_Layer: 2
   m_Name: "Volumen de agua \xB7 referencia futura"
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -149169,6 +149236,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4981984702049393066, guid: 26d0ad087be4c1a4bb1becce9767d459, type: 3}
+      propertyPath: m_Controller
+      value: 
+      objectReference: {fileID: 9100000, guid: beb69273470f5b94386b4ffaa21c52a4, type: 2}
     - target: {fileID: 8251942511221529528, guid: 26d0ad087be4c1a4bb1becce9767d459, type: 3}
       propertyPath: supportOffset.x
       value: -4.7315893
@@ -157525,7 +157596,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1836294788}
   - component: {fileID: 1836294789}
-  m_Layer: 0
+  m_Layer: 2
   m_Name: "Volumen de agua \xB7 referencia futura"
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -158971,6 +159042,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4981984702049393066, guid: 26d0ad087be4c1a4bb1becce9767d459, type: 3}
+      propertyPath: m_Controller
+      value: 
+      objectReference: {fileID: 9100000, guid: beb69273470f5b94386b4ffaa21c52a4, type: 2}
     - target: {fileID: 8251942511221529528, guid: 26d0ad087be4c1a4bb1becce9767d459, type: 3}
       propertyPath: supportOffset.x
       value: -4.7315893
@@ -166190,6 +166265,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4981984702049393066, guid: 26d0ad087be4c1a4bb1becce9767d459, type: 3}
+      propertyPath: m_Controller
+      value: 
+      objectReference: {fileID: 9100000, guid: beb69273470f5b94386b4ffaa21c52a4, type: 2}
     - target: {fileID: 8251942511221529528, guid: 26d0ad087be4c1a4bb1becce9767d459, type: 3}
       propertyPath: supportOffset.x
       value: -4.7315893
@@ -175303,7 +175382,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2051167624}
   - component: {fileID: 2051167625}
-  m_Layer: 0
+  m_Layer: 2
   m_Name: "Volumen de agua \xB7 referencia futura"
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -177106,19 +177185,31 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1521922882777755508, guid: 50e5c6b7d94d544479bb684ad5bbf7de, type: 3}
       propertyPath: supportOffset.x
-      value: 3.058615
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1521922882777755508, guid: 50e5c6b7d94d544479bb684ad5bbf7de, type: 3}
       propertyPath: supportOffset.y
-      value: 2.1198268
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1521922882777755508, guid: 50e5c6b7d94d544479bb684ad5bbf7de, type: 3}
       propertyPath: supportOffset.z
-      value: -7.4954157
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1521922882777755508, guid: 50e5c6b7d94d544479bb684ad5bbf7de, type: 3}
+      propertyPath: supportRotation.w
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1521922882777755508, guid: 50e5c6b7d94d544479bb684ad5bbf7de, type: 3}
       propertyPath: supportRotation.x
-      value: -0.18380336
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1521922882777755508, guid: 50e5c6b7d94d544479bb684ad5bbf7de, type: 3}
+      propertyPath: supportRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1521922882777755508, guid: 50e5c6b7d94d544479bb684ad5bbf7de, type: 3}
+      propertyPath: supportRotation.z
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1781813060003154468, guid: 50e5c6b7d94d544479bb684ad5bbf7de, type: 3}
       propertyPath: m_Layer
@@ -177247,7 +177338,7 @@ PrefabInstance:
     - target: {fileID: 6122510637361621511, guid: 50e5c6b7d94d544479bb684ad5bbf7de, type: 3}
       propertyPath: m_Controller
       value: 
-      objectReference: {fileID: 9100000, guid: 7d058f64f3e942b489d0e963c2c548a9, type: 2}
+      objectReference: {fileID: 9100000, guid: beb69273470f5b94386b4ffaa21c52a4, type: 2}
     - target: {fileID: 6309571471695041326, guid: 50e5c6b7d94d544479bb684ad5bbf7de, type: 3}
       propertyPath: m_Layer
       value: 2

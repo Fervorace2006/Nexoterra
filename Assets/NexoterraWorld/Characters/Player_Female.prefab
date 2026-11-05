@@ -61,7 +61,7 @@ PrefabInstance:
     - target: {fileID: -6057140222963153312, guid: 467617ea34e348adb680d5ac3fd4e043, type: 3}
       propertyPath: m_Controller
       value: 
-      objectReference: {fileID: 9100000, guid: 7d058f64f3e942b489d0e963c2c548a9, type: 2}
+      objectReference: {fileID: 9100000, guid: beb69273470f5b94386b4ffaa21c52a4, type: 2}
     - target: {fileID: -6057140222963153312, guid: 467617ea34e348adb680d5ac3fd4e043, type: 3}
       propertyPath: m_CullingMode
       value: 0
@@ -157,6 +157,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Nexoterra.World.HumanoidWeaponIK
   supportOffset: {x: 5.7872996, y: 2.7278671, z: -7.9754148}
   supportRotation: {x: 0.1233479, y: 0.36708093, z: 0.4469871, w: 0.8063751}
+  weaponHandIK: 0
 --- !u!4 &3264903487215528352 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -4216859302048453862, guid: 467617ea34e348adb680d5ac3fd4e043, type: 3}

@@ -61,7 +61,7 @@ PrefabInstance:
     - target: {fileID: -6057140222963153312, guid: 7d0ea41d18dd4162a90a3fb16dd1c96e, type: 3}
       propertyPath: m_Controller
       value: 
-      objectReference: {fileID: 9100000, guid: 7d058f64f3e942b489d0e963c2c548a9, type: 2}
+      objectReference: {fileID: 9100000, guid: beb69273470f5b94386b4ffaa21c52a4, type: 2}
     - target: {fileID: -6057140222963153312, guid: 7d0ea41d18dd4162a90a3fb16dd1c96e, type: 3}
       propertyPath: m_CullingMode
       value: 0
@@ -132,11 +132,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -463995517713469628, guid: 7d0ea41d18dd4162a90a3fb16dd1c96e, type: 3}
       propertyPath: m_LocalRotation.x
-      value: 0.0281806
+      value: 0.028180601
       objectReference: {fileID: 0}
     - target: {fileID: -463995517713469628, guid: 7d0ea41d18dd4162a90a3fb16dd1c96e, type: 3}
       propertyPath: m_LocalRotation.z
-      value: 0.04323104
+      value: 0.043231044
       objectReference: {fileID: 0}
     - target: {fileID: 3373197664844238778, guid: 7d0ea41d18dd4162a90a3fb16dd1c96e, type: 3}
       propertyPath: m_LocalRotation.w
@@ -156,19 +156,19 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3506150401543615792, guid: 7d0ea41d18dd4162a90a3fb16dd1c96e, type: 3}
       propertyPath: m_LocalRotation.x
-      value: 0.000046661058
+      value: 0.00004666106
       objectReference: {fileID: 0}
     - target: {fileID: 3506150401543615792, guid: 7d0ea41d18dd4162a90a3fb16dd1c96e, type: 3}
       propertyPath: m_LocalRotation.z
-      value: -0.019630691
+      value: -0.019630693
       objectReference: {fileID: 0}
     - target: {fileID: 8529429290064647585, guid: 7d0ea41d18dd4162a90a3fb16dd1c96e, type: 3}
       propertyPath: m_LocalRotation.x
-      value: -0.061079074
+      value: -0.061079077
       objectReference: {fileID: 0}
     - target: {fileID: 8529429290064647585, guid: 7d0ea41d18dd4162a90a3fb16dd1c96e, type: 3}
       propertyPath: m_LocalRotation.z
-      value: 0.065941684
+      value: 0.06594169
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -197,6 +197,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Nexoterra.World.HumanoidWeaponIK
   supportOffset: {x: 3.0586183, y: 2.119829, z: -7.4954066}
   supportRotation: {x: -0.18380335, y: -0.442893, z: -0.47325554, w: -0.73898095}
+  weaponHandIK: 0
 --- !u!4 &4214671326942185341 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -4216859302048453862, guid: 7d0ea41d18dd4162a90a3fb16dd1c96e, type: 3}

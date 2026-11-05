@@ -252,8 +252,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Nexoterra.World.NativeEnemyAnimation
   walkReferenceSpeed: 2
   animator: {fileID: 4981984702049393066}
-  grip: {x: 1.5429664, y: 3.808437, z: -1.7546555}
-  gripRotation: {x: 0.5487091, y: -0.5156978, z: -0.035776377, w: -0.6570349}
+  grip: {x: 3.3334527, y: 2.407428, z: -7.487547}
+  gripRotation: {x: 0.22134945, y: -0.6951983, z: -0.67578644, w: -0.10496044}
+  weaponSocketOffset: {x: 0, y: -0.045, z: 0.035}
 --- !u!1 &8785671355579567592
 GameObject:
   m_ObjectHideFlags: 0
@@ -294,6 +295,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 6035955512300525031}
     m_Modifications:
+    - target: {fileID: 6294299489421535015, guid: 2c302f7162748dd4896c8882b07e701b, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0.008903769
+      objectReference: {fileID: 0}
+    - target: {fileID: 6294299489421535015, guid: 2c302f7162748dd4896c8882b07e701b, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0.046211876
+      objectReference: {fileID: 0}
     - target: {fileID: 6507196535746431987, guid: 2c302f7162748dd4896c8882b07e701b, type: 3}
       propertyPath: supportOffset.x
       value: -4.7315893
@@ -326,6 +335,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Enemy1
       objectReference: {fileID: 0}
+    - target: {fileID: 7919981865061698017, guid: 2c302f7162748dd4896c8882b07e701b, type: 3}
+      propertyPath: m_Controller
+      value: 
+      objectReference: {fileID: 9100000, guid: beb69273470f5b94386b4ffaa21c52a4, type: 2}
     - target: {fileID: 8739642431002483197, guid: 2c302f7162748dd4896c8882b07e701b, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0

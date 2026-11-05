@@ -11,13 +11,14 @@ namespace Nexoterra.World
   public HumanoidPose pose;
   public float MotionSpeed {get;private set;}
   EnemyCombatant health;CharacterController motor;PlayerHealth target;
-  int volley;
+  int volley;float reloadUntil;bool loaded;
   static readonly string[] commonLoadout={"Infierno","Arana","ice","Carnero","tazerling","Armashelt"};
   static readonly string[] bossLoadout={"Infierno","ice","tazerling","Arana","Tornado"};
   public string NextSpecies(){var choices=boss?bossLoadout:commonLoadout;return choices[volley++%choices.Length];}
   Vector3 home,modelOrigin;float fireAt,vertical,deadTime,recoil;
   public float Recoil=>recoil;
   public bool IsAiming {get;private set;}
+  public Vector3 AimDirection=>target&&weapon?(target.transform.position+Vector3.up-weapon.position).normalized:transform.forward;
   void Start(){health=GetComponent<EnemyCombatant>();motor=GetComponent<CharacterController>();target=FindAnyObjectByType<PlayerHealth>();home=transform.position;if(model)modelOrigin=model.localPosition;volley=Mathf.Abs(Mathf.RoundToInt(home.x*3+home.z*7))%commonLoadout.Length;fireAt=Time.time+2;}
   void Update()
   {
@@ -33,17 +34,19 @@ namespace Nexoterra.World
     Vector3 forward=goal-transform.position;forward.y=0;
     if(forward.sqrMagnitude>.05f)transform.rotation=Quaternion.Slerp(transform.rotation,Quaternion.LookRotation(forward),1-Mathf.Exp(-5*Time.deltaTime));
     if(!evading&&health.CanMove&&(!engaged||distance>attackRange*.7f))move=forward.normalized*speed*health.SpeedMultiplier;
-    if(!evading&&health.CanShoot&&engaged&&distance<attackRange&&Time.time>=fireAt)
+    if(!loaded&&reloadUntil==0&&health.CanShoot&&engaged){reloadUntil=Time.time+1.67f;if(native)native.Reload();}
+    if(reloadUntil>0&&Time.time>=reloadUntil){loaded=true;reloadUntil=0;}
+    if(loaded&&!evading&&health.CanShoot&&engaged&&distance<attackRange&&Time.time>=fireAt)
     {
      Vector3 origin=weapon?weapon.position+weapon.forward*.65f:transform.position+Vector3.up*1.4f+transform.forward*.85f,aim=target.transform.position+Vector3.up;
      bool blocked=false;foreach(var hit in Physics.RaycastAll(origin,(aim-origin).normalized,Vector3.Distance(origin,aim),~0,QueryTriggerInteraction.Ignore))if(!hit.transform.IsChildOf(transform)&&hit.collider.GetComponentInParent<PlayerHealth>()!=target){blocked=true;break;}
-     if(!blocked)Shoot(origin,aim);fireAt=Time.time+shotCooldown;
+     if(!blocked){Shoot(origin,aim);loaded=false;}fireAt=Time.time+shotCooldown;
     }
    }
    if(motor.isGrounded&&vertical<0)vertical=-2;vertical+=Physics.gravity.y*Time.deltaTime;motor.Move((move+Vector3.up*vertical)*Time.deltaTime);MotionSpeed=move.magnitude;
    recoil=Mathf.MoveTowards(recoil,0,Time.deltaTime*3);if(model&&pose){model.localPosition=modelOrigin+Vector3.up*(Mathf.Sin(Time.time*10)*.035f*Mathf.Clamp01(MotionSpeed))+Vector3.back*(recoil*.12f);}
   }
-  void LateUpdate(){if(pose&&health&&!health.IsDead&&!health.IsKnockedDown)pose.Pose(MotionSpeed,false,0,weapon,recoil,0);}
+  void LateUpdate(){if(!GetComponent<NativeEnemyAnimation>()&&pose&&health&&!health.IsDead&&!health.IsKnockedDown)pose.Pose(MotionSpeed,false,0,weapon,recoil,0);}
   void Shoot(Vector3 origin,Vector3 aim)
   {
    if(!catalog)return;var baseSlug=catalog.Find(NextSpecies());if(baseSlug==null)return;

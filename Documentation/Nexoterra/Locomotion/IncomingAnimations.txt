@@ -1,0 +1,37 @@
+Player / idle_loop: 2.50 s, avatar humanoide válido
+Player / walk_loop: 1.33 s, avatar humanoide válido
+Player / pistol_idle_loop: 1.67 s, avatar humanoide válido
+Player / pistol_shoot: 0.63 s, avatar humanoide válido
+Player / pistol_reload: 1.67 s, avatar humanoide válido
+Enemy1 / idle_loop: 2.50 s, avatar humanoide válido
+Enemy1 / walk_loop: 1.33 s, avatar humanoide válido
+Enemy1 / pistol_idle_loop: 1.67 s, avatar humanoide válido
+Enemy1 / pistol_shoot: 0.63 s, avatar humanoide válido
+Enemy1 / pistol_reload: 1.67 s, avatar humanoide válido
+SirBlack / idle_loop: 2.50 s, avatar humanoide válido
+SirBlack / walk_loop: 1.33 s, avatar humanoide válido
+SirBlack / pistol_idle_loop: 1.67 s, avatar humanoide válido
+SirBlack / pistol_shoot: 0.63 s, avatar humanoide válido
+SirBlack / pistol_reload: 1.67 s, avatar humanoide válido
+Controlador Player aislado con sus propios estados; RollLeft/RollRight copiados intactos del controlador original.
+Controlador Enemy1 aislado con sus propios estados; RollLeft/RollRight copiados intactos del controlador original.
+Controlador SirBlack aislado con sus propios estados; RollLeft/RollRight copiados intactos del controlador original.
+Controlador asignado: tripo_convert_6e718756-085e-41c5-86d7-7ea44b56b0d3 → Player_Animations
+Controlador asignado: tripo_convert_3c3b88ac-74cf-47c1-8cc5-36f82fc45da9 → Player_Animations
+Controlador asignado: tripo_convert_6e718756-085e-41c5-86d7-7ea44b56b0d3 → Player_Animations
+Controlador asignado: tripo_convert_3c3b88ac-74cf-47c1-8cc5-36f82fc45da9 → Player_Animations
+Controlador asignado: tripo_convert_fc88be13-a8f9-45fc-94b0-0fb5bbe389a1 → Player_Animations
+Controlador asignado: tripo_convert_ad822429-2985-45cb-9002-eb87c17c4285 → Player_Animations
+Controlador asignado: tripo_convert_fc88be13-a8f9-45fc-94b0-0fb5bbe389a1 → Player_Animations
+Controlador asignado: tripo_convert_ad822429-2985-45cb-9002-eb87c17c4285 → Player_Animations
+Controlador asignado: tripo_convert_fc88be13-a8f9-45fc-94b0-0fb5bbe389a1 → Player_Animations
+Controlador asignado: tripo_convert_fc88be13-a8f9-45fc-94b0-0fb5bbe389a1 → Player_Animations
+Controlador asignado: tripo_convert_fc88be13-a8f9-45fc-94b0-0fb5bbe389a1 → Player_Animations
+Controlador asignado: tripo_convert_fc88be13-a8f9-45fc-94b0-0fb5bbe389a1 → Player_Animations
+Controlador asignado: tripo_convert_fc88be13-a8f9-45fc-94b0-0fb5bbe389a1 → Player_Animations
+Controlador asignado: tripo_convert_fc88be13-a8f9-45fc-94b0-0fb5bbe389a1 → Player_Animations
+Controlador asignado: tripo_convert_fc88be13-a8f9-45fc-94b0-0fb5bbe389a1 → Player_Animations
+Controlador asignado: tripo_convert_fc88be13-a8f9-45fc-94b0-0fb5bbe389a1 → Player_Animations
+Controlador asignado: tripo_convert_fc88be13-a8f9-45fc-94b0-0fb5bbe389a1 → Player_Animations
+Controlador asignado: tripo_convert_fc88be13-a8f9-45fc-94b0-0fb5bbe389a1 → Player_Animations
+Controlador asignado: tripo_convert_fc88be13-a8f9-45fc-94b0-0fb5bbe389a1 → Player_Animations

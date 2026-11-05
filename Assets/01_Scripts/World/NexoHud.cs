@@ -34,7 +34,7 @@ namespace Nexoterra.World
    if(GameSession.Blocked||!health||!player||GetComponent<SlugInventory>().IsOpen)return;var old=GUI.matrix;Scale();
    var box=new Rect(20,596,336,108);NexoUi.Card(box,Cyan);NexoUi.Card(new Rect(28,604,86,92),Cyan);
    NexoUi.Portrait(new Rect(30,606,82,88),player.female.activeSelf?femalePortrait:malePortrait,Cyan);
-   Label(new Rect(126,607,210,22),player.female.activeSelf?"COMANDO":"MILITAR",17,NexoUi.Text);
+   Label(new Rect(126,607,210,22),player.female.activeSelf?"COMANDO":"JUGADOR",17,NexoUi.Text);
    Label(new Rect(126,633,190,18),health.IsDead?"DERROTADO":shown<.25f?"VIDA CRÍTICA":"VITALIDAD",11,shown<.25f?new Color(1,.4f,.35f):NexoUi.Muted);
    var bar=new Rect(126,657,212,17);Fill(bar,new Color(.07f,.13f,.17f));Fill(new Rect(bar.x,bar.y,bar.width*trail,bar.height),new Color(.8f,.4f,.18f));
    Color color=shown<.25f?new Color(1,.27f,.22f):new Color(.25f,.88f,.55f);Fill(new Rect(bar.x,bar.y,bar.width*shown,bar.height),color);Fill(new Rect(bar.x,bar.y,bar.width*shown,3),Color.Lerp(color,Color.white,.5f));

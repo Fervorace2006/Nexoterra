@@ -4,7 +4,7 @@ namespace Nexoterra.World
  [RequireComponent(typeof(Animator))]
  public sealed class HumanoidWeaponIK : MonoBehaviour
  {
-  public Vector3 supportOffset;public Quaternion supportRotation=Quaternion.identity;
+  public Vector3 supportOffset;public Quaternion supportRotation=Quaternion.identity;public bool weaponHandIK;
   static readonly AvatarIKGoal[] goals={AvatarIKGoal.LeftHand,AvatarIKGoal.RightHand,AvatarIKGoal.LeftFoot,AvatarIKGoal.RightFoot};
   Animator animator;PlayerAbilities abilities;EnemyCombatant enemy;CharacterController motor;NexoterraThirdPerson player;NativePlayerAnimation driver;
   void Awake(){animator=GetComponent<Animator>();abilities=GetComponentInParent<PlayerAbilities>();enemy=GetComponentInParent<EnemyCombatant>();motor=GetComponentInParent<CharacterController>();player=GetComponentInParent<NexoterraThirdPerson>();driver=GetComponentInParent<NativePlayerAnimation>();}
@@ -17,7 +17,7 @@ namespace Nexoterra.World
    if((abilities&&abilities.IsDodging)||state.IsName("RollLeft")||state.IsName("RollRight")||state.IsName("Death")||(enemy&&(enemy.IsDead||enemy.IsKnockedDown)))return;
    float weight=driver?driver.AimWeight:enemy?animator.GetLayerWeight(Mathf.Max(0,animator.GetLayerIndex("AimUpperBody"))):0;
    var right=animator.GetBoneTransform(HumanBodyBones.RightHand);
-   if(right&&weight>.001f){
+   if(weaponHandIK&&right&&weight>.001f){
     float pitch=player&&player.view?Mathf.Clamp(Mathf.DeltaAngle(0,player.view.transform.eulerAngles.x),-45,60):0;
     var chest=animator.GetBoneTransform(HumanBodyBones.Chest);Vector3 pivot=chest?chest.position:transform.position+Vector3.up*1.35f;
     var aim=Quaternion.AngleAxis(pitch*weight,transform.right);
