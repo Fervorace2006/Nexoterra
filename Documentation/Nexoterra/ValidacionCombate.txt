@@ -1,0 +1,7 @@
+PASS
+Direct hits and timed burns: Infierno and Elemental Fuego.
+Water/ice slow and expire without multiplicative stacking.
+Carnero/Armashelt/Tierra knock down, block actions, recover.
+Normal-form hit has no transformed ability.
+Real projectile collision applies damage and reverts/returns.
+All eleven species have valid particle/trail materials; impact stops emission and lights.

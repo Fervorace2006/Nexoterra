@@ -1,0 +1,6 @@
+PASS
+11 normal/transformed pairs and portraits.
+Transformation threshold at 8m; horizontal flight; visible transformed meshes.
+6-slot automatic equipment; backpack and equipped swaps preserve ownership.
+Food adoption enters inventory. Muzzle origin, cooldown and collision verified.
+Test uses a temporary collection; player save untouched.

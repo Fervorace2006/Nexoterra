@@ -1,0 +1,5 @@
+PASS
+29 single-species spawns in six zones.
+Four unique elementals do not respawn after adoption or save/reload.
+Legacy Burpy migrates to Infierno; legacy duplicate elementals collapse without losing equipment references.
+Traversable ramps/bridges/crater trail: 14

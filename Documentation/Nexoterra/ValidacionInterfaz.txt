@@ -1,0 +1,6 @@
+PASS
+Title pause and empty collection; legacy save not loaded.
+No autosave on collect/equip; explicit save with backup.
+New game resets collection and boss; load restores equipment.
+Below-floor and 65m returns recover and release species.
+Player/boss HUD and updated poses captured.

@@ -1,0 +1,236 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f95e45091f037b3468ac4eba51975649, type: 3}
+  m_Name: Catalog
+  m_EditorClassIdentifier: Assembly-CSharp::Nexoterra.World.SlugCatalog
+  species:
+  - id: Arana
+    displayName: "Ara\xF1a"
+    normal: {fileID: 4012135783070755963, guid: 790f0ab24d10ea84089e2ca9f7aef773, type: 3}
+    transformed: {fileID: 8519800000508299421, guid: e2c6317bd338fc6429102bfe426244fa, type: 3}
+    portrait: {fileID: 2800000, guid: b77e251f877ac2240a8eda4dac4eaac0, type: 3}
+    accent: {r: 0, g: 1, b: 1, a: 1}
+    unique: 0
+    combat:
+      impactDamage: 12
+      burnDamagePerSecond: 0
+      burnDuration: 0
+      slowMultiplier: 1
+      slowDuration: 0
+      knockdownDuration: 0
+      knockbackSpeed: 0
+      stunDuration: 0
+    combatConfigured: 1
+  - id: Armashelt
+    displayName: Armashelt
+    normal: {fileID: 5888577457209316336, guid: 248282b9a55852144bec533a272d5a51, type: 3}
+    transformed: {fileID: 3607836560113831865, guid: 76ba6b3787cfe4046895542076ad3959, type: 3}
+    portrait: {fileID: 2800000, guid: 393d0c4a06bbd364f8fcb720bcc89ce1, type: 3}
+    accent: {r: 0, g: 1, b: 1, a: 1}
+    unique: 0
+    combat:
+      impactDamage: 25
+      burnDamagePerSecond: 0
+      burnDuration: 0
+      slowMultiplier: 1
+      slowDuration: 0
+      knockdownDuration: 1.8
+      knockbackSpeed: 4
+      stunDuration: 0
+    combatConfigured: 1
+  - id: Infierno
+    displayName: Infierno
+    normal: {fileID: 1322220974269988154, guid: feb0785f60f967449998a6a45ae16c7c, type: 3}
+    transformed: {fileID: 1569749652952367352, guid: 6762ffb740db17d4a90c4495cef98547, type: 3}
+    portrait: {fileID: 2800000, guid: 7774e510b859fb14894e2d0e4db89300, type: 3}
+    accent: {r: 0, g: 1, b: 1, a: 1}
+    unique: 0
+    combat:
+      impactDamage: 22
+      burnDamagePerSecond: 5
+      burnDuration: 4
+      slowMultiplier: 1
+      slowDuration: 0
+      knockdownDuration: 0
+      knockbackSpeed: 0
+      stunDuration: 0
+    combatConfigured: 1
+  - id: Gon_Doc
+    displayName: Gon Doc
+    normal: {fileID: 7894971535634278879, guid: 8f6462a604280124baee048077ffd0d9, type: 3}
+    transformed: {fileID: 2992284630715008010, guid: 2043d9a575ee61547b7f0db1c9ef70f1, type: 3}
+    portrait: {fileID: 2800000, guid: f59f7a1b41a20dc499eac0a5e5615f73, type: 3}
+    accent: {r: 0, g: 1, b: 1, a: 1}
+    unique: 0
+    combat:
+      impactDamage: 4
+      burnDamagePerSecond: 0
+      burnDuration: 0
+      slowMultiplier: 1
+      slowDuration: 0
+      knockdownDuration: 0
+      knockbackSpeed: 0
+      stunDuration: 0
+    combatConfigured: 1
+  - id: ice
+    displayName: Hielo
+    normal: {fileID: 4310809446732420924, guid: 36033fa65f98fe64a93239b9483cf11c, type: 3}
+    transformed: {fileID: 434913927959011621, guid: 0bd20f217252abe4a9a6d22d2804d2f7, type: 3}
+    portrait: {fileID: 2800000, guid: 721a4999dd2ac614da58e1e33731554e, type: 3}
+    accent: {r: 0, g: 1, b: 1, a: 1}
+    unique: 0
+    combat:
+      impactDamage: 18
+      burnDamagePerSecond: 0
+      burnDuration: 0
+      slowMultiplier: 1
+      slowDuration: 0
+      knockdownDuration: 0
+      knockbackSpeed: 0
+      stunDuration: 0
+    combatConfigured: 1
+  - id: tazerling
+    displayName: Tazerling
+    normal: {fileID: 8376512397533721991, guid: 962772838bfba4d46a67b05930c52bea, type: 3}
+    transformed: {fileID: 3584777527857477765, guid: 8d8d659a2b93e434b98e97f4d861ad49, type: 3}
+    portrait: {fileID: 2800000, guid: 1b91d3bc25e6e6e45b789ea2b8bc629a, type: 3}
+    accent: {r: 0, g: 1, b: 1, a: 1}
+    unique: 0
+    combat:
+      impactDamage: 18
+      burnDamagePerSecond: 0
+      burnDuration: 0
+      slowMultiplier: 1
+      slowDuration: 0
+      knockdownDuration: 0
+      knockbackSpeed: 0
+      stunDuration: 0
+    combatConfigured: 1
+  - id: Carnero
+    displayName: Carnero
+    normal: {fileID: 2575442761311289283, guid: 7b8d347b1e0522849956b4e9581c6ced, type: 3}
+    transformed: {fileID: 3857948594709760456, guid: f7f13d75bf692b94cadb7b0f14330b99, type: 3}
+    portrait: {fileID: 2800000, guid: fd833fe0a90422c49aa23593a2be1f32, type: 3}
+    accent: {r: 0, g: 1, b: 1, a: 1}
+    unique: 0
+    combat:
+      impactDamage: 28
+      burnDamagePerSecond: 0
+      burnDuration: 0
+      slowMultiplier: 1
+      slowDuration: 0
+      knockdownDuration: 2.2
+      knockbackSpeed: 5
+      stunDuration: 0
+    combatConfigured: 1
+  - id: Elemental_Agua
+    displayName: E. agua
+    normal: {fileID: 9009039742250634286, guid: 61030b4a85ba13c4db1c7e3663624b90, type: 3}
+    transformed: {fileID: 6536361724727186082, guid: 967854fb4b26f784eb2d542e1fe71546, type: 3}
+    portrait: {fileID: 2800000, guid: c758678fd7687904699ccda32f2ef658, type: 3}
+    accent: {r: 0, g: 1, b: 1, a: 1}
+    unique: 1
+    combat:
+      impactDamage: 20
+      burnDamagePerSecond: 0
+      burnDuration: 0
+      slowMultiplier: 0.55
+      slowDuration: 4
+      knockdownDuration: 0
+      knockbackSpeed: 0
+      stunDuration: 0
+    combatConfigured: 1
+  - id: Elemental_Aire
+    displayName: E. aire
+    normal: {fileID: 4762389591037196156, guid: 2686fb7f7e4d04c439934f7bf0c3f314, type: 3}
+    transformed: {fileID: 7722888540531626396, guid: 2ee4d620414c7414186634f3645720a6, type: 3}
+    portrait: {fileID: 2800000, guid: b154c3792aa55104cacbec68c495c25b, type: 3}
+    accent: {r: 0, g: 1, b: 1, a: 1}
+    unique: 1
+    combat:
+      impactDamage: 20
+      burnDamagePerSecond: 0
+      burnDuration: 0
+      slowMultiplier: 1
+      slowDuration: 0
+      knockdownDuration: 0
+      knockbackSpeed: 8
+      stunDuration: 0
+    combatConfigured: 1
+  - id: Elemental_Fuego
+    displayName: E. fuego
+    normal: {fileID: 2404267146647905380, guid: 12a75750030f431419e09b81c8f7783d, type: 3}
+    transformed: {fileID: 2515545468926550687, guid: 207baedd124aefd4ebd7e918759d5a35, type: 3}
+    portrait: {fileID: 2800000, guid: 8947e3f235e2e1f4d8b78706938d6d21, type: 3}
+    accent: {r: 0, g: 1, b: 1, a: 1}
+    unique: 1
+    combat:
+      impactDamage: 32
+      burnDamagePerSecond: 7
+      burnDuration: 5
+      slowMultiplier: 1
+      slowDuration: 0
+      knockdownDuration: 0
+      knockbackSpeed: 0
+      stunDuration: 0
+    combatConfigured: 1
+  - id: Elemental_Tierra
+    displayName: E. tierra
+    normal: {fileID: 6706990672541947464, guid: 30641c2fae5f8a64695243cf67a9260b, type: 3}
+    transformed: {fileID: 3715327977821812347, guid: 63a5f7d68a067f4439bdbeca218183a5, type: 3}
+    portrait: {fileID: 2800000, guid: 3df2e50527b3f674d96f700ef07dddfa, type: 3}
+    accent: {r: 0, g: 1, b: 1, a: 1}
+    unique: 1
+    combat:
+      impactDamage: 30
+      burnDamagePerSecond: 0
+      burnDuration: 0
+      slowMultiplier: 1
+      slowDuration: 0
+      knockdownDuration: 1.5
+      knockbackSpeed: 3
+      stunDuration: 0
+    combatConfigured: 1
+  - id: Tornado
+    displayName: Tornado
+    normal: {fileID: 2561432588572171116, guid: 2551a3b67a062834ea67dc130dbcce61, type: 3}
+    transformed: {fileID: 4743683067547265516, guid: 4e909909a2649314ba435555aaec209d, type: 3}
+    portrait: {fileID: 2800000, guid: 0b574d592dde61740b10b668df7c743b, type: 3}
+    accent: {r: 0, g: 1, b: 1, a: 1}
+    unique: 0
+    combat:
+      impactDamage: 16
+      burnDamagePerSecond: 0
+      burnDuration: 0
+      slowMultiplier: 1
+      slowDuration: 0
+      knockdownDuration: 0
+      knockbackSpeed: 6
+      stunDuration: 0
+    combatConfigured: 1
+  - id: Elemental_Energia
+    displayName: "E. energ\xEDa"
+    normal: {fileID: 9057438712029302241, guid: 4caf272ce4b74e74e81e9b4426d41951, type: 3}
+    transformed: {fileID: 5224101705316114932, guid: 621a038f355d88e44bdb53249effb5fb, type: 3}
+    portrait: {fileID: 2800000, guid: bd86220263da3984aac3c9a2ee65fb2e, type: 3}
+    accent: {r: 0, g: 1, b: 1, a: 1}
+    unique: 1
+    combat:
+      impactDamage: 6
+      burnDamagePerSecond: 0
+      burnDuration: 0
+      slowMultiplier: 1
+      slowDuration: 0
+      knockdownDuration: 0
+      knockbackSpeed: 0
+      stunDuration: 0
+    combatConfigured: 1

@@ -1,0 +1,9 @@
+Pistol_Run root velocity=(0.00, 0.00, 3.10)
+voltereta root velocity=(-2.12, 0.00, -0.61)
+voltereta2 root velocity=(2.12, 0.00, -0.61)
+Death root velocity=(0.05, 0.00, 0.24)
+Player_Male: humanoid válido, IK y controlador compartido.
+Player_Female: humanoid válido, IK y controlador compartido.
+Enemy1: humanoid válido, IK y controlador compartido.
+Sir_Black: humanoid válido, IK y controlador compartido.
+SirBlack_Final: sin avatar humano; se conserva modelo estático.

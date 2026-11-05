@@ -1,0 +1,22 @@
+PASS
+PASS Retrato HD Arana
+PASS Retrato HD Armashelt
+PASS Retrato HD Infierno
+PASS Retrato HD Gon_Doc
+PASS Retrato HD ice
+PASS Retrato HD tazerling
+PASS Retrato HD Carnero
+PASS Retrato HD Elemental_Agua
+PASS Retrato HD Elemental_Aire
+PASS Retrato HD Elemental_Fuego
+PASS Retrato HD Elemental_Tierra
+PASS Retrato HD Tornado
+PASS Retrato HD Elemental_Energia
+PASS Colección con mochila adicional
+PASS Equipar desde mochila
+PASS Intercambio de espacios
+PASS Abrir mochila libera cursor
+PASS No hay anillos en forma salvaje
+PASS No hay anillos antes de transformar
+PASS Anillos al cambiar a T
+PASS Anillos desaparecen a los 2 segundos

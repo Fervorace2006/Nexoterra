@@ -1,0 +1,6 @@
+Pistol_Run: 0.7333333 s; humanoid=True; desplazamiento horneado al cuerpo.
+voltereta: 2.1 s; humanoid=True; desplazamiento horneado al cuerpo.
+voltereta2: 2.1 s; humanoid=True; desplazamiento horneado al cuerpo.
+Death: 3.9 s; humanoid=True; desplazamiento horneado al cuerpo.
+13 especies; 3 Doc; 1 elemental energía única en inicio; Tornado en hielo/agua.
+Último encuentro: Sir Black y fase final de 600 PV; derrotarla completa la historia.

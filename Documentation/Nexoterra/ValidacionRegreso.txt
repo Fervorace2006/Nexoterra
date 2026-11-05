@@ -1,0 +1,7 @@
+PASS
+Species lock includes duplicates and re-equipping; other species can fire.
+Impact removes transformation without unlocking.
+Forward hops return to a moving owner and unlock on arrival; refire succeeds.
+Misses and pre-transformation impacts return in small form.
+Wild forward hopping verified.
+Upward and downward aim, ceiling reversion and small-form falling verified.

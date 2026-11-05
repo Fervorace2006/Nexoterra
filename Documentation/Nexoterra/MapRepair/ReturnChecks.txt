@@ -1,0 +1,4 @@
+PASS
+Salida (275.00, 0.38, -272.53); destino (240.00, 12.05, -219.51)
+PASS Retorno sin teletransporte de emergencia
+PASS Babosa regresó por rampas y puente hasta la cornisa.

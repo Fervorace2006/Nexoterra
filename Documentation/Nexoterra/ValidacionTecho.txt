@@ -1,0 +1,3 @@
+PASS
+Boveda elevada 4 metros. Objetos movidos: 321
+Spawns de arana actualizados: 4

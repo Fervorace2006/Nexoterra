@@ -1,0 +1,4 @@
+PASS
+Six biome landing points grounded in Play mode.
+Runtime slugs spawn. Mushroom collection and adoption succeed.
+Weapon tracer and both character models present.

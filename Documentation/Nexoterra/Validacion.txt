@@ -1,0 +1,8 @@
+NEXOTERRA VALIDATION
+PASS
+Extent: 320 x 320 m
+Plateaus: 6
+Lakes: 2 cyan + 2 dark red
+Maximum sampled hill slope: 28.22 degrees
+Minimum conservative clearance above hills: 5.40 m
+Summits reached with a 2 m CharacterController: 6 / 6

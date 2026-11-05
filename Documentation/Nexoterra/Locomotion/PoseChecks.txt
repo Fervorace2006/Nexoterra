@@ -1,0 +1,8 @@
+Player_Male Idle hands=(0.27, 0.98, -0.07) Lfoot=(-0.15, 0.26, 0.16) Rfoot=(0.02, 0.28, -0.09)
+Player_Male Walk hands=(0.24, 1.12, 0.11) Lfoot=(-0.37, 0.28, 0.11) Rfoot=(0.22, 0.25, -0.26)
+Player_Male Run hands=(0.22, 1.17, 0.02) Lfoot=(0.00, 0.26, 0.32) Rfoot=(0.18, 0.55, -0.45)
+Player_Male Aim hands=(-0.07, 1.57, 0.35) Lfoot=(-0.15, 0.26, 0.16) Rfoot=(0.02, 0.28, -0.09)
+Player_Female Idle hands=(0.25, 0.95, -0.04) Lfoot=(-0.16, 0.24, 0.19) Rfoot=(0.01, 0.26, -0.06)
+Player_Female Walk hands=(0.24, 1.09, 0.12) Lfoot=(-0.36, 0.25, 0.14) Rfoot=(0.22, 0.23, -0.23)
+Player_Female Run hands=(0.22, 1.13, 0.04) Lfoot=(0.01, 0.23, 0.34) Rfoot=(0.18, 0.52, -0.39)
+Player_Female Aim hands=(-0.04, 1.53, 0.36) Lfoot=(-0.16, 0.24, 0.19) Rfoot=(0.01, 0.26, -0.06)

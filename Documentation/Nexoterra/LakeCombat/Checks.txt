@@ -1,0 +1,9 @@
+Sólido cerrado: Acceso_al_islote
+Sólido cerrado: Orillas_laguna_santuario
+Sólido cerrado: Islote_elemental_agua_cima
+Infierno: único spawn volcánico; no reaparece tras domesticarlo.
+PASS rayos arriba/abajo Acceso_al_islote: 40
+PASS rayos arriba/abajo Islote_elemental_agua_cima: 40
+PASS telaraña: sin movimiento, puede disparar, duración 5.5s
+PASS seis especies enemigas: Infierno, Arana, ice, Carnero, tazerling, Armashelt
+PASS una Infierno

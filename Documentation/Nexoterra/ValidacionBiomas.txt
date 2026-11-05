@@ -1,0 +1,6 @@
+NEXOTERRA CUATRO NODOS
+PASS
+4 nodos de 320 x 320 m; mundo de 640 x 640 m; 6 biomas
+Spawns: 36
+Hongos comestibles: 67
+Hongos con luz: 22

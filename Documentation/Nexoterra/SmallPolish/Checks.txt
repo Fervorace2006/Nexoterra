@@ -1,0 +1,38 @@
+PASS
+PASS Web roots feet but allows shooting
+PASS Web expires
+PASS Ice freezes movement and weapon
+PASS Fire melts ice immediately
+PASS Water roots but allows shooting
+PASS Electricity blocks movement and weapon
+PASS Shock reuses slug lightning VFX
+PASS Movement and weapon recover after shock
+PASS Wind drags target
+PASS Transformed projectile registers grazing hit
+PASS Wall prevents projectile damage behind it
+PASS Normal projectile is 70 percent of previous height
+PASS Player_Male Idle actually deforms skeleton
+PASS Player_Male Walk actually deforms skeleton
+PASS Player_Male Run actually deforms skeleton
+PASS Player_Male RollLeft actually deforms skeleton
+PASS Player_Male RollRight actually deforms skeleton
+PASS Player_Female Idle actually deforms skeleton
+PASS Player_Female Walk actually deforms skeleton
+PASS Player_Female Run actually deforms skeleton
+PASS Player_Female RollLeft actually deforms skeleton
+PASS Player_Female RollRight actually deforms skeleton
+PASS Enemy1 Idle actually deforms skeleton
+PASS Enemy1 Walk actually deforms skeleton
+PASS Enemy1 Run actually deforms skeleton
+PASS Enemy1 RollLeft actually deforms skeleton
+PASS Enemy1 RollRight actually deforms skeleton
+PASS Sir_Black Idle actually deforms skeleton
+PASS Sir_Black Walk actually deforms skeleton
+PASS Sir_Black Run actually deforms skeleton
+PASS Sir_Black RollLeft actually deforms skeleton
+PASS Sir_Black RollRight actually deforms skeleton
+PASS Dodge starts grounded
+PASS Dodge moves the collision controller
+PASS Dodge does not snap back after animation
+PASS Menu is build entry scene
+PASS Menu is a separate scene without world/player

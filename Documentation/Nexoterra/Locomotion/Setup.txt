@@ -1,0 +1,24 @@
+Idle length=8.766667 speed=(0.00, 0.00, 0.00)
+Walk length=1.333333 speed=(0.00, 0.00, 0.00)
+Run length=0.6333334 speed=(0.00, 0.00, 0.00)
+Humanoide válido tripo_convert_6e718756-085e-41c5-86d7-7ea44b56b0d3
+Humanoide válido tripo_convert_3c3b88ac-74cf-47c1-8cc5-36f82fc45da9
+Playback walk=2 run=4.5
+Humanoide válido tripo_convert_6e718756-085e-41c5-86d7-7ea44b56b0d3
+Humanoide válido tripo_convert_3c3b88ac-74cf-47c1-8cc5-36f82fc45da9
+Humanoide válido tripo_convert_fc88be13-a8f9-45fc-94b0-0fb5bbe389a1
+Humanoide válido tripo_convert_ad822429-2985-45cb-9002-eb87c17c4285
+Humanoide válido tripo_convert_fc88be13-a8f9-45fc-94b0-0fb5bbe389a1
+Humanoide válido tripo_convert_fc88be13-a8f9-45fc-94b0-0fb5bbe389a1
+Humanoide válido tripo_convert_fc88be13-a8f9-45fc-94b0-0fb5bbe389a1
+Humanoide válido tripo_convert_fc88be13-a8f9-45fc-94b0-0fb5bbe389a1
+Humanoide válido tripo_convert_fc88be13-a8f9-45fc-94b0-0fb5bbe389a1
+Humanoide válido tripo_convert_fc88be13-a8f9-45fc-94b0-0fb5bbe389a1
+Humanoide válido tripo_convert_fc88be13-a8f9-45fc-94b0-0fb5bbe389a1
+Humanoide válido tripo_convert_fc88be13-a8f9-45fc-94b0-0fb5bbe389a1
+Humanoide válido tripo_convert_fc88be13-a8f9-45fc-94b0-0fb5bbe389a1
+Humanoide válido tripo_convert_fc88be13-a8f9-45fc-94b0-0fb5bbe389a1
+Humanoide válido tripo_convert_fc88be13-a8f9-45fc-94b0-0fb5bbe389a1
+Humanoide válido tripo_convert_fc88be13-a8f9-45fc-94b0-0fb5bbe389a1
+Humanoide válido tripo_convert_ad822429-2985-45cb-9002-eb87c17c4285
+PASS volteretas originales conservadas

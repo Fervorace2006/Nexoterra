@@ -1,0 +1,8 @@
+PASS
+42 destructibles, 300-second respawn.
+Ceiling fall/area damage hits player and enemy, deduplicates colliders.
+Rock/earth restrictions, barrier destruction, cylinder chain, original-position respawn.
+All skin weights normalized; seventeen-bone rigs.
+Player and enemy poses rendered.
+Hostile shots hit player; reload blocks firing.
+Three sequential boss phases, unique instance and saved progression verified.

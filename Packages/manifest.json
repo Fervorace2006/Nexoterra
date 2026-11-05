@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "com.tripo3d.unitybridge": "file:C:/Users/johnn/Downloads/Tripo3d_Unity_Bridge",
     "com.unity.ai.assistant": "2.21.0-pre.2",
     "com.unity.ai.inference": "2.6.1",
     "com.unity.ai.navigation": "2.0.14",

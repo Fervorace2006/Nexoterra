@@ -1,0 +1,50 @@
+using System;
+using System.IO;
+using System.Linq;
+using System.Text;
+using UnityEngine;
+using UnityEngine.AI;
+using UnityEditor;
+using UnityEditor.SceneManagement;
+using Nexoterra.World;
+namespace Nexoterra.Editor
+{
+ [InitializeOnLoad] public static class MapRepairChecks
+ {
+  static StringBuilder report=new StringBuilder();static SlugProjectile slug;static float start;static bool begun;
+  static MapRepairChecks(){EditorApplication.update+=Tick;}
+  static void Check(bool ok,string text){if(!ok)throw new Exception(text);report.AppendLine("PASS "+text);}
+  public static void Run()
+  {
+   try{
+    EditorSceneManager.OpenScene(NexoterraBiomeBuilder.ScenePath);Physics.SyncTransforms();
+    foreach(var mf in UnityEngine.Object.FindObjectsByType<MeshFilter>().Where(m=>m.name.StartsWith("Subida_")&&!m.name.EndsWith("_base")&&!m.name.EndsWith("_barandas")))
+    {
+     var mesh=mf.sharedMesh;int i=mesh.triangles.Length/6*3;var tri=mesh.triangles;var vs=mesh.vertices;var point=mf.transform.TransformPoint((vs[tri[i]]+vs[tri[i+1]]+vs[tri[i+2]])/3);
+     Check(mf.GetComponent<Collider>().Raycast(new Ray(point-Vector3.up,Vector3.up),out _,2),mf.name+" bloquea desde abajo");
+    }
+    var nav=UnityEngine.Object.FindAnyObjectByType<SlugNavigation>();var instance=NavMesh.AddNavMeshData(nav.data);
+    var camps=new[]{new Vector3(275,0,-270),new Vector3(-225,0,5),new Vector3(-210,0,195),new Vector3(190,0,170),new Vector3(105,0,-48),new Vector3(-230,0,-220)};
+    for(int i=0;i<6;i++){var b=UnityEngine.Object.FindObjectsByType<MeshFilter>().First(f=>f.name=="Cornisa_"+i+"_cima").GetComponent<Renderer>().bounds;var entry=UnityEngine.Object.FindObjectsByType<MeshFilter>().First(f=>f.name=="Sendero_entrada_"+i);var ev=entry.sharedMesh.vertices;Vector3 startPoint=entry.transform.TransformPoint((ev[0]+ev[1]+ev[2]+ev[3])*.25f);Check(NavMesh.SamplePosition(startPoint,out var from,3,NavMesh.AllAreas),"Inicio navegable "+i);Check(NavMesh.SamplePosition(b.center,out var to,2,NavMesh.AllAreas),"Cornisa navegable "+i);var path=new NavMeshPath();Check(NavMesh.CalculatePath(from.position,to.position,NavMesh.AllAreas,path)&&path.status==NavMeshPathStatus.PathComplete,"Ruta completa suelo-cornisa "+i);report.AppendLine("corners "+path.corners.Length);}
+    instance.Remove();Check(UnityEngine.Object.FindObjectsByType<WorldDestructible>().Count(p=>p.kind==WorldDestructible.Kind.CeilingRock)>=60,"Más picos distribuidos");
+    File.WriteAllText("Library/MapRepairGeometryChecks.txt",report.ToString());SessionState.SetBool("MapRepairChecks",true);EditorSceneManager.playModeStartScene=null;EditorApplication.isPlaying=true;
+   }catch(Exception e){Finish(e);}
+  }
+  static void Tick()
+  {
+   if(!SessionState.GetBool("MapRepairChecks",false)||!EditorApplication.isPlaying||!GameSession.Current||!GameSession.Current.Ready||Time.time<2)return;
+   try{
+    var player=GameSession.Current.GetComponent<NexoterraThirdPerson>();
+    if(!begun)
+    {
+     foreach(var ai in UnityEngine.Object.FindObjectsByType<EnemyShooter>())ai.enabled=false;foreach(var ai in UnityEngine.Object.FindObjectsByType<NativeEnemyAnimation>())ai.enabled=false;
+     var spawn=UnityEngine.Object.FindObjectsByType<SlugSpawnPoint>().First(s=>s.species=="Elemental_Energia");Vector3 groundStart=player.transform.position+Vector3.up*.22f;report.AppendLine("Salida "+groundStart+"; destino "+spawn.transform.position);player.Teleport(spawn.transform.position);var inventory=player.GetComponent<SlugInventory>();
+     slug=new GameObject("Retorno real por subida").AddComponent<SlugProjectile>();slug.transform.position=groundStart;slug.Launch(inventory.catalog.Find("Infierno"),Vector3.forward,inventory);slug.BeginReturn();start=Time.time;Time.timeScale=4;begun=true;return;
+    }
+    if(!slug||slug.HasArrived){Check(slug.EmergencyRecalls==0,"Retorno sin teletransporte de emergencia");report.AppendLine("PASS Babosa regresó por rampas y puente hasta la cornisa.");Finish(null);return;}
+    if(Time.time-start>100)throw new Exception("Babosa atascada en "+slug.transform.position+"; destino "+player.transform.position);
+   }catch(Exception e){Finish(e);}
+  }
+  static void Finish(Exception error){SessionState.SetBool("MapRepairChecks",false);Directory.CreateDirectory("Documentation/Nexoterra/MapRepair");File.WriteAllText("Documentation/Nexoterra/MapRepair/Checks.txt",(error==null?"PASS\n":"FAIL\n"+error+"\n")+report);EditorApplication.isPlaying=false;EditorApplication.delayCall+=()=>EditorApplication.Exit(error==null?0:1);}
+ }
+}

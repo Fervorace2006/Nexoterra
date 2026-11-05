@@ -1,0 +1,5 @@
+PASS
+Superficies sólidas: 31
+Techos/paredes cafés: 322
+Picos adicionales: 48
+Energía en cornisa inicial. Navegación horneada.

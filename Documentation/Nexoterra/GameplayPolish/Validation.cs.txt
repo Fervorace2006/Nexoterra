@@ -1,0 +1,64 @@
+using System;
+using System.IO;
+using System.Linq;
+using System.Text;
+using UnityEditor;
+using UnityEditor.Animations;
+using UnityEditor.SceneManagement;
+using UnityEngine;
+using Nexoterra.World;
+namespace Nexoterra.Editor
+{
+ [InitializeOnLoad] public static class PolishChecks
+ {
+  static StringBuilder report=new StringBuilder();static int phase;static float until;static Vector3 start,end;static bool loadingMenu;
+  static PolishChecks(){EditorApplication.update+=Tick;}
+  static void Check(bool ok,string why){if(!ok)throw new Exception(why);report.AppendLine("PASS "+why);}
+  public static void Run(){EditorSceneManager.playModeStartScene=null;EditorSceneManager.OpenScene(NexoterraBiomeBuilder.ScenePath);SessionState.SetBool("PolishChecks",true);EditorApplication.isPlaying=true;}
+  static void Tick()
+  {
+   if(!SessionState.GetBool("PolishChecks",false)||!EditorApplication.isPlaying)return;
+   try
+   {
+    if(loadingMenu){if(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name!=FrontEndMenu.MenuScene)return;Check(!GameSession.Current,"Menu is a separate scene without world/player");Finish(0);return;}
+    if(!GameSession.Current||!GameSession.Current.Ready||Time.time<Mathf.Max(2,until))return;
+    var player=GameSession.Current.GetComponent<NexoterraThirdPerson>();var driver=player.GetComponent<NativePlayerAnimation>();var abilities=player.GetComponent<PlayerAbilities>();
+    if(phase==0)
+    {
+     foreach(var ai in UnityEngine.Object.FindObjectsByType<EnemyShooter>())ai.enabled=false;foreach(var a in UnityEngine.Object.FindObjectsByType<NativeEnemyAnimation>())a.enabled=false;
+     var catalog=player.GetComponent<SlugInventory>().catalog;var target=new GameObject("TestTarget");target.transform.position=new Vector3(0,500,0);var cc=target.AddComponent<CharacterController>();cc.center=Vector3.up;cc.height=2;cc.radius=.35f;var hp=target.AddComponent<EnemyCombatant>();hp.maxHealth=1000;hp.Revive();var fx=hp.Controls;fx.webPrefab=AssetDatabase.LoadAssetAtPath<GameObject>("Assets/NexoterraWorld/Expansion/Web.prefab");
+     hp.ReceiveSlug(catalog.Find("Arana"),Vector3.forward,true);Check(!hp.CanMove&&hp.CanShoot,"Web roots feet but allows shooting");fx.Advance(6);Check(hp.CanMove,"Web expires");
+     hp.ReceiveSlug(catalog.Find("ice"),Vector3.forward,true);Check(!hp.CanMove&&!hp.CanShoot,"Ice freezes movement and weapon");hp.ReceiveSlug(catalog.Find("Infierno"),Vector3.forward,true);Check(fx.FreezeRemaining==0&&hp.CanShoot,"Fire melts ice immediately");
+     hp.ReceiveSlug(catalog.Find("Elemental_Agua"),Vector3.forward,true);Check(!hp.CanMove&&hp.CanShoot,"Water roots but allows shooting");fx.Advance(5);
+     hp.ReceiveSlug(catalog.Find("tazerling"),Vector3.forward,true);Check(hp.CanMove&&!hp.CanShoot,"Electricity blocks weapon independently");fx.Advance(5);Check(hp.CanShoot,"Weapon recovers after shock");
+     hp.ReceiveSlug(catalog.Find("Tornado"),Vector3.forward,true);Vector3 old=target.transform.position;fx.Advance(.1f);Check(Vector3.Distance(old,target.transform.position)>.1f,"Wind drags target");fx.ResetEffects();target.transform.position=new Vector3(0,500,0);Physics.SyncTransforms();
+     float health=hp.Health;var shot=new GameObject("GrazingShot").AddComponent<SlugProjectile>();shot.transform.position=new Vector3(.65f,501,-4);shot.transformDistance=.01f;shot.Launch(catalog.Find("Infierno"),Vector3.forward);shot.Advance(.3f);Check(hp.Health<health,"Transformed projectile registers grazing hit");UnityEngine.Object.DestroyImmediate(shot.gameObject);
+     var wall=GameObject.CreatePrimitive(PrimitiveType.Cube);wall.transform.position=new Vector3(0,501,-2);wall.transform.localScale=new Vector3(4,4,.2f);Physics.SyncTransforms();health=hp.Health;shot=new GameObject("BlockedShot").AddComponent<SlugProjectile>();shot.transform.position=new Vector3(0,501,-4);shot.transformDistance=.01f;shot.Launch(catalog.Find("Infierno"),Vector3.forward);shot.Advance(.3f);Check(hp.Health==health,"Wall prevents projectile damage behind it");UnityEngine.Object.DestroyImmediate(shot.gameObject);UnityEngine.Object.DestroyImmediate(wall);UnityEngine.Object.DestroyImmediate(target);
+     Capture(player,driver);player.Teleport(player.spawn);phase=1;until=Time.time+.3f;return;
+    }
+    if(phase==1){start=player.transform.position;Check(abilities.TryDodge(1,Vector3.right),"Dodge starts grounded");phase=2;until=Time.time+1.2f;return;}
+    if(phase==2){end=player.transform.position;Check(end.x-start.x>3,"Dodge moves the collision controller");phase=3;until=Time.time+.5f;return;}
+    Check(Mathf.Abs(player.transform.position.x-end.x)<.1f,"Dodge does not snap back after animation");
+    Check(EditorBuildSettings.scenes[0].path.Contains("Nexoterra_Menu"),"Menu is build entry scene");loadingMenu=true;FrontEndMenu.Load(FrontEndMenu.MenuScene);
+   }catch(Exception e){report.AppendLine(e.ToString());Finish(1);}
+  }
+  static void Finish(int code){Directory.CreateDirectory("Documentation/Nexoterra/GameplayPolish");File.WriteAllText("Documentation/Nexoterra/GameplayPolish/Checks.txt",(code==0?"PASS\n":"FAIL\n")+report);SessionState.SetBool("PolishChecks",false);EditorApplication.isPlaying=false;EditorApplication.delayCall+=()=>EditorApplication.Exit(code);}
+  static void Capture(NexoterraThirdPerson player,NativePlayerAnimation driver)
+  {
+   Directory.CreateDirectory("Documentation/Nexoterra/GameplayPolish");var light=new GameObject("TestLight").AddComponent<Light>();light.type=LightType.Directional;light.intensity=2;light.transform.rotation=Quaternion.Euler(40,200,0);RenderSettings.ambientLight=Color.gray;
+   var cam=new GameObject("CaptureCamera").AddComponent<Camera>();cam.clearFlags=CameraClearFlags.SolidColor;cam.backgroundColor=new Color(.07f,.1f,.14f);cam.fieldOfView=38;
+   foreach(string role in new[]{"Player_Male","Player_Female","Enemy1","Sir_Black"})
+   {
+    var go=UnityEngine.Object.Instantiate(AssetDatabase.LoadAssetAtPath<GameObject>("Assets/NexoterraWorld/Characters/"+role+".prefab"));go.transform.position=new Vector3(0,1000,0);var a=go.GetComponentInChildren<Animator>();a.cullingMode=AnimatorCullingMode.AlwaysAnimate;a.enabled=true;a.speed=1;a.Rebind();a.Update(.01f);var hand=a.GetBoneTransform(HumanBodyBones.RightHand);var rest=hand.position; if(role.StartsWith("Player")){var gun=UnityEngine.Object.Instantiate(driver.weapon.gameObject);var scale=driver.weapon.lossyScale;gun.transform.SetParent(hand,false);gun.transform.localPosition=role=="Player_Male"?driver.maleGrip:driver.femaleGrip;gun.transform.localRotation=role=="Player_Male"?driver.maleGripRotation:driver.femaleGripRotation;var hs=hand.lossyScale;gun.transform.localScale=new Vector3(scale.x/hs.x,scale.y/hs.y,scale.z/hs.z);}
+    foreach(string state in new[]{"Idle","Walk","Run","RollLeft","RollRight"})
+    {
+     a.Play(state,0,.4f);a.Update(.001f);Check(state=="Idle"||(hand.position-rest).sqrMagnitude>.001f,role+" "+state+" actually deforms skeleton");
+     var meshes=new System.Collections.Generic.List<GameObject>();foreach(var skin in a.GetComponentsInChildren<SkinnedMeshRenderer>()){var m=new Mesh();skin.BakeMesh(m,false);var mesh=new GameObject("Bake");mesh.transform.SetPositionAndRotation(skin.transform.position,skin.transform.rotation);mesh.AddComponent<MeshFilter>().sharedMesh=m;mesh.AddComponent<MeshRenderer>().sharedMaterials=skin.sharedMaterials;meshes.Add(mesh);skin.enabled=false;}
+     cam.transform.position=go.transform.position+new Vector3(2,1.3f,4);cam.transform.LookAt(go.transform.position+Vector3.up);var rt=new RenderTexture(600,700,24);cam.targetTexture=rt;cam.Render();var previous=RenderTexture.active;RenderTexture.active=rt;var tex=new Texture2D(600,700,TextureFormat.RGB24,false);tex.ReadPixels(new Rect(0,0,600,700),0,0);tex.Apply();File.WriteAllBytes("Documentation/Nexoterra/GameplayPolish/"+role+"_"+state+".png",tex.EncodeToPNG());RenderTexture.active=previous;cam.targetTexture=null;rt.Release();UnityEngine.Object.DestroyImmediate(rt);UnityEngine.Object.DestroyImmediate(tex);foreach(var mesh in meshes){UnityEngine.Object.DestroyImmediate(mesh.GetComponent<MeshFilter>().sharedMesh);UnityEngine.Object.DestroyImmediate(mesh);}foreach(var skin in a.GetComponentsInChildren<SkinnedMeshRenderer>())skin.enabled=true;
+    }
+    UnityEngine.Object.DestroyImmediate(go);
+   }
+   UnityEngine.Object.DestroyImmediate(cam.gameObject);UnityEngine.Object.DestroyImmediate(light.gameObject);
+  }
+ }
+}

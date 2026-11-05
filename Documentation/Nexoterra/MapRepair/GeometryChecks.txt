@@ -1,0 +1,31 @@
+PASS Subida_3 bloquea desde abajo
+PASS Subida_2 bloquea desde abajo
+PASS Subida_1 bloquea desde abajo
+PASS Subida_0 bloquea desde abajo
+PASS Subida_4 bloquea desde abajo
+PASS Subida_5 bloquea desde abajo
+PASS Inicio navegable 0
+PASS Cornisa navegable 0
+PASS Ruta completa suelo-cornisa 0
+corners 15
+PASS Inicio navegable 1
+PASS Cornisa navegable 1
+PASS Ruta completa suelo-cornisa 1
+corners 18
+PASS Inicio navegable 2
+PASS Cornisa navegable 2
+PASS Ruta completa suelo-cornisa 2
+corners 13
+PASS Inicio navegable 3
+PASS Cornisa navegable 3
+PASS Ruta completa suelo-cornisa 3
+corners 6
+PASS Inicio navegable 4
+PASS Cornisa navegable 4
+PASS Ruta completa suelo-cornisa 4
+corners 19
+PASS Inicio navegable 5
+PASS Cornisa navegable 5
+PASS Ruta completa suelo-cornisa 5
+corners 16
+PASS Más picos distribuidos
