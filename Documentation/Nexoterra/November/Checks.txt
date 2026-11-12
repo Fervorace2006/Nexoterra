@@ -19,16 +19,6 @@ PASS Daño elemental actualizado: Malvada_Elemental_Fuego
 PASS Daño elemental actualizado: Malvada_Elemental_Tierra
 PASS Salto solo en capa de piernas
 PASS Avatar válido tras salto
-SCENE Enemy1 · 5 Enemies_Blast size=(0.36, 0.72, 0.62) dist=0.2504985 parent=BlasterSocket
-SCENE Secuaz de Sir Black Blast size=(0.38, 0.54, 0.70) dist=0.2505021 parent=BlasterSocket
-SCENE Enemy1 · 4 Enemies_Blast size=(0.64, 0.73, 0.35) dist=0.250501 parent=BlasterSocket
-SCENE Enemy1 · 7 Enemies_Blast size=(0.39, 0.62, 0.73) dist=0.2504978 parent=BlasterSocket
-SCENE Enemy1 · 3 Enemies_Blast size=(0.36, 0.72, 0.62) dist=0.2504994 parent=BlasterSocket
-SCENE Enemy1 · 1 Enemies_Blast size=(0.64, 0.73, 0.35) dist=0.2504984 parent=BlasterSocket
-SCENE Enemy1 · 2 Enemies_Blast size=(0.39, 0.62, 0.73) dist=0.2504965 parent=BlasterSocket
-SCENE Enemy1 · 6 Enemies_Blast size=(0.36, 0.72, 0.62) dist=0.2504988 parent=BlasterSocket
-INFO Blast(Clone) en=False act=True layer=0 center=(-85.00, 10.06, -107.00) size=(7.01, 19.95, 35.56) hand=(-84.73, 1.16, -107.10) parent=Visual camMask=-1
-INFO Enemies_Blast en=True act=True layer=2 center=(-85.00, 10.06, -107.00) size=(7.43, 23.83, 35.56) hand=(-84.73, 1.16, -107.10) parent=Visual camMask=-1
 PASS Nuevo tornado VFX conectado
 PASS Tornado blanco/gris
 PASS Menú de pausa abre y libera cursor

@@ -58,19 +58,14 @@ public sealed class NovemberReview : MonoBehaviour
   player.enabled=false;var view=player.view.transform;view.position=player.transform.position+player.transform.forward*3.2f+Vector3.up*1.4f;view.LookAt(player.transform.position+Vector3.up*1f);
   animation.enabled=false;animation.male.SetLayerWeight(jumpLayer,1);animation.male.Play("JumpStart",jumpLayer,.45f);animation.male.Update(0);
   yield return new WaitForEndOfFrame();ScreenCapture.CaptureScreenshot(Folder+"Jump.png");yield return new WaitForSeconds(.3f);
-  view.position=player.transform.position+player.transform.right*3.2f+Vector3.up*1.2f;view.LookAt(player.transform.position+Vector3.up*.9f);
-  foreach(string clip in new[]{"JumpStart","JumpLand"})for(int f=0;f<=10;f++){animation.male.Play(clip,jumpLayer,f/10f);animation.male.speed=0;animation.male.Update(0);yield return new WaitForEndOfFrame();ScreenCapture.CaptureScreenshot(Folder+"F_"+clip+"_"+f.ToString("00")+".png");yield return null;yield return null;}
-  animation.male.speed=1;
   animation.male.SetLayerWeight(jumpLayer,0);animation.enabled=true;player.enabled=true;
   Check(animation.male.avatar.isValid&&animation.male.avatar.isHuman,"Avatar válido tras salto");
-  var fixture=(GameObject)PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>("Assets/02_Prefabs/Gameplay/Enemies/Enemy1.prefab"));
+  var fixture=Instantiate(AssetDatabase.LoadAssetAtPath<GameObject>("Assets/02_Prefabs/Gameplay/Enemies/Enemy1.prefab")); // plain runtime copy, like the game spawns it
   fixture.transform.position=player.transform.position+player.transform.forward*3;fixture.GetComponent<EnemyShooter>().enabled=false;
   player.enabled=false;player.view.transform.position=fixture.transform.position+fixture.transform.forward*2.2f+fixture.transform.right*.9f+Vector3.up*1.5f;player.view.transform.LookAt(fixture.transform.position+Vector3.up*1.2f);
   yield return new WaitForSeconds(.5f);
   ScreenCapture.CaptureScreenshot(Folder+"EnemyWeapon.png");yield return new WaitForSeconds(.25f);
-  foreach(var other in FindObjectsByType<EnemyShooter>(FindObjectsSortMode.None)){if(other.gameObject==fixture)continue;var oh=other.GetComponentInChildren<Animator>()?other.GetComponentInChildren<Animator>().GetBoneTransform(HumanBodyBones.RightHand):null;foreach(var r in other.weapon.GetComponentsInChildren<Renderer>(true))if(r.enabled)File.AppendAllText(Folder+"Checks.txt","SCENE "+other.name+" "+r.name+" size="+r.bounds.size+" dist="+(oh?Vector3.Distance(oh.position,r.bounds.center):-1)+" parent="+other.weapon.parent.name+Environment.NewLine);}
   var hand=fixture.GetComponentInChildren<Animator>().GetBoneTransform(HumanBodyBones.RightHand);
-  {var sh=fixture.GetComponent<EnemyShooter>();foreach(var r in sh.weapon.GetComponentsInChildren<Renderer>(true))File.AppendAllText(Folder+"Checks.txt","INFO "+r.name+" en="+r.enabled+" act="+r.gameObject.activeInHierarchy+" layer="+r.gameObject.layer+" center="+r.bounds.center+" size="+r.bounds.size+" hand="+(hand?hand.position.ToString():"null")+" parent="+sh.weapon.parent.name+" camMask="+player.view.cullingMask+Environment.NewLine);}
   if(hand){player.view.transform.position=hand.position+fixture.transform.forward*1.1f+fixture.transform.right*-.4f+Vector3.up*.25f;player.view.transform.LookAt(hand.position);yield return new WaitForSeconds(.2f);ScreenCapture.CaptureScreenshot(Folder+"EnemyHand.png");yield return new WaitForSeconds(.25f);}
   var wind=ImportedSlugVfx.Spawn("AirTornado",fixture.transform,Vector3.zero,.52f,Quaternion.identity,4);
   Check(wind&&wind.GetComponent<UnityEngine.VFX.VisualEffect>(),"Nuevo tornado VFX conectado");
