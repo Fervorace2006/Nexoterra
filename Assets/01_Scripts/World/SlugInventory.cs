@@ -169,22 +169,56 @@ namespace Nexoterra.World
         {
             if(GameSession.Blocked)return;Styles();Matrix4x4 before=GUI.matrix;NexoHud.Scale();
             if(IsOpen)DrawBackpack();
-            NexoUi.Card(new Rect(380,588,524,116),Teal);
+            if(!IsOpen)DrawTray();
+            GUI.matrix=before;
+        }
+        // Bottom-right blaster tray (6 capsule slots + charge gauge) and bottom-left info tiles.
+        void DrawTray()
+        {
+            var inner=NexoHud.Plate(new Rect(790,592,474,114),false);
+            var anim=GetComponent<NativePlayerAnimation>();
             for(int i=0;i<6;i++)
             {
                 int index=equipped[i];var def=index>=0&&index<owned.Count?catalog.Find(owned[index]):null;
-                var rect=new Rect(390+i*85,596,79,88);Slot(rect,def,i==selected,(i+1).ToString(),def?.displayName??"Vacío");
-                if(Cursor.lockState!=CursorLockMode.Locked&&GUI.Button(rect,GUIContent.none,GUIStyle.none))selected=i;
+                var r=new Rect(inner.x+4+i*70,inner.y+4,64,inner.height-8);
+                bool active=i==selected;var accent=NexoUi.Accent(def);bool busy=def!=null&&IsBusy(def.id);
+                NexoHud.Fill(r,active?NexoHud.Orange:new Color(.02f,.04f,.05f));
+                NexoHud.Gradient(new Rect(r.x+2,r.y+2,r.width-4,r.height-4),new Color(.07f,.42f,.48f),new Color(.01f,.11f,.14f));
+                for(float y=r.y+8;y<r.yMax-6;y+=6)NexoHud.Fill(new Rect(r.x+4,y,r.width-8,1),new Color(.5f,1,1,.05f));
+                if(def!=null)NexoUi.Portrait(new Rect(r.x+4,r.y+8,r.width-8,r.height-30),def.portrait,accent,busy?.4f:1);
+                else NexoHud.Label(new Rect(r.x,r.y,r.width,r.height-20),"+",22,new Color(.4f,.6f,.65f),TextAnchor.MiddleCenter);
+                if(busy)DrawReturnRing(r,def.id);
+                // Number badge as a round socket at the bottom, like a chamber.
+                var badge=new Rect(r.center.x-10,r.yMax-22,20,18);NexoHud.Fill(badge,active?NexoHud.Orange:new Color(.1f,.16f,.19f));NexoHud.Fill(new Rect(badge.x+2,badge.y+2,badge.width-4,badge.height-4),active?new Color(1,.75f,.3f):new Color(.04f,.08f,.1f));
+                NexoHud.Label(badge,(i+1).ToString(),11,active?Ink:NexoUi.Text,TextAnchor.MiddleCenter);
+                if(def!=null&&def.IsElemental)NexoHud.Label(new Rect(r.xMax-16,r.y+3,14,14),"E",10,accent,TextAnchor.MiddleCenter);
+                if(active)NexoHud.Brackets(r,NexoHud.Orange,10,2);
+                if(Cursor.lockState!=CursorLockMode.Locked&&GUI.Button(r,GUIContent.none,GUIStyle.none))selected=i;
             }
+            // Charge gauge: full when the selected slug is loaded, fills during reload.
             var definition=SelectedDefinition();var current=definition==null?null:Travelling(definition.id);
-            string state=definition==null?"ESPACIO "+(selected+1)+" VACÍO":current?(current.IsReturning?"REGRESANDO · espera su llegada":"EN VUELO · especie ocupada"):definition.displayName.ToUpperInvariant()+" · LISTA";
-            NexoHud.Label(new Rect(392,688,500,14),state,11,current?Gold:NexoUi.Muted,TextAnchor.MiddleCenter);
-            if(NexoUi.Button(new Rect(1070,654,190,48),"MOCHILA  [B]   "+owned.Count,IsOpen))SetOpen(!IsOpen);
-            NexoHud.Fill(new Rect(1066,621,198,26),new Color(.01f,.025f,.04f,.85f));
-            NexoHud.Label(new Rect(1070,624,190,20),"HONGOS   "+(player?player.food:0),13,NexoUi.Text,TextAnchor.MiddleRight);
-            if(!IsOpen)NexoHud.Fill(new Rect(380,558,524,26),new Color(.01f,.025f,.04f,.85f));
-            if(!IsOpen)NexoHud.Label(new Rect(380,561,524,22),owned.Count>0?"1–6  /  RUEDA   Seleccionar       CLIC   Lanzar":"Alimenta babosas con F para formar tu equipo",12,NexoUi.Muted,TextAnchor.MiddleCenter);
-            GUI.matrix=before;
+            var gauge=new Rect(inner.xMax-38,inner.y+4,34,inner.height-8);NexoHud.Fill(gauge,new Color(.01f,.02f,.03f));
+            float charge=anim==null?1:anim.IsLoaded?1:anim.IsReloading?.5f+.5f*Mathf.PingPong(Time.time*2,1):0;
+            int cells=10;for(int c=0;c<cells;c++){var cell=new Rect(gauge.x+5,gauge.yMax-5-(c+1)*(gauge.height-10)/cells,gauge.width-10,(gauge.height-10)/cells-2);NexoHud.Fill(cell,(c+.5f)/cells<=charge?new Color(.2f,.85f,1):new Color(.05f,.1f,.12f));}
+            string state=definition==null?"ESPACIO "+(selected+1)+" VACÍO":current?(current.IsReturning?"REGRESANDO":"EN VUELO"):definition.displayName.ToUpperInvariant()+(anim!=null&&!anim.IsLoaded?" · R RECARGAR":" · LISTA");
+            var caption=NexoHud.Plate(new Rect(790,562,474,28),false,new Color(.7f,.35f,.08f));
+            NexoHud.Label(caption,state,12,current?Gold:Color.white,TextAnchor.MiddleCenter);
+            // Info tiles (bottom-left).
+            Tile(new Rect(16,616,84,90),(player?player.food:0).ToString(),"HONGOS",new Color(.85f,.55f,1f),false);
+            if(Tile(new Rect(106,616,84,90),owned.Count.ToString(),"MOCHILA [B]",Gold,IsOpen))SetOpen(!IsOpen);
+            var abilities=GetComponent<PlayerAbilities>();float cd=abilities?abilities.DodgeCooldown:0;
+            Tile(new Rect(196,616,84,90),cd>0?cd.ToString("0.0"):"OK","ESQUIVA",new Color(.3f,.85f,1f),false);
+            if(abilities&&abilities.BoostRemaining>0)Tile(new Rect(286,616,84,90),Mathf.CeilToInt(abilities.BoostRemaining).ToString(),"VIENTO",new Color(.85f,.9f,.95f),true);
+            if(owned.Count==0)NexoHud.Shadowed(new Rect(790,536,474,22),"Alimenta babosas con F para formar tu equipo",12,NexoUi.Muted,TextAnchor.MiddleCenter);
+            else NexoHud.Shadowed(new Rect(790,536,474,22),"1–6 / RUEDA  seleccionar     CLIC  lanzar",11,new Color(.75f,.85f,.88f),TextAnchor.MiddleCenter);
+        }
+        bool Tile(Rect r,string value,string caption,Color accent,bool active)
+        {
+            var inner=NexoHud.Plate(r,true,active?NexoHud.Orange:new Color(.75f,.4f,.08f));
+            NexoHud.Shadowed(new Rect(inner.x,inner.y+4,inner.width,34),value,24,accent,TextAnchor.MiddleCenter);
+            NexoHud.Fill(new Rect(inner.x+8,inner.y+44,inner.width-16,1),accent*new Color(1,1,1,.5f));
+            NexoHud.Label(new Rect(inner.x,inner.y+48,inner.width,26),caption,10,NexoUi.Text,TextAnchor.MiddleCenter);
+            return GUI.Button(r,GUIContent.none,GUIStyle.none)&&Cursor.lockState!=CursorLockMode.Locked;
         }
         void DrawBackpack()
         {

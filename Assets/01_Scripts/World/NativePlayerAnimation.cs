@@ -53,7 +53,7 @@ namespace Nexoterra.World
    // Jump clips play on a legs-only layer, so arms keep holding the pistol.
    int jumpLayer=current.GetLayerIndex("JumpLower");
    if(jumpLayer>=0){
-    string jump=dead||roll||knockdown!=null?null:airborne?"JumpStart":landRemaining>0?"JumpLand":null;
+    string jump=dead||roll||knockdown!=null?null:airborne?(motor.velocity.y>.5f?"JumpStart":"JumpFall"):landRemaining>0?"JumpLand":null;
     if(jump!=null&&jump!=jumpState)current.CrossFadeInFixedTime(jump,jump=="JumpLand"?.05f:.12f,jumpLayer);
     jumpState=jump;
     jumpWeight=Mathf.MoveTowards(jumpWeight,jump!=null?1:0,Time.deltaTime/(jump!=null?.08f:.12f));
@@ -73,7 +73,25 @@ namespace Nexoterra.World
    if(next!=state){current.CrossFadeInFixedTime(next,next.StartsWith("Roll")?.05f:.18f,0);state=next;}
    current.speed=GameSession.Blocked?0:IsReloading?1:next=="Run"?Mathf.Clamp(speed/Mathf.Max(.1f,runReferenceSpeed),.35f,1.6f):next=="Walk"?Mathf.Clamp(speed/Mathf.Max(.1f,walkReferenceSpeed),.35f,1.6f):next.StartsWith("Roll")?rollClipDuration/Mathf.Max(.1f,abilities.dodgeDuration):1;
   }
-  void LateUpdate(){PositionWeapon();}
+  void LateUpdate(){PositionWeapon();GroundModel();}
+  // The CharacterController hovers by its skin width and the imported models carry a lift,
+  // so the soles floated ~20 cm. Measure each model once while standing idle and drop it onto the floor.
+  readonly System.Collections.Generic.HashSet<Animator> grounded=new System.Collections.Generic.HashSet<Animator>();
+  float idleSince;
+  void GroundModel(){
+   if(!current||!motor||grounded.Contains(current))return;
+   if(state!="Idle"||!motor.isGrounded||jumpWeight>0){idleSince=Time.time;return;}
+   if(Time.time-idleSince<.4f)return;
+   float floor=transform.position.y+motor.center.y-motor.height*.5f-motor.skinWidth;
+   float sole=float.MaxValue;var mesh=new Mesh();
+   foreach(var skin in current.GetComponentsInChildren<SkinnedMeshRenderer>()){
+    if(!skin.enabled)continue;skin.BakeMesh(mesh,false);var vertices=mesh.vertices;var m=skin.transform.localToWorldMatrix;
+    for(int i=0;i<vertices.Length;i++){float y=m.MultiplyPoint3x4(vertices[i]).y;if(y<sole)sole=y;}
+   }
+   Destroy(mesh);grounded.Add(current);
+   float lift=sole-floor;
+   if(sole<float.MaxValue&&Mathf.Abs(lift)>.01f&&Mathf.Abs(lift)<.5f)current.transform.position-=Vector3.up*(lift-.01f);
+  }
   void PositionWeapon(){
    if((maleMuzzle && femaleMuzzle)||!weapon||!current||!player||!player.visuals)return;
    var hand=current.GetBoneTransform(HumanBodyBones.RightHand);if(!hand)return;

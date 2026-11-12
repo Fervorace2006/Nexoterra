@@ -66,11 +66,13 @@ namespace Nexoterra.World
   public bool IsReward(WildSlug slug)=>slug&&slug==reward;
   void OnGUI(){
    if(!player||GameSession.Blocked||(inventory&&inventory.IsOpen))return;var before=GUI.matrix;NexoHud.Scale();
-   NexoHud.Panel(new Rect(24,20,610,Time.unscaledTime<introUntil?154:75));
-   NexoHud.Label(new Rect(40,30,580,27),Titles[index]+" · "+Remaining+" enemigos restantes",18,Color.white);
+   bool intro=Time.unscaledTime<introUntil;
+   var inner=NexoHud.Plate(new Rect(446,14,388,intro?172:78));
+   NexoHud.Label(new Rect(inner.x+10,inner.y+2,inner.width-20,24),Titles[index].ToUpperInvariant(),16,Color.white,TextAnchor.MiddleCenter);
+   NexoHud.Label(new Rect(inner.x+10,inner.y+24,inner.width-20,16),Remaining>0?Remaining+" ENEMIGOS RESTANTES":"ZONA DESPEJADA",11,NexoHud.Orange,TextAnchor.MiddleCenter);
    string objective=Cleared?(index==Scenes.Length-1?"Victoria. Regresa por el túnel.":"Túnel abierto · sigue la flecha amarilla"):Remaining>0?(index==4&&ambushBoss&&ambushBoss.gameObject.activeSelf?"¡Trampa! Sir Black tiene la elemental de fuego.":index==5?"Derrota a Enemy2, al secuaz y a Sir Black 2.":"Derrota a la patrulla y al secuaz."):index==0?"Alimenta a Energía con F para obtenerla.":"Cura la elemental con Doc/Energía y aliméntala con F.";
-   NexoHud.Label(new Rect(40,61,580,28),objective,15,NexoHud.Cyan);
-   if(Time.unscaledTime<introUntil)NexoHud.Label(new Rect(40,96,575,70),introduction,15,Color.white);GUI.matrix=before;
+   NexoHud.Label(new Rect(inner.x+10,inner.y+40,inner.width-20,24),objective,13,new Color(.55f,1,.95f),TextAnchor.MiddleCenter);
+   if(intro)NexoHud.Label(new Rect(inner.x+12,inner.y+68,inner.width-24,92),introduction,13,Color.white,TextAnchor.UpperCenter);GUI.matrix=before;
   }
   public void DrawMap(GUIStyle label,GUIStyle title){
    float x=Screen.width*.5f-240,y=Screen.height*.5f-240;GUI.Box(new Rect(x-16,y-45,512,545),GUIContent.none);

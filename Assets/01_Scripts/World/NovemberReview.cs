@@ -41,6 +41,7 @@ public sealed class NovemberReview : MonoBehaviour
   yield return new WaitForSeconds(1);
   var player=GameSession.Current.GetComponent<NexoterraThirdPerson>();var health=player.GetComponent<PlayerHealth>();var ability=player.GetComponent<PlayerAbilities>();var inventory=player.GetComponent<SlugInventory>();
   foreach(var ai in FindObjectsByType<EnemyShooter>(FindObjectsSortMode.None))ai.enabled=false;
+
   health.Restore(100);health.CorruptionCost();Check(Mathf.Approximately(health.Health,95),"Disparo malvado cuesta exactamente 5 PV");
   foreach(string id in new[]{"Tornado","Malvada_Tornado","Elemental_Aire","Malvada_Elemental_Aire"}){ability.OnSlugLaunched(id);Check(ability.MovementMultiplier>1,"Impulso de viento "+id);}
   Check(!ability.TryDodge(1,Vector3.forward,true)&&!ability.TryDodge(-1,Vector3.forward,true),"Sin volteretas adelante ni atrás");
@@ -58,6 +59,10 @@ public sealed class NovemberReview : MonoBehaviour
   player.enabled=false;var view=player.view.transform;view.position=player.transform.position+player.transform.forward*3.2f+Vector3.up*1.4f;view.LookAt(player.transform.position+Vector3.up*1f);
   animation.enabled=false;animation.male.SetLayerWeight(jumpLayer,1);animation.male.Play("JumpStart",jumpLayer,.45f);animation.male.Update(0);
   yield return new WaitForEndOfFrame();ScreenCapture.CaptureScreenshot(Folder+"Jump.png");yield return new WaitForSeconds(.3f);
+  view.position=player.transform.position+player.visuals.right*3.4f+Vector3.up*1.1f;view.LookAt(player.transform.position+Vector3.up*.9f);
+  foreach(var shot in new[]{("Idle",0,0f),("JumpStart",1,.95f),("JumpFall",1,.0f),("JumpFall",1,.95f),("JumpLand",1,.3f)}){
+   animation.male.SetLayerWeight(jumpLayer,shot.Item2);animation.male.Play(shot.Item1=="Idle"?"Empty":shot.Item1,jumpLayer,shot.Item3);animation.male.Update(0);
+   yield return new WaitForEndOfFrame();ScreenCapture.CaptureScreenshot(Folder+"J_"+shot.Item1+"_"+shot.Item3.ToString("0.00")+".png");yield return null;yield return null;}
   animation.male.SetLayerWeight(jumpLayer,0);animation.enabled=true;player.enabled=true;
   Check(animation.male.avatar.isValid&&animation.male.avatar.isHuman,"Avatar válido tras salto");
   var fixture=Instantiate(AssetDatabase.LoadAssetAtPath<GameObject>("Assets/02_Prefabs/Gameplay/Enemies/Enemy1.prefab")); // plain runtime copy, like the game spawns it

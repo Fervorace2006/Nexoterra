@@ -15,6 +15,7 @@ namespace Nexoterra.World
   public float MovementMultiplier=>Time.time<boostUntil?windMultiplier:1;
   public bool Evading=>IsDodging&&dodgeRemaining<dodgeDuration-.08f&&dodgeRemaining>.1f;
   public float BoostRemaining=>Mathf.Max(0,boostUntil-Time.time);
+  public float DodgeCooldown=>Mathf.Max(0,readyAt-Time.time);
   float dodgeRemaining,readyAt,boostUntil;PlayerHealth health;
   void Awake(){health=GetComponent<PlayerHealth>();}
   void Update(){if(GameSession.Blocked)return;if(!health.CanMove)dodgeRemaining=0;else dodgeRemaining=Mathf.Max(0,dodgeRemaining-Time.deltaTime);}

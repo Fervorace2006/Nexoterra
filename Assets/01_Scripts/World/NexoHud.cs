@@ -18,6 +18,50 @@ namespace Nexoterra.World
    Fill(new Rect(r.x+14,r.y+12,r.width-28,2),Cyan*.6f);
    foreach(float x in new[]{r.x,r.xMax-13})foreach(float y in new[]{r.y,r.yMax-13})Fill(new Rect(x,y,13,13),Gold);
   }
+  // ---- Lanzador HUD kit: gunmetal plates, teal glass insets and orange corner brackets ----
+  public static readonly Color Metal=new Color(.16f,.2f,.23f),MetalDark=new Color(.06f,.08f,.1f),Glass=new Color(.03f,.22f,.27f),Orange=new Color(1f,.55f,.08f);
+  // Vertical gradient (top→bottom) drawn as stacked bands; cheap and pipeline-independent.
+  public static void Gradient(Rect r,Color top,Color bottom)
+  {
+   int bands=Mathf.Clamp(Mathf.RoundToInt(r.height/4),3,24);float h=r.height/bands;
+   for(int i=0;i<bands;i++)Fill(new Rect(r.x,r.y+i*h,r.width,h+1),Color.Lerp(top,bottom,i/(bands-1f)));
+  }
+  public static void Brackets(Rect r,Color c,float len=14,float t=3)
+  {
+   Fill(new Rect(r.x,r.y,len,t),c);Fill(new Rect(r.x,r.y,t,len),c);
+   Fill(new Rect(r.xMax-len,r.y,len,t),c);Fill(new Rect(r.xMax-t,r.y,t,len),c);
+   Fill(new Rect(r.x,r.yMax-t,len,t),c);Fill(new Rect(r.x,r.yMax-len,t,len),c);
+   Fill(new Rect(r.xMax-len,r.yMax-t,len,t),c);Fill(new Rect(r.xMax-t,r.yMax-len,t,len),c);
+  }
+  // Raised metal plate with bevel, optional glass inset and orange brackets.
+  public static Rect Plate(Rect r,bool glass=true,Color? bracket=null)
+  {
+   Fill(new Rect(r.x+2,r.y+3,r.width,r.height),new Color(0,0,0,.45f));
+   Fill(r,new Color(.02f,.03f,.04f));
+   Gradient(new Rect(r.x+1,r.y+1,r.width-2,r.height-2),new Color(.32f,.38f,.42f),MetalDark);
+   Fill(new Rect(r.x+2,r.y+2,r.width-4,1),new Color(.6f,.68f,.72f,.55f));
+   var inner=new Rect(r.x+5,r.y+5,r.width-10,r.height-10);
+   if(glass){Fill(inner,new Color(.01f,.03f,.04f));Gradient(new Rect(inner.x+1,inner.y+1,inner.width-2,inner.height-2),new Color(.06f,.36f,.42f),new Color(.01f,.09f,.12f));Fill(new Rect(inner.x+1,inner.y+1,inner.width-2,1),new Color(.4f,.95f,1f,.35f));}
+   Brackets(r,bracket??Orange,Mathf.Min(16,r.height*.4f),3);
+   return inner;
+  }
+  // Thin vertical ticks, like a charge gauge.
+  public static void Ticks(Rect r,float fraction,float trail,Color on,Color lost)
+  {
+   Fill(r,new Color(.01f,.02f,.025f));
+   int count=Mathf.Max(4,Mathf.FloorToInt((r.width-2)/5f));float w=(r.width-2)/count;
+   for(int i=0;i<count;i++){float p=(i+.5f)/count;var cell=new Rect(r.x+1+i*w+1,r.y+2,w-2,r.height-4);
+    Color c=p<=fraction?on:p<=trail?lost:new Color(.08f,.12f,.13f);Fill(cell,c);if(p<=fraction)Fill(new Rect(cell.x,cell.y,cell.width,2),Color.Lerp(on,Color.white,.55f));}
+  }
+  public static void PortraitFrame(Rect r,Texture2D portrait,Color accent)
+  {
+   var inner=Plate(r,true,Orange);NexoUi.Portrait(inner,portrait,accent);
+   Fill(new Rect(inner.x,inner.yMax-3,inner.width,3),accent*new Color(1,1,1,.8f));
+  }
+  public static void Shadowed(Rect r,string text,int size,Color color,TextAnchor anchor=TextAnchor.MiddleLeft)
+  {
+   Label(new Rect(r.x+1,r.y+1,r.width,r.height),text,size,new Color(0,0,0,.8f),anchor);Label(r,text,size,color,anchor);
+  }
   static Texture2D vignette;static GUIStyle field;
   // Full-screen menu backdrop: key art cropped to fill, deep-water tint, vignette and slow caustic bands.
   public static void Backdrop(Texture2D art)
@@ -72,31 +116,35 @@ namespace Nexoterra.World
     }
     foreach(var enemy in combatants.Keys.ToArray())if(!enemy||enemy.IsDead||Time.time-combatants[enemy]>8)combatants.Remove(enemy);
    }
-   var targets=combatants.Keys.Where(e=>e&&!e.IsDead).OrderBy(e=>(e.transform.position-player.transform.position).sqrMagnitude).ToArray();
-   float rowHeight=Mathf.Min(100,500f/Mathf.Max(1,targets.Length));
+   var targets=combatants.Keys.Where(e=>e&&!e.IsDead).OrderBy(e=>(e.transform.position-player.transform.position).sqrMagnitude).Take(4).ToArray();
+   var red=new Color(.92f,.12f,.12f);
    for(int i=0;i<targets.Length;i++){
-    var e=targets[i];float y=20+i*rowHeight;float h=Mathf.Min(90,rowHeight-4);float face=h-10;
-    var accent=new Color(.95f,.18f,.2f);NexoUi.Card(new Rect(906,y,354,h),accent);
-    NexoUi.Card(new Rect(1254-face,y+5,face,face),Cyan);
-    if(e.portrait)NexoUi.Portrait(new Rect(1256-face,y+7,face-4,face-4),e.portrait,Cyan);
-    Label(new Rect(918,y+6,325-face,22),e.displayName,14,NexoUi.Text);
-    var bar=new Rect(918,y+h*.4f,325-face,Mathf.Max(7,h*.22f));
-    Fill(bar,new Color(.12f,.025f,.035f));float fraction=e.Health/Mathf.Max(1,e.maxHealth);
-    for(int n=0;n<24;n++){float width=bar.width/24;var segment=new Rect(bar.x+n*width,bar.y,width-2,bar.height);float fill=Mathf.Clamp01(fraction*24-n);if(fill>0){segment.width*=fill;Fill(segment,accent);Fill(new Rect(segment.x,segment.y,segment.width,2),new Color(1,.6f,.5f));}}
-    Label(new Rect(918,y+h-23,325-face,19),Mathf.CeilToInt(e.Health)+" / "+e.maxHealth+" PV",12,NexoUi.Text,TextAnchor.MiddleRight);
+    var e=targets[i];float fraction=e.Health/Mathf.Max(1,e.maxHealth);
+    if(i==0){
+     // Main target mirrors the player block: bar on the left, portrait on the right.
+     PortraitFrame(new Rect(1166,14,98,98),e.portrait,red);
+     var plate=Plate(new Rect(846,24,316,44),false);Ticks(new Rect(plate.x+4,plate.y+4,plate.width-8,plate.height-8),fraction,fraction,red,new Color(1,.6f,.3f));
+     Shadowed(new Rect(846,72,316,20),e.displayName.ToUpperInvariant(),15,Color.white,TextAnchor.MiddleRight);
+     Shadowed(new Rect(846,92,316,16),Mathf.CeilToInt(e.Health)+" / "+e.maxHealth+" PV",11,new Color(1,.75f,.7f),TextAnchor.MiddleRight);
+    }else{
+     float y=124+(i-1)*42;var plate=Plate(new Rect(1030,y,234,36),false,new Color(.7f,.35f,.1f));
+     Label(new Rect(plate.x+4,plate.y,140,plate.height),e.displayName,11,NexoUi.Text,TextAnchor.MiddleLeft);
+     Ticks(new Rect(plate.x+140,plate.y+7,plate.width-146,plate.height-14),fraction,fraction,red,red);
+    }
    }
   }
   void OnGUI()
   {
    if(GameSession.Blocked||!health||!player||GetComponent<SlugInventory>().IsOpen)return;var old=GUI.matrix;Scale();
-   var box=new Rect(20,596,336,108);Panel(box);NexoUi.Card(new Rect(28,604,86,92),Cyan);
-   NexoUi.Portrait(new Rect(30,606,82,88),player.female.activeSelf?femalePortrait:malePortrait,Cyan);
-   Label(new Rect(126,607,210,22),player.female.activeSelf?"COMANDO":"JUGADOR",17,NexoUi.Text);
-   Label(new Rect(126,633,190,18),health.IsDead?"DERROTADO":shown<.25f?"VIDA CRÍTICA":"VITALIDAD",11,shown<.25f?new Color(1,.4f,.35f):NexoUi.Muted);
-   var bar=new Rect(126,657,212,17);Fill(bar,new Color(.07f,.13f,.17f));Fill(new Rect(bar.x,bar.y,bar.width*trail,bar.height),new Color(.8f,.4f,.18f));
-   Color color=shown<.25f?new Color(1,.27f,.22f):new Color(.25f,.88f,.55f);Fill(new Rect(bar.x,bar.y,bar.width*shown,bar.height),color);Fill(new Rect(bar.x,bar.y,bar.width*shown,3),Color.Lerp(color,Color.white,.5f));
-   for(int i=1;i<10;i++)Fill(new Rect(bar.x+i*bar.width/10,bar.y,1,bar.height),new Color(.02f,.08f,.09f,.65f));
-   Label(new Rect(126,679,210,17),Mathf.CeilToInt(health.Health)+" / "+health.maxHealth+" PV",12,NexoUi.Text,TextAnchor.MiddleRight);
+   // Player block (top-left): framed portrait + segmented life gauge.
+   bool critical=shown<.25f;
+   PortraitFrame(new Rect(16,14,98,98),player.female.activeSelf?femalePortrait:malePortrait,Cyan);
+   var plate=Plate(new Rect(118,24,316,44),false);
+   Color life=critical?new Color(1,.25f,.2f):new Color(.3f,.95f,.35f);
+   if(critical&&Mathf.Repeat(Time.unscaledTime,.8f)<.4f)life=Color.Lerp(life,Color.white,.35f);
+   Ticks(new Rect(plate.x+4,plate.y+4,plate.width-8,plate.height-8),shown,trail,life,new Color(1,.55f,.15f));
+   Shadowed(new Rect(122,72,200,20),player.female.activeSelf?"COMANDO":"LANZADOR",15,Color.white);
+   Shadowed(new Rect(122,92,312,16),health.IsDead?"DERROTADO":Mathf.CeilToInt(health.Health)+" / "+health.maxHealth+" PV"+(critical?"  ·  VIDA CRÍTICA":""),11,critical?new Color(1,.5f,.45f):new Color(.7f,.95f,.9f));
    DrawOpponents();
    if(boss&&boss.CampaignComplete){NexoUi.Card(new Rect(350,115,580,85),Gold);Label(new Rect(365,130,550,60),"HISTORIA COMPLETADA\nEsc · guardar partida",22,Cyan,TextAnchor.MiddleCenter);}
    GUI.matrix=old;

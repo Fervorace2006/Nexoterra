@@ -17,13 +17,13 @@ public static class NovemberUpgrade
  static void Poll(){
   if(EditorApplication.isCompiling||EditorApplication.isUpdating||EditorApplication.isPlayingOrWillChangePlaymode||!File.Exists("Library/NovemberUpgrade.request"))return;
   string mode=File.ReadAllText("Library/NovemberUpgrade.request").Trim();File.Delete("Library/NovemberUpgrade.request");
-  try{if(mode=="install")Install();else if(mode=="audit")Audit();else if(mode=="scenes")SceneWeapons();else if(mode=="water")WaterProbe();else if(mode=="jumplayer")JumpLayer();else if(mode=="gunshot")GunShot();else if(mode=="trimjump")TrimJump();else AssetDatabase.Refresh();File.WriteAllText("Library/NovemberUpgrade.result","PASS "+mode);}
+  try{if(mode=="install")Install();else if(mode=="audit")Audit();else if(mode=="scenes")SceneWeapons();else if(mode=="water")WaterProbe();else if(mode=="jumplayer")JumpLayer();else if(mode=="gunshot")GunShot();else if(mode=="trimjump")TrimJump();else if(mode=="customjump")CustomJump();else AssetDatabase.Refresh();File.WriteAllText("Library/NovemberUpgrade.result","PASS "+mode);}
   catch(Exception e){File.WriteAllText("Library/NovemberUpgrade.result",e.ToString());Debug.LogException(e);}
  }
  const string Gameplay="Assets/02_Prefabs/Gameplay";
  static void Install(){
   AssetDatabase.Refresh();
-  InstallJumps();InstallTornado();
+  InstallTornado(); // jumps are now hand-made clips (customjump)
   foreach(string role in new[]{"Enemy1","Enemy2","SirBlack","Sir_Black_2"}){
    string path=Gameplay+"/Enemies/"+role+".prefab";
    var root=PrefabUtility.LoadPrefabContents(path);
@@ -266,6 +266,64 @@ public static class NovemberUpgrade
   EditorUtility.SetDirty(controller);AssetDatabase.SaveAssets();
   File.WriteAllText("Library/NovemberTrim.txt",report.ToString());
  }
+ // Hand-made jump: humanoid leg-muscle clips built from the Idle pose (no imported mocap).
+ const string JumpFolder="Assets/Characters/Animations/Jump";
+ static readonly string[] LegMuscles={"Upper Leg Front-Back","Upper Leg In-Out","Upper Leg Twist In-Out","Lower Leg Stretch","Lower Leg Twist In-Out","Foot Up-Down","Foot Twist In-Out","Toes Up-Down"};
+ static AnimationClip IdleClip(AnimatorController c){
+  foreach(var child in c.layers[0].stateMachine.states)if(child.state.name=="Idle"&&child.state.motion is AnimationClip clip)return clip;
+  throw new Exception("Idle no encontrado");
+ }
+ static float Muscle(AnimationClip idle,string name){
+  var binding=EditorCurveBinding.FloatCurve("",typeof(Animator),name);var curve=AnimationUtility.GetEditorCurve(idle,binding);
+  return curve!=null&&curve.length>0?curve.Evaluate(0):0;
+ }
+ // keys: time -> per side (front-back, stretch, foot) deltas from idle
+ static AnimationClip BuildJumpClip(string name,AnimationClip idle,bool loop,params (float t,float lf,float ls,float lfoot,float rf,float rs,float rfoot)[] keys){
+  string path=JumpFolder+"/"+name+".anim";var clip=AssetDatabase.LoadAssetAtPath<AnimationClip>(path);
+  if(!clip){clip=new AnimationClip();AssetDatabase.CreateAsset(clip,path);}
+  clip.ClearCurves();
+  // Carry the idle pose for every other channel (root, spine, arms) so the clip is a full, valid pose;
+  // the legs-only layer mask ignores those channels in game.
+  float end=keys[keys.Length-1].t;
+  foreach(var binding in AnimationUtility.GetCurveBindings(idle)){
+   if(LegMuscles.Any(m=>binding.propertyName=="Left "+m||binding.propertyName=="Right "+m))continue;
+   var src=AnimationUtility.GetEditorCurve(idle,binding);if(src==null)continue;float v=src.Evaluate(0);
+   AnimationUtility.SetEditorCurve(clip,binding,new AnimationCurve(new Keyframe(0,v),new Keyframe(Mathf.Max(end,.01f),v)));
+  }
+  foreach(string side in new[]{"Left","Right"})foreach(string m in LegMuscles){
+   string muscle=side+" "+m;float baseValue=Muscle(idle,muscle);var curve=new AnimationCurve();
+   foreach(var k in keys){
+    float d=0;bool left=side=="Left";
+    if(m=="Upper Leg Front-Back")d=left?k.lf:k.rf;else if(m=="Lower Leg Stretch")d=left?k.ls:k.rs;else if(m=="Foot Up-Down")d=left?k.lfoot:k.rfoot;
+    curve.AddKey(new Keyframe(k.t,Mathf.Clamp(baseValue+d,-1,1)));
+   }
+   for(int i=0;i<curve.length;i++)AnimationUtility.SetKeyLeftTangentMode(curve,i,AnimationUtility.TangentMode.ClampedAuto);
+   for(int i=0;i<curve.length;i++)AnimationUtility.SetKeyRightTangentMode(curve,i,AnimationUtility.TangentMode.ClampedAuto);
+   AnimationUtility.SetEditorCurve(clip,EditorCurveBinding.FloatCurve("",typeof(Animator),muscle),curve);
+  }
+  var settings=AnimationUtility.GetAnimationClipSettings(clip);settings.loopTime=loop;AnimationUtility.SetAnimationClipSettings(clip,settings);
+  EditorUtility.SetDirty(clip);return clip;
+ }
+ static void CustomJump(){
+  var controller=AssetDatabase.LoadAssetAtPath<AnimatorController>("Assets/NexoterraWorld/Locomotion/Imported/Player_Animations.controller");
+  var idle=IdleClip(controller);
+  float F=JumpSign;
+  // Rising: knees tuck up quickly, one leg a bit higher.
+  var rise=BuildJumpClip("Nexo_JumpRise",idle,false,(0,0,0,0,0,0,0),(.12f,.55f*F,-.75f,.25f,.35f*F,-.55f,.2f),(.35f,.65f*F,-.95f,.3f,.42f*F,-.7f,.25f));
+  // Falling: legs open up and reach for the floor.
+  var fall=BuildJumpClip("Nexo_JumpFall",idle,false,(0,.6f*F,-.9f,.3f,.4f*F,-.65f,.25f),(.25f,.22f*F,-.28f,.12f,.12f*F,-.2f,.1f));
+  // Landing: quick knee absorb, then back to idle (layer fades out).
+  var land=BuildJumpClip("Nexo_JumpLand",idle,false,(0,.1f*F,-.14f,.05f,.08f*F,-.12f,.05f),(.06f,.16f*F,-.24f,.1f,.15f*F,-.23f,.1f),(.2f,0,0,0,0,0,0));
+  var mask=AssetDatabase.LoadAssetAtPath<AvatarMask>(JumpFolder+"/JumpLowerBody.mask");
+  mask.SetHumanoidBodyPartActive(AvatarMaskBodyPart.Root,false);EditorUtility.SetDirty(mask);
+  var machine=controller.layers.First(l=>l.name=="JumpLower").stateMachine;
+  foreach(var child in machine.states.ToArray())if(child.state.name!="Empty")machine.RemoveState(child.state);
+  machine.AddState("JumpStart").motion=rise;machine.AddState("JumpFall").motion=fall;machine.AddState("JumpLand").motion=land;
+  EditorUtility.SetDirty(controller);AssetDatabase.SaveAssets();
+  foreach(var fbx in Directory.GetFiles(JumpFolder,"*.fbx"))AssetDatabase.DeleteAsset(fbx.Replace((char)92,'/'));
+  AssetDatabase.SaveAssets();
+ }
+ const float JumpSign=1;
  public static void Audit(){
   var report=new StringBuilder();
   foreach(var file in Directory.GetFiles("Assets/Characters/Animations/Jump","*.fbx")){
