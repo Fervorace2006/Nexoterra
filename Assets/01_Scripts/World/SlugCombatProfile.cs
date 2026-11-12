@@ -9,10 +9,14 @@ namespace Nexoterra.World
   [Min(0)] public float burnDamagePerSecond,burnDuration;
   [Range(.05f,1)] public float slowMultiplier=1;
   [Min(0)] public float slowDuration,knockdownDuration,knockbackSpeed,stunDuration;
+  public SlugCombatProfile WithDamageMultiplier(float multiplier)
+  {
+   var copy=(SlugCombatProfile)MemberwiseClone();copy.impactDamage*=multiplier;copy.burnDamagePerSecond*=multiplier;return copy;
+  }
   public static SlugCombatProfile Default(string id)
   {
    var p=new SlugCombatProfile();
-   switch(SlugCatalog.Canonical(id))
+   switch(SlugCatalog.BaseSpecies(id))
    {
     case "Infierno":p.impactDamage=22;p.burnDamagePerSecond=5;p.burnDuration=4;break;
     case "Elemental_Fuego":p.impactDamage=32;p.burnDamagePerSecond=7;p.burnDuration=5;break;

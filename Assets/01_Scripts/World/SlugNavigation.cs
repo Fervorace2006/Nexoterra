@@ -18,14 +18,14 @@ namespace Nexoterra.World
   {
    if(Time.time>=refresh||Vector3.Distance(goal,destination)>2)
    {
-    refresh=Time.time+.85f;destination=goal;
+    refresh=Time.time+(Vector3.Distance(position,goal)<12?.12f:.4f);destination=goal;
     if(NavMesh.SamplePosition(position-Vector3.up*.22f,out var from,1.5f,NavMesh.AllAreas)&&NavMesh.SamplePosition(goal-Vector3.up*.22f,out var to,1.5f,NavMesh.AllAreas)&&NavMesh.CalculatePath(from.position,to.position,NavMesh.AllAreas,path)&&path.status==NavMeshPathStatus.PathComplete)
     {corners=path.corners;index=1;HasRoute=corners.Length>1;}
     else {HasRoute=false;corners=null;}
    }
    if(!HasRoute)return goal;
    while(index<corners.Length-1&&Vector3.Distance(position,corners[index]+Vector3.up*.22f)<.65f)index++;
-   return corners[Mathf.Min(index,corners.Length-1)]+Vector3.up*.22f;
+   return index>=corners.Length-1?goal:corners[index]+Vector3.up*.22f;
   }
  }
 }

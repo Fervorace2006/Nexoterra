@@ -1,0 +1,127 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &7644210128729336985
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2953587854348568818}
+  - component: {fileID: 8073845640957397865}
+  m_Layer: 0
+  m_Name: Wild_Tornado
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2953587854348568818
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7644210128729336985}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 219359883358202351}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &8073845640957397865
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7644210128729336985}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 93cf37cc7c6f4884c8846363d2b5d3f6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Nexoterra.World.WildSlug
+  species: Tornado
+  roamRadius: 4
+  hopHeight: 0.32
+  hopDuration: 0.55
+  hopDistance: 0.85
+  adopted: 0
+--- !u!1001 &1433400008535506540
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 2953587854348568818}
+    m_Modifications:
+    - target: {fileID: 1220236974993282947, guid: 2551a3b67a062834ea67dc130dbcce61, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 0.65
+      objectReference: {fileID: 0}
+    - target: {fileID: 1220236974993282947, guid: 2551a3b67a062834ea67dc130dbcce61, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 0.65
+      objectReference: {fileID: 0}
+    - target: {fileID: 1220236974993282947, guid: 2551a3b67a062834ea67dc130dbcce61, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 0.65
+      objectReference: {fileID: 0}
+    - target: {fileID: 1220236974993282947, guid: 2551a3b67a062834ea67dc130dbcce61, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1220236974993282947, guid: 2551a3b67a062834ea67dc130dbcce61, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0.325
+      objectReference: {fileID: 0}
+    - target: {fileID: 1220236974993282947, guid: 2551a3b67a062834ea67dc130dbcce61, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1220236974993282947, guid: 2551a3b67a062834ea67dc130dbcce61, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1220236974993282947, guid: 2551a3b67a062834ea67dc130dbcce61, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1220236974993282947, guid: 2551a3b67a062834ea67dc130dbcce61, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1220236974993282947, guid: 2551a3b67a062834ea67dc130dbcce61, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1220236974993282947, guid: 2551a3b67a062834ea67dc130dbcce61, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1220236974993282947, guid: 2551a3b67a062834ea67dc130dbcce61, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1220236974993282947, guid: 2551a3b67a062834ea67dc130dbcce61, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2561432588572171116, guid: 2551a3b67a062834ea67dc130dbcce61, type: 3}
+      propertyPath: m_Name
+      value: Tornado(Clone)
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 2551a3b67a062834ea67dc130dbcce61, type: 3}
+--- !u!4 &219359883358202351 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 1220236974993282947, guid: 2551a3b67a062834ea67dc130dbcce61, type: 3}
+  m_PrefabInstance: {fileID: 1433400008535506540}
+  m_PrefabAsset: {fileID: 0}

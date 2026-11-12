@@ -20,12 +20,12 @@ namespace Nexoterra.World
    if(GameSession.Blocked||!player||player.IsDead||!bossPrefab||Completed>=encounterPoints.Length)return;
    if(active)
    {
-    if(active.IsDead&&Completed==encounterPoints.Length-1&&!finalPhase&&finalBossPrefab){var point=active.transform.position;Destroy(active.gameObject);active=Instantiate(finalBossPrefab,point,Quaternion.identity).GetComponent<EnemyCombatant>();active.maxHealth=600;active.Revive();finalPhase=true;player.GetComponent<NexoterraThirdPerson>().Notify("Sir Black · fase final");return;}
+    if(active.IsDead&&Completed==encounterPoints.Length-1&&!finalPhase&&finalBossPrefab){var point=active.transform.position;Destroy(active.gameObject);active=Instantiate(finalBossPrefab,point,Quaternion.identity).GetComponent<EnemyCombatant>();active.Revive();finalPhase=true;player.GetComponent<NexoterraThirdPerson>().Notify("Sir Black · fase final");return;}
     bool retreat=Completed<encounterPoints.Length-1&&active.Health<=active.maxHealth*.4f;
     if(active.IsDead||retreat){Destroy(active.gameObject);Completed++;if(!GameSession.Current){PlayerPrefs.SetInt(progressKey,Completed);PlayerPrefs.Save();}var p=player.GetComponent<NexoterraThirdPerson>();if(p)p.Notify(retreat?"Sir Black se retira. Volveras a encontrarlo.":"HISTORIA COMPLETADA · Sir Black derrotado. Guarda tu partida.");}return;
    }
    if(Vector3.Distance(player.transform.position,encounterPoints[Completed].position)>triggerDistance)return;
-   var go=Instantiate(bossPrefab,encounterPoints[Completed].position,encounterPoints[Completed].rotation);active=go.GetComponent<EnemyCombatant>();active.maxHealth=Completed==encounterPoints.Length-1?420:240;active.Revive();
+   var go=Instantiate(bossPrefab,encounterPoints[Completed].position,encounterPoints[Completed].rotation);active=go.GetComponent<EnemyCombatant>();active.Revive();
   }
  }
 }

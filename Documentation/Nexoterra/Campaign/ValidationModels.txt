@@ -1,0 +1,4 @@
+PASS arma sujeta a mano derecha Enemy2
+PASS arma sujeta a mano derecha SirBlack2
+PASS arma sujeta a mano derecha Secuaz
+COMPLETE model snapshots

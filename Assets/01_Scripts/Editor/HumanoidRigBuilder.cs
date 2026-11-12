@@ -7,7 +7,7 @@ namespace Nexoterra.Editor
 {
  public static class HumanoidRigBuilder
  {
-  const string Folder="Assets/NexoterraWorld/Combat/Rigs";
+  const string Folder="Assets/02_Prefabs/Gameplay/Enemies/Rigs";
   public static HumanoidPose Build(GameObject model,string key)
   {
    if(model.GetComponentInChildren<RiggedCharacterModel>(true))return null;

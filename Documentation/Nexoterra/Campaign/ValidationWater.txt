@@ -1,0 +1,34 @@
+PASS tres zonas de agua
+PASS cantidad nivel 2
+PASS un solo secuaz 2
+PASS jefes por nivel 2
+PASS tres slots del bioma: Enemy1 · 1
+PASS avatar Enemy1 · 1
+PASS tres slots del bioma: Enemy1 · 2
+PASS avatar Enemy1 · 2
+PASS tres slots del bioma: Enemy1 · 3
+PASS avatar Enemy1 · 3
+PASS tres slots del bioma: Enemy1 · 4
+PASS avatar Enemy1 · 4
+PASS tres slots del bioma: Enemy1 · 5
+PASS avatar Enemy1 · 5
+PASS tres slots del bioma: Enemy1 · 6
+PASS avatar Enemy1 · 6
+PASS tres slots del bioma: Enemy1 · 7
+PASS avatar Enemy1 · 7
+PASS tres slots del bioma: Secuaz de Sir Black
+PASS avatar Secuaz de Sir Black
+PASS lanzamiento slot 0 nivel 2
+PASS lanzamiento slot 1 nivel 2
+PASS lanzamiento slot 2 nivel 2
+PASS bloquea cuarto disparo 2
+PASS enemigo no paga vida 2
+PASS regreso real de las tres babosas 2
+PASS suelta tres babosas 2
+PASS recogida persistente 2
+PASS todos derrotados 2
+PASS recompensa correcta 2
+PASS curación requerida 2
+PASS purificación 2
+PASS progresión 2
+COMPLETE

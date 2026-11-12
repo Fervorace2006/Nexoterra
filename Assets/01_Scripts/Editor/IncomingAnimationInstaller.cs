@@ -77,7 +77,8 @@ namespace Nexoterra.Editor
    string path=Output+"/"+role+"_Animations.controller";if(AssetDatabase.LoadAssetAtPath<AnimatorController>(path))AssetDatabase.DeleteAsset(path);
    var controller=AnimatorController.CreateAnimatorControllerAtPath(path);controller.name=role+"_Animations";var main=controller.layers[0].stateMachine;
    foreach(var state in main.states)main.RemoveState(state.state);
-   Set(main,"Idle",clips[0]);Set(main,"Walk",clips[1]);Set(main,"Run",clips[1]);
+   Set(main,"Idle",clips[0]);Set(main,"Walk",clips[1]);Set(main,"WalkBack",clips[1]);main.states.First(s=>s.state.name=="WalkBack").state.speed=-1;Set(main,"Run",AssetDatabase.LoadAssetAtPath<AnimationClip>("Assets/Characters/Animations/Carrera.fbx"));
+   foreach(string reaction in new[]{"CaidaAtras","levantarsedecaida"})Set(main,reaction,AssetDatabase.LoadAssetAtPath<AnimationClip>("Assets/NexoterraWorld/Locomotion/"+reaction+".anim"));
    foreach(string n in new[]{"RollLeft","RollRight","Death"})if(rolls.TryGetValue(n,out var motion))Set(main,n,motion);
    controller.AddLayer("AimUpperBody");var upper=Array.FindIndex(controller.layers,l=>l.name=="AimUpperBody");var layers=controller.layers;layers[upper].avatarMask=AssetDatabase.LoadAssetAtPath<AvatarMask>("Assets/NexoterraWorld/Locomotion/AimUpperBody.mask");layers[upper].defaultWeight=0;layers[upper].iKPass=true;controller.layers=layers;
    var upperMachine=controller.layers[upper].stateMachine;foreach(var state in upperMachine.states)upperMachine.RemoveState(state.state);
@@ -97,8 +98,8 @@ namespace Nexoterra.Editor
   }
   static void Configure(Animator animator,RuntimeAnimatorController controller,StringBuilder report){if(!animator||!animator.avatar||!animator.avatar.isHuman||!animator.avatar.isValid)throw new Exception("Avatar no válido en "+(animator?animator.name:"Animator nulo"));animator.runtimeAnimatorController=controller;animator.applyRootMotion=false;animator.cullingMode=AnimatorCullingMode.AlwaysAnimate;EditorUtility.SetDirty(animator);report.AppendLine("Controlador asignado: "+animator.name+" → "+controller.name);}
   static void AssignCharacterPrefab(string role,AnimatorController controller,StringBuilder report)
-  {string path="Assets/NexoterraWorld/Characters/"+role+".prefab";if(!File.Exists(path))return;var root=PrefabUtility.LoadPrefabContents(path);try{var animator=root.GetComponentInChildren<Animator>(true);if(animator)Configure(animator,controller,report);PrefabUtility.SaveAsPrefabAsset(root,path);}finally{PrefabUtility.UnloadPrefabContents(root);}}
+  {string path="Assets/02_Prefabs/Gameplay/Models/"+role+".prefab";if(!File.Exists(path))return;var root=PrefabUtility.LoadPrefabContents(path);try{var animator=root.GetComponentInChildren<Animator>(true);if(animator)Configure(animator,controller,report);PrefabUtility.SaveAsPrefabAsset(root,path);}finally{PrefabUtility.UnloadPrefabContents(root);}}
   static void AssignCombatPrefab(string role,AnimatorController controller,StringBuilder report)
-  {string path="Assets/NexoterraWorld/Combat/"+role+".prefab";if(!File.Exists(path))return;var root=PrefabUtility.LoadPrefabContents(path);try{var enemy=root.GetComponent<NativeEnemyAnimation>();if(enemy&&enemy.animator){Configure(enemy.animator,controller,report);CalibrateGrip(enemy.animator,out enemy.grip,out enemy.gripRotation);}PrefabUtility.SaveAsPrefabAsset(root,path);}finally{PrefabUtility.UnloadPrefabContents(root);}}
+  {string path="Assets/02_Prefabs/Gameplay/Enemies/"+role+".prefab";if(!File.Exists(path))return;var root=PrefabUtility.LoadPrefabContents(path);try{var enemy=root.GetComponent<NativeEnemyAnimation>();if(enemy&&enemy.animator){Configure(enemy.animator,controller,report);CalibrateGrip(enemy.animator,out enemy.grip,out enemy.gripRotation);}PrefabUtility.SaveAsPrefabAsset(root,path);}finally{PrefabUtility.UnloadPrefabContents(root);}}
  }
 }

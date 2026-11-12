@@ -1,0 +1,1 @@
+Forward roll humanoid valid; duration 1.466667 seconds. Backward plays the same somersault in reverse.

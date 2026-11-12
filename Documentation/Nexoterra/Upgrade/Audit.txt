@@ -1,0 +1,107 @@
+SCENE Nexoterra_Jardines
+Jugador hp=100 prefab=Assets/02_Prefabs/Gameplay/Player.prefab
+Enemy1 · 1 hp=100 prefab=Assets/02_Prefabs/Gameplay/Enemies/Enemy1.prefab
+Enemy1 · 2 hp=100 prefab=Assets/02_Prefabs/Gameplay/Enemies/Enemy1.prefab
+Enemy1 · 3 hp=100 prefab=Assets/02_Prefabs/Gameplay/Enemies/Enemy1.prefab
+Enemy1 · 4 hp=100 prefab=Assets/02_Prefabs/Gameplay/Enemies/Enemy1.prefab
+Enemy1 · 5 hp=100 prefab=Assets/02_Prefabs/Gameplay/Enemies/Enemy1.prefab
+Enemy1 · 6 hp=100 prefab=Assets/02_Prefabs/Gameplay/Enemies/Enemy1.prefab
+Enemy1 · 7 hp=100 prefab=Assets/02_Prefabs/Gameplay/Enemies/Enemy1.prefab
+Secuaz de Sir Black hp=200 prefab=Assets/02_Prefabs/Gameplay/Enemies/Secuaz_Sir_Black.prefab
+SCENE Nexoterra_Hielo
+Jugador hp=100 prefab=Assets/02_Prefabs/Gameplay/Player.prefab
+Enemy1 · 1 hp=100 prefab=Assets/02_Prefabs/Gameplay/Enemies/Enemy1.prefab
+Enemy1 · 2 hp=100 prefab=Assets/02_Prefabs/Gameplay/Enemies/Enemy1.prefab
+Enemy1 · 3 hp=100 prefab=Assets/02_Prefabs/Gameplay/Enemies/Enemy1.prefab
+Enemy1 · 4 hp=100 prefab=Assets/02_Prefabs/Gameplay/Enemies/Enemy1.prefab
+Enemy1 · 5 hp=100 prefab=Assets/02_Prefabs/Gameplay/Enemies/Enemy1.prefab
+Enemy1 · 6 hp=100 prefab=Assets/02_Prefabs/Gameplay/Enemies/Enemy1.prefab
+Enemy1 · 7 hp=100 prefab=Assets/02_Prefabs/Gameplay/Enemies/Enemy1.prefab
+Secuaz de Sir Black hp=200 prefab=Assets/02_Prefabs/Gameplay/Enemies/Secuaz_Sir_Black.prefab
+SCENE Nexoterra_Agua
+Jugador hp=100 prefab=Assets/02_Prefabs/Gameplay/Player.prefab
+Enemy1 · 1 hp=100 prefab=Assets/02_Prefabs/Gameplay/Enemies/Enemy1.prefab
+Enemy1 · 2 hp=100 prefab=Assets/02_Prefabs/Gameplay/Enemies/Enemy1.prefab
+Enemy1 · 3 hp=100 prefab=Assets/02_Prefabs/Gameplay/Enemies/Enemy1.prefab
+Enemy1 · 4 hp=100 prefab=Assets/02_Prefabs/Gameplay/Enemies/Enemy1.prefab
+Enemy1 · 5 hp=100 prefab=Assets/02_Prefabs/Gameplay/Enemies/Enemy1.prefab
+Enemy1 · 6 hp=100 prefab=Assets/02_Prefabs/Gameplay/Enemies/Enemy1.prefab
+Enemy1 · 7 hp=100 prefab=Assets/02_Prefabs/Gameplay/Enemies/Enemy1.prefab
+Secuaz de Sir Black hp=200 prefab=Assets/02_Prefabs/Gameplay/Enemies/Secuaz_Sir_Black.prefab
+SCENE Nexoterra_Tierra
+Jugador hp=100 prefab=Assets/02_Prefabs/Gameplay/Player.prefab
+Enemy1 · 1 hp=100 prefab=Assets/02_Prefabs/Gameplay/Enemies/Enemy1.prefab
+Enemy1 · 2 hp=100 prefab=Assets/02_Prefabs/Gameplay/Enemies/Enemy1.prefab
+Enemy1 · 3 hp=100 prefab=Assets/02_Prefabs/Gameplay/Enemies/Enemy1.prefab
+Enemy1 · 4 hp=100 prefab=Assets/02_Prefabs/Gameplay/Enemies/Enemy1.prefab
+Enemy1 · 5 hp=100 prefab=Assets/02_Prefabs/Gameplay/Enemies/Enemy1.prefab
+Enemy1 · 6 hp=100 prefab=Assets/02_Prefabs/Gameplay/Enemies/Enemy1.prefab
+Enemy1 · 7 hp=100 prefab=Assets/02_Prefabs/Gameplay/Enemies/Enemy1.prefab
+Secuaz de Sir Black hp=200 prefab=Assets/02_Prefabs/Gameplay/Enemies/Secuaz_Sir_Black.prefab
+SCENE Nexoterra_Volcan
+Jugador hp=100 prefab=Assets/02_Prefabs/Gameplay/Player.prefab
+Enemy1 · 1 hp=100 prefab=Assets/02_Prefabs/Gameplay/Enemies/Enemy1.prefab
+Enemy1 · 2 hp=100 prefab=Assets/02_Prefabs/Gameplay/Enemies/Enemy1.prefab
+Enemy1 · 3 hp=100 prefab=Assets/02_Prefabs/Gameplay/Enemies/Enemy1.prefab
+Enemy1 · 4 hp=100 prefab=Assets/02_Prefabs/Gameplay/Enemies/Enemy1.prefab
+Enemy1 · 5 hp=100 prefab=Assets/02_Prefabs/Gameplay/Enemies/Enemy1.prefab
+Enemy1 · 6 hp=100 prefab=Assets/02_Prefabs/Gameplay/Enemies/Enemy1.prefab
+Enemy1 · 7 hp=100 prefab=Assets/02_Prefabs/Gameplay/Enemies/Enemy1.prefab
+Secuaz de Sir Black hp=200 prefab=Assets/02_Prefabs/Gameplay/Enemies/Secuaz_Sir_Black.prefab
+Sir Black 1 hp=250 prefab=Assets/02_Prefabs/Gameplay/Enemies/SirBlack.prefab
+SCENE Nexoterra_Carmesi
+Jugador hp=100 prefab=Assets/02_Prefabs/Gameplay/Player.prefab
+Enemy2 · 1 hp=150 prefab=Assets/02_Prefabs/Gameplay/Enemies/Enemy2.prefab
+Enemy2 · 2 hp=150 prefab=Assets/02_Prefabs/Gameplay/Enemies/Enemy2.prefab
+Enemy2 · 3 hp=150 prefab=Assets/02_Prefabs/Gameplay/Enemies/Enemy2.prefab
+Enemy2 · 4 hp=150 prefab=Assets/02_Prefabs/Gameplay/Enemies/Enemy2.prefab
+Enemy2 · 5 hp=150 prefab=Assets/02_Prefabs/Gameplay/Enemies/Enemy2.prefab
+Enemy2 · 6 hp=150 prefab=Assets/02_Prefabs/Gameplay/Enemies/Enemy2.prefab
+Enemy2 · 7 hp=150 prefab=Assets/02_Prefabs/Gameplay/Enemies/Enemy2.prefab
+Secuaz de Sir Black hp=200 prefab=Assets/02_Prefabs/Gameplay/Enemies/Secuaz_Sir_Black.prefab
+Sir Black 2 hp=500 prefab=Assets/02_Prefabs/Gameplay/Enemies/Sir_Black_2.prefab
+SCENE Nexoterra_CuatroNodos
+Jugador · Militar y Comando hp=100 prefab=Assets/02_Prefabs/Gameplay/Player.prefab
+Objetivo de practica 1 hp=160 prefab=
+Objetivo de practica 2 hp=160 prefab=
+Objetivo de practica 3 hp=160 prefab=
+Enemy1 hp=100 prefab=Assets/02_Prefabs/Gameplay/Enemies/Enemy1.prefab
+Enemy1 hp=100 prefab=Assets/02_Prefabs/Gameplay/Enemies/Enemy1.prefab
+Enemy1 hp=100 prefab=Assets/02_Prefabs/Gameplay/Enemies/Enemy1.prefab
+Enemy1 hp=100 prefab=Assets/02_Prefabs/Gameplay/Enemies/Enemy1.prefab
+Enemy1 hp=100 prefab=Assets/02_Prefabs/Gameplay/Enemies/Enemy1.prefab
+Enemy1 hp=100 prefab=Assets/02_Prefabs/Gameplay/Enemies/Enemy1.prefab
+Enemy1 hp=100 prefab=Assets/02_Prefabs/Gameplay/Enemies/Enemy1.prefab
+Enemy1 hp=100 prefab=Assets/02_Prefabs/Gameplay/Enemies/Enemy1.prefab
+Enemy1 hp=100 prefab=Assets/02_Prefabs/Gameplay/Enemies/Enemy1.prefab
+Enemy1 hp=100 prefab=Assets/02_Prefabs/Gameplay/Enemies/Enemy1.prefab
+Enemy1 hp=100 prefab=Assets/02_Prefabs/Gameplay/Enemies/Enemy1.prefab
+Enemy1 hp=100 prefab=Assets/02_Prefabs/Gameplay/Enemies/Enemy1.prefab
+Enemy1 hp=100 prefab=Assets/02_Prefabs/Gameplay/Enemies/Enemy1.prefab
+Enemy1 hp=100 prefab=Assets/02_Prefabs/Gameplay/Enemies/Enemy1.prefab
+Enemy1 hp=100 prefab=Assets/02_Prefabs/Gameplay/Enemies/Enemy1.prefab
+Enemy1 hp=100 prefab=Assets/02_Prefabs/Gameplay/Enemies/Enemy1.prefab
+Enemy1 hp=100 prefab=Assets/02_Prefabs/Gameplay/Enemies/Enemy1.prefab
+Enemy1 hp=100 prefab=Assets/02_Prefabs/Gameplay/Enemies/Enemy1.prefab
+Enemy1 hp=100 prefab=Assets/02_Prefabs/Gameplay/Enemies/Enemy1.prefab
+Enemy1 hp=100 prefab=Assets/02_Prefabs/Gameplay/Enemies/Enemy1.prefab
+Enemy1 hp=100 prefab=Assets/02_Prefabs/Gameplay/Enemies/Enemy1.prefab
+Enemy1 hp=100 prefab=Assets/02_Prefabs/Gameplay/Enemies/Enemy1.prefab
+Enemy1 hp=100 prefab=Assets/02_Prefabs/Gameplay/Enemies/Enemy1.prefab
+LANDMARK Volcan_caldera bounds=Center: (190.00, 7.35, 230.00), Extents: (48.00, 7.35, 48.00)
+LANDMARK Lava_en_crater bounds=Center: (190.00, 11.80, 230.00), Extents: (4.00, 0.00, 4.00)
+LANDMARK Colada_de_lava bounds=Center: (190.00, 7.58, 203.00), Extents: (2.30, 7.02, 17.00)
+LANDMARK Islote_elemental_agua_acantilado bounds=Center: (133.00, -10.60, -17.74), Extents: (5.89, 13.70, 5.78)
+LANDMARK Islote_elemental_agua_cima bounds=Center: (133.00, 3.10, -17.76), Extents: (5.61, 0.00, 5.50)
+LANDMARK Orillas_laguna_santuario bounds=Center: (133.00, 0.27, -18.00), Extents: (22.00, 0.23, 18.00)
+LANDMARK Laguna_del_santuario bounds=Center: (133.00, 0.22, -18.00), Extents: (19.00, 0.00, 15.00)
+LANDMARK Acceso_al_islote bounds=Center: (121.83, 1.77, -30.24), Extents: (10.93, 1.41, 11.77)
+LANDMARK Acceso_al_islote_barandas bounds=Center: (120.31, 2.29, -31.90), Extents: (9.57, 1.93, 10.26)
+LANDMARK Acceso_al_islote_base bounds=Center: (121.83, 1.61, -30.24), Extents: (10.93, 1.57, 11.77)
+LANDMARK Sendero_al_crater bounds=Center: (205.57, 7.35, 212.82), Extents: (16.66, 7.00, 32.16)
+LANDMARK Sendero_al_crater_barandas bounds=Center: (205.93, 7.88, 212.82), Extents: (16.48, 7.52, 32.34)
+LANDMARK Sendero_al_crater_base bounds=Center: (205.57, 7.28, 212.82), Extents: (16.66, 7.22, 32.16)
+LANDMARK Santuario_1 bounds=Center: (-260.01, 6.90, 55.00), Extents: (2.64, 0.65, 2.33)
+LANDMARK Santuario_2 bounds=Center: (-245.00, 6.47, 245.01), Extents: (2.63, 0.65, 2.32)
+LANDMARK Santuario_4 bounds=Center: (133.00, 3.75, -18.01), Extents: (2.64, 0.65, 2.32)
+LANDMARK Santuario_3 bounds=Center: (190.01, 14.43, 239.00), Extents: (2.63, 0.35, 2.32)

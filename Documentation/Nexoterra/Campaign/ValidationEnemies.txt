@@ -1,0 +1,198 @@
+PASS cantidad nivel 0
+PASS un solo secuaz 0
+PASS jefes por nivel 0
+PASS tres slots del bioma: Enemy1 · 1
+PASS avatar Enemy1 · 1
+PASS tres slots del bioma: Enemy1 · 2
+PASS avatar Enemy1 · 2
+PASS tres slots del bioma: Enemy1 · 3
+PASS avatar Enemy1 · 3
+PASS tres slots del bioma: Enemy1 · 4
+PASS avatar Enemy1 · 4
+PASS tres slots del bioma: Enemy1 · 5
+PASS avatar Enemy1 · 5
+PASS tres slots del bioma: Enemy1 · 6
+PASS avatar Enemy1 · 6
+PASS tres slots del bioma: Enemy1 · 7
+PASS avatar Enemy1 · 7
+PASS tres slots del bioma: Secuaz de Sir Black
+PASS avatar Secuaz de Sir Black
+PASS lanzamiento slot 0 nivel 0
+PASS lanzamiento slot 1 nivel 0
+PASS lanzamiento slot 2 nivel 0
+PASS bloquea cuarto disparo 0
+PASS enemigo no paga vida 0
+PASS regreso real de las tres babosas 0
+PASS suelta tres babosas 0
+PASS recogida persistente 0
+PASS todos derrotados 0
+PASS recompensa correcta 0
+PASS curación requerida 0
+PASS purificación 0
+PASS progresión 0
+PASS cantidad nivel 1
+PASS un solo secuaz 1
+PASS jefes por nivel 1
+PASS tres slots del bioma: Enemy1 · 1
+PASS avatar Enemy1 · 1
+PASS tres slots del bioma: Enemy1 · 2
+PASS avatar Enemy1 · 2
+PASS tres slots del bioma: Enemy1 · 3
+PASS avatar Enemy1 · 3
+PASS tres slots del bioma: Enemy1 · 4
+PASS avatar Enemy1 · 4
+PASS tres slots del bioma: Enemy1 · 5
+PASS avatar Enemy1 · 5
+PASS tres slots del bioma: Enemy1 · 6
+PASS avatar Enemy1 · 6
+PASS tres slots del bioma: Enemy1 · 7
+PASS avatar Enemy1 · 7
+PASS tres slots del bioma: Secuaz de Sir Black
+PASS avatar Secuaz de Sir Black
+PASS lanzamiento slot 0 nivel 1
+PASS lanzamiento slot 1 nivel 1
+PASS lanzamiento slot 2 nivel 1
+PASS bloquea cuarto disparo 1
+PASS enemigo no paga vida 1
+PASS regreso real de las tres babosas 1
+PASS suelta tres babosas 1
+PASS recogida persistente 1
+PASS todos derrotados 1
+PASS recompensa correcta 1
+PASS curación requerida 1
+PASS purificación 1
+PASS progresión 1
+PASS cantidad nivel 2
+PASS un solo secuaz 2
+PASS jefes por nivel 2
+PASS tres slots del bioma: Enemy1 · 1
+PASS avatar Enemy1 · 1
+PASS tres slots del bioma: Enemy1 · 2
+PASS avatar Enemy1 · 2
+PASS tres slots del bioma: Enemy1 · 3
+PASS avatar Enemy1 · 3
+PASS tres slots del bioma: Enemy1 · 4
+PASS avatar Enemy1 · 4
+PASS tres slots del bioma: Enemy1 · 5
+PASS avatar Enemy1 · 5
+PASS tres slots del bioma: Enemy1 · 6
+PASS avatar Enemy1 · 6
+PASS tres slots del bioma: Enemy1 · 7
+PASS avatar Enemy1 · 7
+PASS tres slots del bioma: Secuaz de Sir Black
+PASS avatar Secuaz de Sir Black
+PASS lanzamiento slot 0 nivel 2
+PASS lanzamiento slot 1 nivel 2
+PASS lanzamiento slot 2 nivel 2
+PASS bloquea cuarto disparo 2
+PASS enemigo no paga vida 2
+PASS regreso real de las tres babosas 2
+PASS suelta tres babosas 2
+PASS recogida persistente 2
+PASS todos derrotados 2
+PASS recompensa correcta 2
+PASS curación requerida 2
+PASS purificación 2
+PASS progresión 2
+PASS cantidad nivel 3
+PASS un solo secuaz 3
+PASS jefes por nivel 3
+PASS tres slots del bioma: Enemy1 · 1
+PASS avatar Enemy1 · 1
+PASS tres slots del bioma: Enemy1 · 2
+PASS avatar Enemy1 · 2
+PASS tres slots del bioma: Enemy1 · 3
+PASS avatar Enemy1 · 3
+PASS tres slots del bioma: Enemy1 · 4
+PASS avatar Enemy1 · 4
+PASS tres slots del bioma: Enemy1 · 5
+PASS avatar Enemy1 · 5
+PASS tres slots del bioma: Enemy1 · 6
+PASS avatar Enemy1 · 6
+PASS tres slots del bioma: Enemy1 · 7
+PASS avatar Enemy1 · 7
+PASS tres slots del bioma: Secuaz de Sir Black
+PASS avatar Secuaz de Sir Black
+PASS lanzamiento slot 0 nivel 3
+PASS lanzamiento slot 1 nivel 3
+PASS lanzamiento slot 2 nivel 3
+PASS bloquea cuarto disparo 3
+PASS enemigo no paga vida 3
+PASS regreso real de las tres babosas 3
+PASS suelta tres babosas 3
+PASS recogida persistente 3
+PASS todos derrotados 3
+PASS recompensa correcta 3
+PASS curación requerida 3
+PASS purificación 3
+PASS progresión 3
+PASS cantidad nivel 4
+PASS un solo secuaz 4
+PASS jefes por nivel 4
+PASS tres slots del bioma: Enemy1 · 1
+PASS avatar Enemy1 · 1
+PASS tres slots del bioma: Enemy1 · 2
+PASS avatar Enemy1 · 2
+PASS tres slots del bioma: Enemy1 · 3
+PASS avatar Enemy1 · 3
+PASS tres slots del bioma: Enemy1 · 4
+PASS avatar Enemy1 · 4
+PASS tres slots del bioma: Enemy1 · 5
+PASS avatar Enemy1 · 5
+PASS tres slots del bioma: Enemy1 · 6
+PASS avatar Enemy1 · 6
+PASS tres slots del bioma: Enemy1 · 7
+PASS avatar Enemy1 · 7
+PASS tres slots del bioma: Secuaz de Sir Black
+PASS avatar Secuaz de Sir Black
+PASS tres slots del bioma: Sir Black 1
+PASS avatar Sir Black 1
+PASS lanzamiento slot 0 nivel 4
+PASS lanzamiento slot 1 nivel 4
+PASS lanzamiento slot 2 nivel 4
+PASS bloquea cuarto disparo 4
+PASS enemigo no paga vida 4
+PASS regreso real de las tres babosas 4
+PASS suelta tres babosas 4
+PASS recogida persistente 4
+PASS jefe oculto antes de trampa
+PASS doble batalla activada
+PASS secuaz trampa no suelta elemental
+PASS todos derrotados 4
+PASS recompensa correcta 4
+PASS curación requerida 4
+PASS purificación 4
+PASS progresión 4
+PASS cantidad nivel 5
+PASS un solo secuaz 5
+PASS jefes por nivel 5
+PASS tres slots del bioma: Enemy2 · 1
+PASS avatar Enemy2 · 1
+PASS tres slots del bioma: Enemy2 · 2
+PASS avatar Enemy2 · 2
+PASS tres slots del bioma: Enemy2 · 3
+PASS avatar Enemy2 · 3
+PASS tres slots del bioma: Enemy2 · 4
+PASS avatar Enemy2 · 4
+PASS tres slots del bioma: Enemy2 · 5
+PASS avatar Enemy2 · 5
+PASS tres slots del bioma: Enemy2 · 6
+PASS avatar Enemy2 · 6
+PASS tres slots del bioma: Enemy2 · 7
+PASS avatar Enemy2 · 7
+PASS tres slots del bioma: Secuaz de Sir Black
+PASS avatar Secuaz de Sir Black
+PASS tres slots del bioma: Sir Black 2
+PASS avatar Sir Black 2
+PASS lanzamiento slot 0 nivel 5
+PASS lanzamiento slot 1 nivel 5
+PASS lanzamiento slot 2 nivel 5
+PASS bloquea cuarto disparo 5
+PASS enemigo no paga vida 5
+PASS regreso real de las tres babosas 5
+PASS suelta tres babosas 5
+PASS recogida persistente 5
+PASS todos derrotados 5
+PASS progresión 5
+PASS agua oscura es el final
+COMPLETE

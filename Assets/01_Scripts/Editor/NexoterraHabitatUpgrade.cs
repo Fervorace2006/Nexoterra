@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Linq;
 using System.Collections.Generic;
@@ -133,22 +133,6 @@ namespace Nexoterra.Editor
         }
         static void Walkway(string name,Vector3[] points,float width,bool bridge,int zone)
         {
-            if(bridge)
-            {
-                var smooth=new List<Vector3>{points[0]};
-                for(int i=1;i<points.Length-1;i++)
-                {
-                    Vector3 before=points[i]-points[i-1],after=points[i+1]-points[i];
-                    float trim=Mathf.Min(10,Mathf.Min(before.magnitude,after.magnitude)*.45f);
-                    Vector3 a=points[i]-before.normalized*trim,b=points[i]+after.normalized*trim;
-                    for(int j=0;j<=8;j++){float t=j/8f;smooth.Add((1-t)*(1-t)*a+2*(1-t)*t*points[i]+t*t*b);}
-                }
-                smooth.Add(points[points.Length-1]);points=smooth.ToArray();
-                float length=0;var distances=new float[points.Length];
-                for(int i=1;i<points.Length;i++){length+=Vector2.Distance(new Vector2(points[i].x,points[i].z),new Vector2(points[i-1].x,points[i-1].z));distances[i]=length;}
-                float startHeight=points[0].y,endHeight=points[points.Length-1].y;
-                for(int i=0;i<points.Length;i++)points[i].y=Mathf.Lerp(startHeight,endHeight,Mathf.InverseLerp(6.5f,length-5.5f,distances[i]));
-            }
             for(int i=0;i<points.Length-1;i++)corridors.Add((points[i],points[i+1],width));
             var deck=new Geo();var rails=new Geo();var supports=new Geo();
             for(int n=0;n<points.Length-1;n++)
@@ -202,8 +186,7 @@ namespace Nexoterra.Editor
             Vector3 foot=OnGround(camp+new Vector3(7,0,6));Vector3 approach=foot-first[zone];approach.y=0;approach.Normalize();
             Walkway("Subida_"+zone,new[]{foot,first[zone]+approach*14.5f+Vector3.up*.08f,first[zone]+approach*5+Vector3.up*.08f},5,false,zone);
             Vector3 delta=second[zone]-first[zone];delta.y=0;delta.Normalize();
-            Vector3 middle=(first[zone]+second[zone])*.5f+Vector3.Cross(Vector3.up,delta)*17;
-            Walkway("Puente_"+zone,new[]{first[zone]+delta*8+Vector3.up*.09f,first[zone]+delta*14.5f+Vector3.up*.09f,middle+Vector3.up*.09f,second[zone]-delta*12.5f+Vector3.up*.09f,second[zone]-delta*7+Vector3.up*.09f},3.5f,true,zone);
+            Walkway("Puente_"+zone,new[]{first[zone]+delta*8.2f+Vector3.up*.09f,first[zone]+delta*9.6f+Vector3.up*.09f,second[zone]-delta*12.2f+Vector3.up*.09f,second[zone]-delta*9.7f+Vector3.up*.09f},3.5f,true,zone);
             Walkway("Sendero_entrada_"+zone,new[]{OnGround(camp),OnGround(camp+new Vector3(9,0,3)),OnGround(camp+new Vector3(7,0,6))},4,false,zone);
             for(int i=0;i<7;i++)
             {
@@ -308,7 +291,7 @@ namespace Nexoterra.Editor
         }
         static GameObject Creature(SlugDefinition definition)
         {
-            string folder="Assets/NexoterraWorld/Biomes/Creatures/";
+            string folder="Assets/02_Prefabs/Gameplay/WildSlugs/";
             if(definition.id=="Infierno"&&File.Exists(folder+"Burpy.prefab")&&!File.Exists(folder+"Infierno.prefab"))AssetDatabase.MoveAsset(folder+"Burpy.prefab",folder+"Infierno.prefab");
             var holder=new GameObject(definition.id);var model=UnityEngine.Object.Instantiate(definition.normal,holder.transform);model.transform.localPosition=Vector3.up*.325f;model.transform.localScale=Vector3.one*.65f;
             var slug=holder.AddComponent<WildSlug>();slug.species=definition.id;slug.roamRadius=definition.unique?.65f:2;

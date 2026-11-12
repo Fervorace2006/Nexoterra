@@ -8,8 +8,9 @@ namespace Nexoterra.World
  {
   public Animator male,female;
   public RuntimeAnimatorController playerController;
-  public float walkReferenceSpeed=2.8f,runReferenceSpeed=3.8f,rollClipDuration=2.1f;
+  public float walkReferenceSpeed=2.8f,runReferenceSpeed=3.8f,rollClipDuration=40f/30f;
   public Transform weapon;
+  public Transform maleMuzzle,femaleMuzzle;
   public Vector3 maleGrip,femaleGrip;
   public Quaternion maleGripRotation=Quaternion.identity,femaleGripRotation=Quaternion.identity;
   public float gripHeightCorrection=.09f;
@@ -18,13 +19,14 @@ namespace Nexoterra.World
   public Vector3 weaponSocketOffset=new Vector3(0,-.025f,.04f);
   public float AimWeight {get;private set;}
   public bool IsReloading=>reloadRemaining>0;
-  public bool IsLoaded {get;private set;}
+  bool loaded;string loadedSpecies;
+  public bool IsLoaded {get{var inventory=GetComponent<SlugInventory>();var selected=inventory?inventory.SelectedDefinition():null;return loaded&&selected!=null&&selected.id==loadedSpecies&&!inventory.IsBusy(selected.id);}}
   Vector3 weaponScale;Transform weaponSocket;
   NexoterraThirdPerson player;CharacterController motor;PlayerHealth health;PlayerAbilities abilities;
   string state,upperState;Animator current;float reloadRemaining,shootRemaining;
   void Awake(){player=GetComponent<NexoterraThirdPerson>();motor=GetComponent<CharacterController>();health=GetComponent<PlayerHealth>();abilities=GetComponent<PlayerAbilities>();if(!waterSensor)waterSensor=GetComponent<WaterAnimationSensor>();if(weapon)weaponScale=weapon.lossyScale;}
-  public void BeginReload(float duration){IsLoaded=false;reloadRemaining=Mathf.Max(.1f,duration);shootRemaining=0;}
-  public void PlayShot(){IsLoaded=false;shootRemaining=shootDuration;reloadRemaining=0;}
+  public void BeginReload(float duration){if(IsReloading||IsLoaded)return;var inventory=GetComponent<SlugInventory>();var selected=inventory?inventory.SelectedDefinition():null;if(selected==null||inventory.IsBusy(selected.id))return;loadedSpecies=selected.id;loaded=false;reloadRemaining=Mathf.Max(.1f,duration);shootRemaining=0;}
+  public void PlayShot(){loaded=false;shootRemaining=shootDuration;reloadRemaining=0;}
   void Update()
   {
    if(!player||!player.male||!player.female)return;
@@ -35,12 +37,14 @@ namespace Nexoterra.World
    float speed=new Vector2(motor.velocity.x,motor.velocity.z).magnitude;
    bool roll=abilities&&abilities.IsDodging;
    bool dead=health&&health.IsDead;
-   string next=dead?"Death":roll?(abilities.DodgeLeft?"RollLeft":"RollRight"):speed>.15f?(speed>3.4f?"Run":"Walk"):"Idle";
-   bool aim=!GameSession.Blocked&&!dead&&!roll&&Mouse.current!=null&&Mouse.current.rightButton.isPressed&&Cursor.lockState==CursorLockMode.Locked&&!(GetComponent<SlugInventory>()&&GetComponent<SlugInventory>().IsOpen);
-   if(reloadRemaining>0 && reloadRemaining<=Time.deltaTime)IsLoaded=true;
+   var effects=GetComponent<EnemyControlEffects>();
+   string knockdown=effects?effects.KnockdownPose:null;
+   string next=dead?"Death":knockdown!=null?knockdown:roll?(abilities.DodgeAxis>0?"RollForward":abilities.DodgeAxis<0?"RollBackward":abilities.DodgeLeft?"RollLeft":"RollRight"):speed>.15f?(speed>3.4f?"Run":"Walk"):"Idle";
+   bool aim=knockdown==null&&!GameSession.Blocked&&!dead&&!roll&&Mouse.current!=null&&Mouse.current.rightButton.isPressed&&Cursor.lockState==CursorLockMode.Locked&&!(GetComponent<SlugInventory>()&&GetComponent<SlugInventory>().IsOpen);
+   if(reloadRemaining>0 && reloadRemaining<=Time.deltaTime)loaded=true;
    reloadRemaining=Mathf.Max(0,reloadRemaining-Time.deltaTime);shootRemaining=Mathf.Max(0,shootRemaining-Time.deltaTime);
    AimWeight=Mathf.MoveTowards(AimWeight,aim?1:0,Time.deltaTime/.2f);
-   if(roll||dead){AimWeight=0;reloadRemaining=shootRemaining=0;}
+   if(roll||dead||knockdown!=null){AimWeight=0;reloadRemaining=shootRemaining=0;}
    int layer=current.GetLayerIndex("AimUpperBody");
    if(layer>=0){bool overridePose=reloadRemaining>0||shootRemaining>0;current.SetLayerWeight(layer,Mathf.Max(AimWeight,overridePose?1:0));
     string upper=reloadRemaining>0?"ReloadUpper":shootRemaining>0?"ShootUpper":aim?"AimPose":null;
@@ -52,24 +56,36 @@ namespace Nexoterra.World
   }
   void LateUpdate(){PositionWeapon();}
   void PositionWeapon(){
-   if(!weapon||!current||!player||!player.visuals)return;
+   if((maleMuzzle && femaleMuzzle)||!weapon||!current||!player||!player.visuals)return;
    var hand=current.GetBoneTransform(HumanBodyBones.RightHand);if(!hand)return;
-   Vector3 facing=player.visuals.forward;
-   Quaternion bodyRotation=Quaternion.LookRotation(facing,Vector3.up);
-   Quaternion restingRotation=bodyRotation*Quaternion.Euler(38,0,0);
-   Quaternion aimRotation=player.view?Quaternion.Slerp(restingRotation,player.view.transform.rotation,AimWeight):restingRotation;
    if(!weaponSocket||weaponSocket.parent!=hand)AttachWeapon();
-   if(weaponSocket){weaponSocket.localPosition=current==female?femaleGrip:maleGrip;weaponSocket.localRotation=current==female?femaleGripRotation:maleGripRotation;}
   }
+
+  // Center of the inclined black handle in the normalized 0.34 m blaster model.
+  static readonly Vector3 HandleCenter=new Vector3(0f,.13f,-.20f);
   void AttachWeapon(){
+   if(maleMuzzle && femaleMuzzle){
+    player.muzzle=current==female?femaleMuzzle:maleMuzzle;
+    weapon=player.muzzle.parent;
+    return;
+   }
    if(!weapon||!current)return;
    var hand=current.GetBoneTransform(HumanBodyBones.RightHand);if(!hand)return;
    weaponSocket=hand.Find("BlasterSocket");
    if(!weaponSocket){var socket=new GameObject("BlasterSocket");weaponSocket=socket.transform;weaponSocket.SetParent(hand,false);}
-   weaponSocket.localPosition=Vector3.zero;weaponSocket.localRotation=Quaternion.identity;weaponSocket.localScale=Vector3.one;
+   var knuckle=current.GetBoneTransform(HumanBodyBones.RightMiddleProximal);
+   var finger=current.GetBoneTransform(HumanBodyBones.RightMiddleIntermediate);
+   // A curled middle finger and its knuckle straddle the grip. Cache the
+   // contact in hand space so the weapon stays rigid through clip transitions.
+   Vector3 palm=knuckle?Vector3.Lerp(hand.position,knuckle.position,.85f):hand.position;
+   if(knuckle&&finger)palm=(palm+finger.position)*.5f;
+   weaponSocket.localPosition=hand.InverseTransformPoint(palm);
+   weaponSocket.localRotation=current==female?femaleGripRotation:maleGripRotation;
+   weaponSocket.localScale=Vector3.one;
    weapon.SetParent(weaponSocket,false);weapon.localPosition=Vector3.zero;weapon.localRotation=Quaternion.identity;
    Vector3 scale=weaponSocket.lossyScale;
    weapon.localScale=new Vector3(weaponScale.x/Mathf.Max(.001f,scale.x),weaponScale.y/Mathf.Max(.001f,scale.y),weaponScale.z/Mathf.Max(.001f,scale.z));
+   weapon.localPosition=-Vector3.Scale(HandleCenter,weapon.localScale);
   }
  }
 }

@@ -11,6 +11,27 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/00_Scenes/Nexoterra_CuatroNodos.unity
     guid: a885576179567ef4f8b59aec610cc738
+  - enabled: 1
+    path: Assets/00_Scenes/Campaign/Nexoterra_Jardines.unity
+    guid: fe3aa2d43de84c24db0d513368937e2f
+  - enabled: 1
+    path: Assets/00_Scenes/Campaign/Nexoterra_Hielo.unity
+    guid: b285a24325e407a42a759f7e1cd03a93
+  - enabled: 1
+    path: Assets/00_Scenes/Campaign/Nexoterra_Agua.unity
+    guid: 6045cdc49fe5dc54a9e58f6cb911d07e
+  - enabled: 1
+    path: Assets/00_Scenes/Campaign/Nexoterra_Tierra.unity
+    guid: ffe10acb3241155458ff44935771e387
+  - enabled: 1
+    path: Assets/00_Scenes/Campaign/Nexoterra_Volcan.unity
+    guid: ef3ef66699836844fae0761f8aedb78e
+  - enabled: 1
+    path: Assets/00_Scenes/Campaign/Nexoterra_Carmesi.unity
+    guid: 6432599e6b2d9f64ea1fea95c9e560f1
+  - enabled: 1
+    path: Assets/00_Scenes/Campaign/Nexoterra_Arena.unity
+    guid: c9d4877dfab4e1640908b116aea87bcf
   m_configObjects:
     com.unity.dt.app-ui: {fileID: 11400000, guid: 1b1c20d82303e4b5781c3ef50ac1449f, type: 2}
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}

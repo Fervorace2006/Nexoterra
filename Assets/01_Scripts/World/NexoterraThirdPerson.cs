@@ -27,7 +27,7 @@ namespace Nexoterra.World
         int travelIndex;
         GUIStyle label,title;
 
-        void Awake(){abilities=GetComponent<PlayerAbilities>();health=GetComponent<PlayerHealth>();animationDriver=GetComponent<PlayerAnimationDriver>();inventory=GetComponent<SlugInventory>();motor=GetComponent<CharacterController>();motor.minMoveDistance=0;spawn=transform.position;}
+        void Awake(){if(!view)view=Camera.main;abilities=GetComponent<PlayerAbilities>();health=GetComponent<PlayerHealth>();animationDriver=GetComponent<PlayerAnimationDriver>();inventory=GetComponent<SlugInventory>();motor=GetComponent<CharacterController>();motor.minMoveDistance=0;spawn=transform.position;}
         void Update()
         {
             if(GameSession.Blocked)return;
@@ -51,7 +51,7 @@ namespace Nexoterra.World
             if(inventoryOpen)map=false;
             if(k.vKey.wasPressedThisFrame){bool chooseFemale=!female.activeSelf;female.SetActive(chooseFemale);male.SetActive(!chooseFemale);Notify(chooseFemale?"Personaje: Comando":"Personaje: Jugador");}
             if(k.homeKey.wasPressedThisFrame||transform.position.y < -6)Teleport(spawn);
-            if(k.tKey.wasPressedThisFrame&&travelPoints.Length>0){travelIndex=(travelIndex+1)%travelPoints.Length;Teleport(travelPoints[travelIndex].position);Notify("Visita de prueba: "+travelPoints[travelIndex].name);}
+            if(!CampaignLevel.Current&&k.tKey.wasPressedThisFrame&&travelPoints.Length>0){travelIndex=(travelIndex+1)%travelPoints.Length;Teleport(travelPoints[travelIndex].position);Notify("Visita de prueba: "+travelPoints[travelIndex].name);}
             Vector2 input=Vector2.zero;
             if(Cursor.lockState==CursorLockMode.Locked&&!map&&!inventoryOpen)
             {
@@ -61,6 +61,8 @@ namespace Nexoterra.World
                     bool ctrl=k.leftCtrlKey.wasPressedThisFrame||k.rightCtrlKey.wasPressedThisFrame;
                     if(k.aKey.wasPressedThisFrame||(ctrl&&k.aKey.isPressed))abilities.TryDodge(-1,Quaternion.Euler(0,yaw,0)*Vector3.right);
                     else if(k.dKey.wasPressedThisFrame||(ctrl&&k.dKey.isPressed))abilities.TryDodge(1,Quaternion.Euler(0,yaw,0)*Vector3.right);
+                    else if(k.wKey.wasPressedThisFrame||(ctrl&&k.wKey.isPressed))abilities.TryDodge(1,Quaternion.Euler(0,yaw,0)*Vector3.forward,true);
+                    else if(k.sKey.wasPressedThisFrame||(ctrl&&k.sKey.isPressed))abilities.TryDodge(-1,Quaternion.Euler(0,yaw,0)*Vector3.forward,true);
                 }
                 if(k.eKey.wasPressedThisFrame)Collect();
                 if(k.fKey.wasPressedThisFrame)Feed();
@@ -99,6 +101,7 @@ namespace Nexoterra.World
         void Shoot()
         {
             if((abilities&&abilities.IsDodging)||!inventory||!muzzle||!view||(health&&health.IsDead)||(animationDriver&&animationDriver.IsReloading))return;
+            var controls=GetComponent<EnemyControlEffects>();if(controls&&!controls.CanShoot)return;
             var nativeAnimation=GetComponent<NativePlayerAnimation>();
             if(!nativeAnimation||!nativeAnimation.IsLoaded){Notify("Pulsa R para recargar antes de disparar");return;}
             // Keep the body upright while the projectile follows the crosshair in 3D.
@@ -125,9 +128,10 @@ namespace Nexoterra.World
             foreach(var slug in WildSlug.Active)
             {if(!slug||slug.adopted)continue;float d=Vector3.Distance(transform.position,slug.transform.position);if(d<best){best=d;closest=slug;}}
             if(!closest){Notify("Acércate a una babosa para alimentarla");return;}
+            if(CampaignLevel.Current&&CampaignLevel.Current.IsReward(closest)&&closest.species.StartsWith("Malvada_")){Notify("Primero cura la elemental con Doc o Energía.");return;}
             if(food==0){Notify("Necesitas un hongo · recógelo con E");return;}
             if(!inventory||!inventory.Add(closest.species)){Notify("No se pudo registrar esta especie.");return;}
-            food--;adopted=inventory.Count;closest.Adopt();Notify(inventory.Status);
+            food--;adopted=inventory.Count;var loot=closest.GetComponent<EnemySlugLoot>();if(loot&&CampaignLevel.Current)CampaignLevel.Current.CollectLoot(loot.key);closest.Adopt();if(CampaignLevel.Current)GameSession.RememberSpecies(closest.species);Notify(inventory.Status);
         }
         public void Notify(string text){notice=text;noticeUntil=Time.time+4;}
         void OnDisable(){Release();}
@@ -163,6 +167,9 @@ namespace Nexoterra.World
             float px=x+Mathf.InverseLerp(-320,320,transform.position.x)*480,py=y+(1-Mathf.InverseLerp(-320,320,transform.position.z))*480;
             GUI.color=Color.yellow;GUI.DrawTexture(new Rect(px-4,py-4,8,8),Texture2D.whiteTexture);GUI.color=Color.white;
         }
-        public static string BiomeAt(Vector3 p){if(p.x>=0)return p.z>80?"Caldera volcánica":p.z>-80?"Galería acuática":"Jardines del Nexo";return p.z>80?"Tierras antiguas":p.z>-80?"Cavernas de hielo":"Ciénaga carmesí";}
+        public static string BiomeAt(Vector3 p){if(CampaignLevel.Current)return CampaignLevel.Titles[CampaignLevel.Current.index];if(ArenaSession.Current)return "Arena multijugador";if(p.x>=0)return p.z>80?"Caldera volcánica":p.z>-80?"Galería acuática":"Jardines del Nexo";return p.z>80?"Tierras antiguas":p.z>-80?"Cavernas de hielo":"Ciénaga carmesí";}
     }
 }
+
+
+

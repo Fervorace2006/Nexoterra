@@ -1,0 +1,91 @@
+PASS dimensiones 250x250 0
+PASS enemigos nivel 0
+PASS guardián al otro extremo 0
+PASS salida bloqueada 0
+PASS coste malvada 1% 0
+PASS coste no letal 0
+PASS bono malvada 5% 0
+PASS enemigos derrotados 0
+PASS recompensa malvada 0
+PASS curación obligatoria 0
+PASS purificación 0
+PASS túnel desbloqueado 0
+PASS estado guardable 0
+PASS dimensiones 250x250 1
+PASS enemigos nivel 1
+PASS guardián al otro extremo 1
+PASS salida bloqueada 1
+PASS coste malvada 1% 1
+PASS coste no letal 1
+PASS bono malvada 5% 1
+PASS enemigos derrotados 1
+PASS recompensa malvada 1
+PASS curación obligatoria 1
+PASS purificación 1
+PASS túnel desbloqueado 1
+PASS estado guardable 1
+PASS dimensiones 250x250 2
+PASS enemigos nivel 2
+PASS guardián al otro extremo 2
+PASS salida bloqueada 2
+PASS coste malvada 1% 2
+PASS coste no letal 2
+PASS bono malvada 5% 2
+PASS enemigos derrotados 2
+PASS recompensa malvada 2
+PASS curación obligatoria 2
+PASS purificación 2
+PASS túnel desbloqueado 2
+PASS estado guardable 2
+PASS dimensiones 250x250 3
+PASS enemigos nivel 3
+PASS guardián al otro extremo 3
+PASS salida bloqueada 3
+PASS coste malvada 1% 3
+PASS coste no letal 3
+PASS bono malvada 5% 3
+PASS enemigos derrotados 3
+PASS recompensa malvada 3
+PASS curación obligatoria 3
+PASS purificación 3
+PASS túnel desbloqueado 3
+PASS estado guardable 3
+PASS dimensiones 250x250 4
+PASS enemigos nivel 4
+PASS guardián al otro extremo 4
+PASS salida bloqueada 4
+PASS coste malvada 1% 4
+PASS coste no letal 4
+PASS bono malvada 5% 4
+PASS enemigos derrotados 4
+PASS recompensa malvada 4
+PASS curación obligatoria 4
+PASS purificación 4
+PASS túnel desbloqueado 4
+PASS estado guardable 4
+PASS dimensiones 250x250 5
+PASS enemigos nivel 5
+PASS guardián al otro extremo 5
+PASS salida bloqueada 5
+PASS coste malvada 1% 5
+PASS coste no letal 5
+PASS bono malvada 5% 5
+PASS enemigos derrotados 5
+PASS túnel desbloqueado 5
+PASS estado guardable 5
+PASS dimensiones 250x250 6
+PASS enemigos nivel 6
+PASS guardián al otro extremo 6
+PASS salida bloqueada 6
+PASS coste malvada 1% 6
+PASS coste no letal 6
+PASS bono malvada 5% 6
+PASS enemigos derrotados 6
+PASS túnel desbloqueado 6
+PASS estado guardable 6
+PASS Relay: sala de Internet creada con código
+PASS segundo cliente unido mediante Relay
+PASS disparo del segundo cliente creado en anfitrión
+PASS proyectil impacta al anfitrión y al cliente
+PASS daño autorizado por anfitrión recibido por segundo cliente
+COMPLETE

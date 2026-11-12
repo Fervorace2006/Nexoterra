@@ -61,7 +61,7 @@ namespace Nexoterra.Editor
   static void SaveAlias(string role,string path){var go=UnityEngine.Object.Instantiate(AssetDatabase.LoadAssetAtPath<GameObject>(Folder+"/"+role+".prefab"));PrefabUtility.SaveAsPrefabAsset(go,path);UnityEngine.Object.DestroyImmediate(go);}
   static void ReplaceEnemy(string prefabName,string role)
   {
-   string path="Assets/NexoterraWorld/Combat/"+prefabName+".prefab";var root=PrefabUtility.LoadPrefabContents(path);
+   string path="Assets/02_Prefabs/Gameplay/Enemies/"+prefabName+".prefab";var root=PrefabUtility.LoadPrefabContents(path);
    try{var shooter=root.GetComponent<EnemyShooter>();var visual=root.GetComponent<EnemyCombatant>().visualRoot;foreach(Transform child in visual.Cast<Transform>().ToArray())if(child!=shooter.weapon)UnityEngine.Object.DestroyImmediate(child.gameObject);var model=Instance(role,visual);shooter.pose=null;shooter.model=model.transform;PrefabUtility.SaveAsPrefabAsset(root,path);}finally{PrefabUtility.UnloadPrefabContents(root);}
   }
   static void Capture()

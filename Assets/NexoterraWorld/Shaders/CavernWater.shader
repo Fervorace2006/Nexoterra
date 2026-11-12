@@ -9,16 +9,20 @@ Shader "Nexoterra/Cavern Water"
     }
     SubShader
     {
-        Tags { "RenderPipeline"="UniversalPipeline" "RenderType"="Opaque" "Queue"="Geometry+10" }
+        Tags { "RenderPipeline"="UniversalPipeline" "RenderType"="Transparent" "Queue"="Transparent" }
         Pass
         {
             Tags { "LightMode"="UniversalForward" }
             Cull Off
+            ZWrite Off
+            Blend SrcAlpha OneMinusSrcAlpha
             HLSLPROGRAM
             #pragma vertex Vert
             #pragma fragment Frag
             #pragma multi_compile_fog
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+ #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
+ #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DeclareDepthTexture.hlsl"
             CBUFFER_START(UnityPerMaterial)
                 float4 _ShallowColor, _DeepColor, _FoamColor;
                 float _FlowSpeed;
@@ -44,7 +48,26 @@ Shader "Nexoterra/Cavern Water"
                 half3 color=lerp(_DeepColor.rgb,_ShallowColor.rgb,.35+shore*.65);
                 color+=_FoamColor.rgb*(caustic+ripples);
                 color=lerp(color,_FoamColor.rgb,foam*.75);
-                return half4(MixFog(color,i.fog),1);
+                float3 n=normalize(float3(-.045*cos(i.world.x*.7+t),1,.04*sin(i.world.z*.6+t)));
+                float3 v=GetWorldSpaceNormalizeViewDir(i.world);
+                float fresnel=pow(1-abs(dot(n,v)),4);
+                Light sun=GetMainLight();
+                color+=sun.color*pow(saturate(dot(n,normalize(v+sun.direction))),80)*.3;
+                float2 screenUV=GetNormalizedScreenSpaceUV(i.p);
+                float floorDepth=LinearEyeDepth(SampleSceneDepth(screenUV),_ZBufferParams);
+                float surfaceDepth=-TransformWorldToView(i.world).z;
+                float thickness=max(0,floorDepth-surfaceDepth);
+                // Submerged rock softens into teal as the water column deepens.
+                float transmission=exp(-thickness*.36);
+                color=lerp(color*.65+_DeepColor.rgb*.35,color,transmission);
+                float contact=(1-smoothstep(.04,.55,thickness))*smoothstep(.0,.035,thickness);
+                float crest=.5+.5*sin(dot(i.world.xz,float2(2.4,1.8))+t+sin(i.world.z*1.3-t));
+                color=lerp(color,_FoamColor.rgb,contact*smoothstep(.30,.85,crest)*.52);
+                half3 reflected=SampleSH(reflect(-v,n));
+                color=lerp(color,reflected,.48*fresnel);
+                float opacity=lerp(.16,.52,1-exp(-thickness*.18));
+                opacity=lerp(opacity,.68,fresnel);
+                return half4(MixFog(color,i.fog),saturate(opacity+foam*.12));
             }
             ENDHLSL
         }

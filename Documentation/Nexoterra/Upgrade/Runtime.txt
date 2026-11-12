@@ -1,0 +1,23 @@
+PASS Infierno única y no elemental
+PASS Energía no tiene versión malvada
+PASS retratos ilustrados asignados
+PASS enemigo libera tres babosas
+PASS cuerpo desaparece después de ocho segundos
+PASS recompensas sobreviven al cuerpo
+PASS babosas liberadas caminan fuera del radio antiguo
+PASS secuaz suelta Energía limpia
+PASS inicia voltereta longitudinal 1
+PASS animación longitudinal 1
+PASS desplazamiento longitudinal 1
+PASS inicia voltereta longitudinal -1
+PASS animación longitudinal -1
+PASS desplazamiento longitudinal -1
+PASS babosa alcanza al jugador corriendo a 5.8 m/s
+PASS menú multijugador bloquea controles sin pausar la sesión
+PASS santuario original presente Nexoterra_Agua
+PASS guardián apoyado en santuario Nexoterra_Agua
+FAIL ruta completa desde islote hasta orilla
+FAIL System.Exception: ruta completa desde islote hasta orilla
+  at UpgradeReviewRunner.Check (System.Boolean ok, System.String name) [0x0002e] in D:\Realidad Virtual\Nexoterra\Assets\01_Scripts\World\UpgradeReviewRunner.cs:16 
+  at UpgradeReviewRunner+<Review>d__4.MoveNext () [0x00b43] in D:\Realidad Virtual\Nexoterra\Assets\01_Scripts\World\UpgradeReviewRunner.cs:56 
+  at UpgradeReviewRunner+<SafeRun>d__3.MoveNext () [0x00030] in D:\Realidad Virtual\Nexoterra\Assets\01_Scripts\World\UpgradeReviewRunner.cs:18 

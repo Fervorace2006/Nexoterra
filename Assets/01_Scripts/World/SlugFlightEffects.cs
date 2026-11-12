@@ -16,8 +16,6 @@ namespace Nexoterra.World
         LineRenderer[] arcs;
         Light glow;
         float age, nextArc;
-        bool bodyLightning;
-        float bodyHeight=2,bodyRadius=.5f;
         static Material particleMaterial, lineMaterial;
         public static Material RibbonMaterial=>Material(true);
         static Material Material(bool line)
@@ -47,7 +45,7 @@ namespace Nexoterra.World
         public static SlugFlightEffects Create(Transform projectile,string species)
         {
             var go=new GameObject("Efecto transformado Ã‚Â· "+species);go.layer=2;go.transform.SetParent(projectile,false);
-            var effect=go.AddComponent<SlugFlightEffects>();effect.Kind=ForSpecies(species);effect.corrupted=species.StartsWith("Malvada_");effect.Configure();go.transform.localPosition=Vector3.back*.65f;return effect;
+            var effect=go.AddComponent<SlugFlightEffects>();effect.Kind=ForSpecies(species);effect.corrupted=species.StartsWith("Malvada_");effect.Configure();go.transform.localPosition=Vector3.back*.65f;if(effect.Kind==Style.Fire){var fire=ImportedSlugVfx.Spawn("FireTail",go.transform,Vector3.zero,.3f,Quaternion.Euler(-90,0,0));if(effect.corrupted)ImportedSlugVfx.Tint(fire,new Color(.15f,1,.55f));}return effect;
         }
         static Color ColorFor(Style style)
         {
@@ -57,23 +55,12 @@ namespace Nexoterra.World
                 case Style.Water:return new Color(.08f,.65f,1);
                 case Style.Ice:return new Color(.5f,.88f,1);
                 case Style.Lightning:return new Color(.35f,.75f,1);
-                case Style.Wind:return new Color(.65f,1,.85f);
+                case Style.Wind:return new Color(.88f,.88f,.88f);
                 case Style.Earth:return new Color(1,.65f,.22f);
                 case Style.Web:return new Color(.65f,.18f,1);
                 case Style.Spore:return new Color(.3f,1,.15f);
                 default:return new Color(1,.12f,.18f);
             }
-        }
-        public static SlugFlightEffects Electrify(Transform target)
-        {
-            var go=new GameObject("Electroshock · chispas corporales");go.layer=2;go.transform.SetParent(target,false);
-            var effect=go.AddComponent<SlugFlightEffects>();effect.Kind=Style.Lightning;effect.bodyLightning=true;
-            var motor=target.GetComponent<CharacterController>();if(motor){effect.bodyHeight=motor.height;effect.bodyRadius=Mathf.Max(.4f,motor.radius*1.3f);go.transform.localPosition=motor.center-Vector3.up*motor.height*.5f;}
-            effect.Configure();effect.trail.enabled=false;effect.glow.intensity=.9f;effect.glow.range=2.5f;
-            effect.particles.Stop(true,ParticleSystemStopBehavior.StopEmittingAndClear);effect.particles.transform.localPosition=Vector3.up*effect.bodyHeight*.5f;
-            var main=effect.particles.main;main.simulationSpace=ParticleSystemSimulationSpace.Local;main.startSize=new ParticleSystem.MinMaxCurve(.025f,.085f);main.startSpeed=new ParticleSystem.MinMaxCurve(.1f,.5f);
-            var shape=effect.particles.shape;shape.shapeType=ParticleSystemShapeType.Box;shape.scale=new Vector3(effect.bodyRadius*2,effect.bodyHeight,effect.bodyRadius*2);
-            var velocity=effect.particles.velocityOverLifetime;velocity.enabled=false;var emission=effect.particles.emission;emission.rateOverTime=65;effect.particles.Play();return effect;
         }
         static Gradient Fade(Color color,float alpha=1)
         {
@@ -81,7 +68,7 @@ namespace Nexoterra.World
         }
         void Configure()
         {
-            tint=ColorFor(Kind);if(corrupted)tint=Color.Lerp(tint,new Color(.65f,.06f,1),.65f);
+            tint=ColorFor(Kind);if(corrupted)tint=Kind==Style.Wind?Color.red:new Color(.15f,1,.55f);
             particles=MakeParticles(transform,tint,true,Kind==Style.Fire?.62f:.3f);
             particles.transform.localPosition=Vector3.back*.35f;
             var renderer=particles.GetComponent<ParticleSystemRenderer>();
@@ -132,7 +119,7 @@ namespace Nexoterra.World
         {
             var ps=MakeParticles(null,color,false,impact?.28f:.4f);ps.transform.position=position;
             var main=ps.main;main.startSpeed=new ParticleSystem.MinMaxCurve(impact?1:2,impact?3:5);main.startLifetime=new ParticleSystem.MinMaxCurve(.15f,.4f);
-            ps.Play();ps.Emit(impact?18:28);Destroy(ps.gameObject,.8f);
+            ps.Play();ps.Emit(impact?26:28);Destroy(ps.gameObject,.8f);
         }
         void Update()
         {
@@ -150,16 +137,20 @@ namespace Nexoterra.World
                     float t=i/(float)(count-1),angle=t*Mathf.PI*4+age*7+a*Mathf.PI;
                     float radius=.32f+Mathf.Sin(t*Mathf.PI)*.2f;
                     if(Kind==Style.Lightning){angle=a*Mathf.PI*2/3+Mathf.Sin(i*12.7f+nextArc*71)*.55f;radius=.42f+Mathf.Sin(i*19.3f+nextArc*47)*.17f;}
-                    if(bodyLightning){angle=a*Mathf.PI*2/3+t*Mathf.PI*2+Mathf.Sin(i*12.7f+nextArc*71)*.55f;radius=bodyRadius*(.85f+Mathf.Sin(i*19.3f+nextArc*47)*.18f);line.SetPosition(i,new Vector3(Mathf.Cos(angle)*radius,.08f+t*(bodyHeight-.05f),Mathf.Sin(angle)*radius));}
-                    else line.SetPosition(i,new Vector3(Mathf.Cos(angle)*radius,Mathf.Sin(angle)*radius,Mathf.Lerp(-2.1f,-.15f,t)));
+                    line.SetPosition(i,new Vector3(Mathf.Cos(angle)*radius,Mathf.Sin(angle)*radius,Mathf.Lerp(-2.1f,-.15f,t)));
                 }
             }
         }
-        public void End(bool impact)
+        public void End(bool impact,Vector3? hitPoint=null)
         {
             if(Finished)return;Finished=true;
-            if(impact)Burst(transform.position,tint,true);
+            if(impact){
+                Vector3 contact=hitPoint??transform.position;
+                Burst(contact,tint,true);
+                if(Kind==Style.Fire)ImportedSlugVfx.GroundFire(contact,corrupted);
+            }
             transform.SetParent(null,true);
+            foreach(var ps in GetComponentsInChildren<ParticleSystem>())ps.Stop(true,ParticleSystemStopBehavior.StopEmitting);
             if(trail)trail.emitting=false;
             if(particles)particles.Stop(true,ParticleSystemStopBehavior.StopEmitting);
             if(glow)glow.enabled=false;

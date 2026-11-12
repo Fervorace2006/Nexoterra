@@ -26,7 +26,7 @@ namespace Nexoterra.Editor
     var clip=AssetDatabase.LoadAllAssetsAtPath(path).OfType<AnimationClip>().First(x=>!x.name.StartsWith("__preview"));report.AppendLine(name+" root velocity="+clip.averageSpeed);return clip;
    }
    var run=Clip("Pistol_Run",true);var left=Clip("voltereta",false);var right=Clip("voltereta2",false);var death=Clip("Death",false);
-   var restModel=UnityEngine.Object.Instantiate(AssetDatabase.LoadAssetAtPath<GameObject>("Assets/NexoterraWorld/Characters/Player_Male.prefab"));var restAnimator=restModel.GetComponentInChildren<Animator>();restAnimator.enabled=false;var restPose=new HumanPose();using(var handler=new HumanPoseHandler(restAnimator.avatar,restAnimator.transform)){handler.GetHumanPose(ref restPose);}UnityEngine.Object.DestroyImmediate(restModel);
+   var restModel=UnityEngine.Object.Instantiate(AssetDatabase.LoadAssetAtPath<GameObject>("Assets/02_Prefabs/Gameplay/Models/Player_Male.prefab"));var restAnimator=restModel.GetComponentInChildren<Animator>();restAnimator.enabled=false;var restPose=new HumanPose();using(var handler=new HumanPoseHandler(restAnimator.avatar,restAnimator.transform)){handler.GetHumanPose(ref restPose);}UnityEngine.Object.DestroyImmediate(restModel);
    var idle=UnityEngine.Object.Instantiate(run);idle.name="Idle_Pistol";var walk=UnityEngine.Object.Instantiate(run);walk.name="Walk_Pistol";
    foreach(var binding in AnimationUtility.GetCurveBindings(idle))
    {
@@ -46,9 +46,9 @@ namespace Nexoterra.Editor
    driver.male=player.male.GetComponentInChildren<Animator>(true);driver.female=player.female.GetComponentInChildren<Animator>(true);
    ConfigureInstance(driver.male,controller);ConfigureInstance(driver.female,controller);
    Calibrate(driver.male,run,out driver.maleGrip,out driver.maleGripRotation);Calibrate(driver.female,run,out driver.femaleGrip,out driver.femaleGripRotation);
-   driver.runReferenceSpeed=Mathf.Max(1,run.averageSpeed.magnitude);player.walkSpeed=2.8f;player.sprintSpeed=5.8f;player.GetComponent<PlayerAbilities>().dodgeDuration=1.05f;
+   driver.runReferenceSpeed=Mathf.Max(1,run.averageSpeed.magnitude);player.walkSpeed=2.8f;player.sprintSpeed=5.8f;player.GetComponent<PlayerAbilities>().dodgeDuration=PlayerAbilities.QuickRollDuration;
    var web=BuildWeb();
-   foreach(string path in new[]{"Assets/NexoterraWorld/Combat/Enemy1.prefab","Assets/NexoterraWorld/Combat/SirBlack.prefab",Folder+"/SirBlack_Final.prefab"})
+   foreach(string path in new[]{"Assets/02_Prefabs/Gameplay/Enemies/Enemy1.prefab","Assets/02_Prefabs/Gameplay/Enemies/SirBlack.prefab",Folder+"/SirBlack_Final.prefab"})
    {
     var root=PrefabUtility.LoadPrefabContents(path);try{SetupEnemy(root,controller,run,web,report);PrefabUtility.SaveAsPrefabAsset(root,path);}finally{PrefabUtility.UnloadPrefabContents(root);}
    }
@@ -67,7 +67,7 @@ namespace Nexoterra.Editor
   static void ConfigureCharacter(string role,RuntimeAnimatorController controller,AnimationClip run,StringBuilder report)
   {
    string source=Directory.GetFiles("Assets/Characters/Rigged/"+role,"*.fbx").Single().Replace('\\','/');var imp=(ModelImporter)AssetImporter.GetAtPath(source);imp.animationType=ModelImporterAnimationType.Human;imp.avatarSetup=ModelImporterAvatarSetup.CreateFromThisModel;imp.SaveAndReimport();var avatar=AssetDatabase.LoadAllAssetsAtPath(source).OfType<Avatar>().First();if(!avatar.isValid||!avatar.isHuman)throw new Exception("Avatar inválido: "+role);
-   string path="Assets/NexoterraWorld/Characters/"+role+".prefab";var root=PrefabUtility.LoadPrefabContents(path);try{var animator=root.GetComponentInChildren<Animator>(true);animator.avatar=avatar;ConfigureInstance(animator,controller);Calibrate(animator,run,out _,out _);PrefabUtility.SaveAsPrefabAsset(root,path);report.AppendLine(role+": humanoid válido, IK y controlador compartido.");}finally{PrefabUtility.UnloadPrefabContents(root);}
+   string path="Assets/02_Prefabs/Gameplay/Models/"+role+".prefab";var root=PrefabUtility.LoadPrefabContents(path);try{var animator=root.GetComponentInChildren<Animator>(true);animator.avatar=avatar;ConfigureInstance(animator,controller);Calibrate(animator,run,out _,out _);PrefabUtility.SaveAsPrefabAsset(root,path);report.AppendLine(role+": humanoid válido, IK y controlador compartido.");}finally{PrefabUtility.UnloadPrefabContents(root);}
   }
   static void ConfigureInstance(Animator animator,RuntimeAnimatorController controller){animator.enabled=true;animator.runtimeAnimatorController=controller;animator.applyRootMotion=false;animator.cullingMode=AnimatorCullingMode.AlwaysAnimate;if(!animator.GetComponent<HumanoidWeaponIK>())animator.gameObject.AddComponent<HumanoidWeaponIK>();PrefabUtility.RecordPrefabInstancePropertyModifications(animator);}
   static void Calibrate(Animator animator,AnimationClip run,out Vector3 position,out Quaternion rotation)

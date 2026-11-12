@@ -9,35 +9,65 @@ namespace Nexoterra.World
   public float FreezeRemaining {get;private set;}
   public float ShockRemaining {get;private set;}
   public float WindRemaining {get;private set;}
-  public bool CanMove=>RootRemaining<=0&&FreezeRemaining<=0&&ShockRemaining<=0;
-  public bool CanShoot=>FreezeRemaining<=0&&ShockRemaining<=0;
+  const float FallSeconds=54f/30f, StandSeconds=43f/30f;
+  float knockdownRemaining;
+  public string KnockdownPose=>knockdownRemaining>StandSeconds?"CaidaAtras":knockdownRemaining>0?"levantarsedecaida":null;
+  public static bool CausesKnockdown(string id)
+  {
+   string species=SlugCatalog.BaseSpecies(id);
+   return species=="Carnero"||species=="Armashelt"||species=="Elemental_Tierra";
+  }
+  public void BeginKnockdown()
+  {
+   if(knockdownRemaining<=StandSeconds)knockdownRemaining=FallSeconds+StandSeconds;
+  }
+  public bool CanMove=>WindRemaining<=0&&knockdownRemaining<=0&&RootRemaining<=0&&FreezeRemaining<=0&&ShockRemaining<=0;
+  public bool CanShoot=>knockdownRemaining<=0&&FreezeRemaining<=0&&ShockRemaining<=0;
   GameObject rootVisual,iceVisual,windVisual,shockVisual;Vector3 windDirection;
-  Material waterMat,iceMat,windMat,shockMat;
+  Material waterMat,iceMat,shockMat;
+  bool corruptedWind;
   EnemyCombatant health;
   void Awake(){health=GetComponent<EnemyCombatant>();}
   public void Apply(string species,Vector3 direction)
   {
+   bool corrupted=species.StartsWith("Malvada_");
    switch(SlugCatalog.Canonical(species.Replace("Malvada_","")))
    {
     case "Arana":RootRemaining=5.5f;ReplaceRoot(false);break;
     case "Elemental_Agua":RootRemaining=4;ReplaceRoot(true);break;
-    case "ice":FreezeRemaining=4; if(!iceVisual)iceVisual=Ice();break;
+    case "ice":FreezeRemaining=4; if(!iceVisual)iceVisual=Ice();if(iceMat)iceMat.SetColor("_BaseColor",corrupted?new Color(.04f,.35f,.65f,.5f):new Color(.25f,.8f,1,.28f));break;
     case "Infierno":case "Elemental_Fuego":FreezeRemaining=0;Clear(ref iceVisual);break;
-    case "tazerling":ShockRemaining=4.5f;if(!shockVisual)shockVisual=SlugFlightEffects.Electrify(transform).gameObject;break;
-    case "Tornado":case "Elemental_Aire":WindRemaining=3;direction.y=0;windDirection=direction.normalized;if(!windVisual)windVisual=Vortex();break;
+    case "tazerling":ShockRemaining=4.5f;if(!shockVisual)shockVisual=ImportedSlugVfx.ShockCharacter(transform);if(corrupted)ImportedSlugVfx.Tint(shockVisual,new Color(.15f,1,.55f));break;
+    case "Tornado":case "Elemental_Aire":
+     WindRemaining=4f;
+     direction.y=0;
+     windDirection=direction.sqrMagnitude>.001f?direction.normalized:-transform.forward;
+     if(windVisual&&corrupted!=corruptedWind)Clear(ref windVisual);
+     corruptedWind=corrupted;
+     if(!windVisual)windVisual=Vortex(corrupted);
+     break;
    }
   }
   void Update(){Advance(Time.deltaTime);}
   public void Advance(float dt)
   {
    if(health&&health.IsDead){ResetEffects();return;}
+   knockdownRemaining=Mathf.Max(0,knockdownRemaining-dt);
    RootRemaining=Mathf.Max(0,RootRemaining-dt);FreezeRemaining=Mathf.Max(0,FreezeRemaining-dt);ShockRemaining=Mathf.Max(0,ShockRemaining-dt);WindRemaining=Mathf.Max(0,WindRemaining-dt);
    if(RootRemaining<=0)Clear(ref rootVisual);if(FreezeRemaining<=0)Clear(ref iceVisual);if(ShockRemaining<=0)Clear(ref shockVisual);
    if(WindRemaining<=0)Clear(ref windVisual);
-   else {if(windVisual)windVisual.transform.Rotate(0,420*dt,0);var motor=GetComponent<CharacterController>();if(CanMove&&motor&&motor.enabled)motor.Move(windDirection*(2.5f*dt));}
+   else if(knockdownRemaining<=0&&RootRemaining<=0&&FreezeRemaining<=0)
+   {
+    var motor=GetComponent<CharacterController>();
+    if(motor&&motor.enabled)
+    {
+     Vector3 swirl=Vector3.Cross(Vector3.up,windDirection)*Mathf.Sin(WindRemaining*5);
+     motor.Move((windDirection*4f+swirl*1.8f)*dt);
+    }
+   }
   }
   static void Clear(ref GameObject obj){if(obj)Destroy(obj);obj=null;}
-  public void ResetEffects(){RootRemaining=FreezeRemaining=ShockRemaining=WindRemaining=0;Clear(ref rootVisual);Clear(ref iceVisual);Clear(ref windVisual);Clear(ref shockVisual);}
+  public void ResetEffects(){knockdownRemaining=RootRemaining=FreezeRemaining=ShockRemaining=WindRemaining=0;Clear(ref rootVisual);Clear(ref iceVisual);Clear(ref windVisual);Clear(ref shockVisual);}
   void ReplaceRoot(bool water)
   {
    Clear(ref rootVisual);
@@ -61,11 +91,26 @@ namespace Nexoterra.World
    if(!material)material=Transparent(color);var go=new GameObject(name);go.transform.SetParent(transform,false);go.transform.localPosition=Vector3.up*height;var line=go.AddComponent<LineRenderer>();line.useWorldSpace=false;line.loop=true;line.positionCount=48;line.widthMultiplier=name=="Agua acumulada"?.32f:.055f;line.sharedMaterial=material;
    for(int i=0;i<48;i++){float t=i*Mathf.PI*2/48;line.SetPosition(i,new Vector3(Mathf.Cos(t)*radius,Mathf.Sin(t*5)*.025f,Mathf.Sin(t)*radius));}return go;
   }
-  GameObject Vortex()
+  GameObject Vortex(bool corrupted)
   {
-   if(!windMat)windMat=Transparent(new Color(.6f,1,1,.6f));var go=new GameObject("Tornado de arrastre");go.transform.SetParent(transform,false);
-   for(int strand=0;strand<3;strand++){var line=new GameObject("Espiral").AddComponent<LineRenderer>();line.transform.SetParent(go.transform,false);line.useWorldSpace=false;line.positionCount=70;line.widthMultiplier=.065f;line.sharedMaterial=windMat;for(int i=0;i<70;i++){float h=i/69f,t=h*Mathf.PI*6+strand*2.094f,r=.35f+h*.7f;line.SetPosition(i,new Vector3(Mathf.Cos(t)*r,h*2.5f,Mathf.Sin(t)*r));}}return go;
+   var vortex=new GameObject("Tornado de arrastre");
+   vortex.transform.SetParent(transform,false);
+   var funnel=ImportedSlugVfx.Spawn("AirTornado",vortex.transform,Vector3.zero,1,Quaternion.identity);
+   if(funnel)
+   {
+    var fx=funnel.GetComponent<Hun0FX.HunFXController>();
+    if(fx){fx.intensity=.55f;fx.SetColor(corrupted?Color.red:Color.white);}
+    var body=GetComponent<CharacterController>();
+    float height=body?body.height:2f;
+    funnel.transform.localScale=Vector3.one*(height*.26f);
+   }
+   if(corrupted)
+   {
+    var lightning=ImportedSlugVfx.Spawn("Shock",vortex.transform,Vector3.up*1.2f,1.15f,Quaternion.identity);
+    ImportedSlugVfx.Tint(lightning,new Color(1f,.16f,.12f));
+   }
+   return vortex;
   }
-  void OnDestroy(){foreach(var m in new[]{waterMat,iceMat,windMat,shockMat})if(m)Destroy(m);}
+  void OnDestroy(){foreach(var m in new[]{waterMat,iceMat,shockMat})if(m)Destroy(m);}
  }
 }

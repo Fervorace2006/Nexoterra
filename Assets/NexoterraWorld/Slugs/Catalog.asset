@@ -30,6 +30,7 @@ MonoBehaviour:
       knockbackSpeed: 0
       stunDuration: 0
     combatConfigured: 1
+    usePrefabCombat: 1
   - id: Armashelt
     displayName: Armashelt
     normal: {fileID: 5888577457209316336, guid: 248282b9a55852144bec533a272d5a51, type: 3}
@@ -47,13 +48,14 @@ MonoBehaviour:
       knockbackSpeed: 4
       stunDuration: 0
     combatConfigured: 1
+    usePrefabCombat: 1
   - id: Infierno
     displayName: Infierno
     normal: {fileID: 1322220974269988154, guid: feb0785f60f967449998a6a45ae16c7c, type: 3}
     transformed: {fileID: 1569749652952367352, guid: 6762ffb740db17d4a90c4495cef98547, type: 3}
     portrait: {fileID: 2800000, guid: 7774e510b859fb14894e2d0e4db89300, type: 3}
     accent: {r: 0, g: 1, b: 1, a: 1}
-    unique: 0
+    unique: 1
     combat:
       impactDamage: 22
       burnDamagePerSecond: 5
@@ -64,6 +66,7 @@ MonoBehaviour:
       knockbackSpeed: 0
       stunDuration: 0
     combatConfigured: 1
+    usePrefabCombat: 1
   - id: Gon_Doc
     displayName: Gon Doc
     normal: {fileID: 7894971535634278879, guid: 8f6462a604280124baee048077ffd0d9, type: 3}
@@ -81,6 +84,7 @@ MonoBehaviour:
       knockbackSpeed: 0
       stunDuration: 0
     combatConfigured: 1
+    usePrefabCombat: 1
   - id: ice
     displayName: Hielo
     normal: {fileID: 4310809446732420924, guid: 36033fa65f98fe64a93239b9483cf11c, type: 3}
@@ -98,6 +102,7 @@ MonoBehaviour:
       knockbackSpeed: 0
       stunDuration: 0
     combatConfigured: 1
+    usePrefabCombat: 1
   - id: tazerling
     displayName: Tazerling
     normal: {fileID: 8376512397533721991, guid: 962772838bfba4d46a67b05930c52bea, type: 3}
@@ -115,6 +120,7 @@ MonoBehaviour:
       knockbackSpeed: 0
       stunDuration: 0
     combatConfigured: 1
+    usePrefabCombat: 1
   - id: Carnero
     displayName: Carnero
     normal: {fileID: 2575442761311289283, guid: 7b8d347b1e0522849956b4e9581c6ced, type: 3}
@@ -132,6 +138,7 @@ MonoBehaviour:
       knockbackSpeed: 5
       stunDuration: 0
     combatConfigured: 1
+    usePrefabCombat: 1
   - id: Elemental_Agua
     displayName: E. agua
     normal: {fileID: 9009039742250634286, guid: 61030b4a85ba13c4db1c7e3663624b90, type: 3}
@@ -149,6 +156,7 @@ MonoBehaviour:
       knockbackSpeed: 0
       stunDuration: 0
     combatConfigured: 1
+    usePrefabCombat: 1
   - id: Elemental_Aire
     displayName: E. aire
     normal: {fileID: 4762389591037196156, guid: 2686fb7f7e4d04c439934f7bf0c3f314, type: 3}
@@ -166,6 +174,7 @@ MonoBehaviour:
       knockbackSpeed: 8
       stunDuration: 0
     combatConfigured: 1
+    usePrefabCombat: 1
   - id: Elemental_Fuego
     displayName: E. fuego
     normal: {fileID: 2404267146647905380, guid: 12a75750030f431419e09b81c8f7783d, type: 3}
@@ -183,6 +192,7 @@ MonoBehaviour:
       knockbackSpeed: 0
       stunDuration: 0
     combatConfigured: 1
+    usePrefabCombat: 1
   - id: Elemental_Tierra
     displayName: E. tierra
     normal: {fileID: 6706990672541947464, guid: 30641c2fae5f8a64695243cf67a9260b, type: 3}
@@ -200,6 +210,7 @@ MonoBehaviour:
       knockbackSpeed: 3
       stunDuration: 0
     combatConfigured: 1
+    usePrefabCombat: 1
   - id: Tornado
     displayName: Tornado
     normal: {fileID: 2561432588572171116, guid: 2551a3b67a062834ea67dc130dbcce61, type: 3}
@@ -217,6 +228,7 @@ MonoBehaviour:
       knockbackSpeed: 6
       stunDuration: 0
     combatConfigured: 1
+    usePrefabCombat: 1
   - id: Elemental_Energia
     displayName: "E. energ\xEDa"
     normal: {fileID: 9057438712029302241, guid: 4caf272ce4b74e74e81e9b4426d41951, type: 3}
@@ -234,3 +246,202 @@ MonoBehaviour:
       knockbackSpeed: 0
       stunDuration: 0
     combatConfigured: 1
+    usePrefabCombat: 1
+  - id: Malvada_Arana
+    displayName: "Ara\xF1a malvada"
+    normal: {fileID: 6060808898392281977, guid: b891ad0eb008f4740914b5f19318478c, type: 3}
+    transformed: {fileID: 364191895068126426, guid: 2b66f0a161480034a88c9e8b6ce812e1, type: 3}
+    portrait: {fileID: 2800000, guid: 7b0791f4b62876a4ca4d30d5fb0226f3, type: 3}
+    accent: {r: 0.3, g: 1, b: 0.5, a: 1}
+    unique: 0
+    combat:
+      impactDamage: 13.799999
+      burnDamagePerSecond: 0
+      burnDuration: 0
+      slowMultiplier: 0.8
+      slowDuration: 2
+      knockdownDuration: 0
+      knockbackSpeed: 0
+      stunDuration: 0
+    combatConfigured: 1
+    usePrefabCombat: 1
+  - id: Malvada_Carnero
+    displayName: Carnero malvada
+    normal: {fileID: 4297017063204795931, guid: 4c72652052fb54847b12a22d2a037b2e, type: 3}
+    transformed: {fileID: 2181988313490482157, guid: 90e080213691a9b49b0732baa572c0be, type: 3}
+    portrait: {fileID: 2800000, guid: 9863261660ce8724288dddad62495de9, type: 3}
+    accent: {r: 0.3, g: 1, b: 0.5, a: 1}
+    unique: 0
+    combat:
+      impactDamage: 32.2
+      burnDamagePerSecond: 0
+      burnDuration: 0
+      slowMultiplier: 0.8
+      slowDuration: 2
+      knockdownDuration: 2.2
+      knockbackSpeed: 5
+      stunDuration: 0
+    combatConfigured: 1
+    usePrefabCombat: 1
+  - id: Malvada_tazerling
+    displayName: Tazerling malvada
+    normal: {fileID: 6572061781313068852, guid: 38d8f6fde94cbc547a350347f3ad0c30, type: 3}
+    transformed: {fileID: 314724121004046253, guid: ac6fd72c6e32f4745bf24a82dac5ee65, type: 3}
+    portrait: {fileID: 2800000, guid: f18155708bcdfb04fbefef3c333d9a80, type: 3}
+    accent: {r: 0.3, g: 1, b: 0.5, a: 1}
+    unique: 0
+    combat:
+      impactDamage: 20.699999
+      burnDamagePerSecond: 0
+      burnDuration: 0
+      slowMultiplier: 0.8
+      slowDuration: 2
+      knockdownDuration: 0
+      knockbackSpeed: 0
+      stunDuration: 0
+    combatConfigured: 1
+    usePrefabCombat: 1
+  - id: Malvada_Elemental_Agua
+    displayName: E. agua malvada
+    normal: {fileID: 4430951298943110779, guid: b4c4e375a526822408d7d17c9a483b50, type: 3}
+    transformed: {fileID: 3744510848714183350, guid: b31f6513447d56a439fa0438a25e9867, type: 3}
+    portrait: {fileID: 2800000, guid: 218b0ac89b7e05246a544ab776e563b3, type: 3}
+    accent: {r: 0.3, g: 1, b: 0.5, a: 1}
+    unique: 1
+    combat:
+      impactDamage: 23
+      burnDamagePerSecond: 0
+      burnDuration: 0
+      slowMultiplier: 0.55
+      slowDuration: 4
+      knockdownDuration: 0
+      knockbackSpeed: 0
+      stunDuration: 0
+    combatConfigured: 1
+    usePrefabCombat: 1
+  - id: Malvada_Elemental_Aire
+    displayName: E. aire malvada
+    normal: {fileID: 6324214220819140568, guid: d36a07a91aaa4b24080ed7c20de7046e, type: 3}
+    transformed: {fileID: 7352848865653061354, guid: 3f46c37f2f815e94581e7b51b1fceecc, type: 3}
+    portrait: {fileID: 2800000, guid: 052b805fce93d524e8dea95e2ddd9d21, type: 3}
+    accent: {r: 0.3, g: 1, b: 0.5, a: 1}
+    unique: 1
+    combat:
+      impactDamage: 23
+      burnDamagePerSecond: 0
+      burnDuration: 0
+      slowMultiplier: 1
+      slowDuration: 0
+      knockdownDuration: 0
+      knockbackSpeed: 8
+      stunDuration: 0
+    combatConfigured: 1
+    usePrefabCombat: 1
+  - id: Malvada_Elemental_Fuego
+    displayName: E. fuego malvada
+    normal: {fileID: 7214224312018669507, guid: 38ad3194c10afa54e83519b497288ee0, type: 3}
+    transformed: {fileID: 6914566695349362161, guid: 725e8416f91a32040ab6e7deb937b40c, type: 3}
+    portrait: {fileID: 2800000, guid: 826993f3a290eee45b15dd0df1d2cdc7, type: 3}
+    accent: {r: 0.3, g: 1, b: 0.5, a: 1}
+    unique: 1
+    combat:
+      impactDamage: 36.8
+      burnDamagePerSecond: 7
+      burnDuration: 5
+      slowMultiplier: 1
+      slowDuration: 0
+      knockdownDuration: 0
+      knockbackSpeed: 0
+      stunDuration: 0
+    combatConfigured: 1
+    usePrefabCombat: 1
+  - id: Malvada_Elemental_Tierra
+    displayName: E. tierra malvada
+    normal: {fileID: 4882146194175516129, guid: cbb1aab97532aa342b0266494f947833, type: 3}
+    transformed: {fileID: 5443911478882383045, guid: 5918751fd278b0c489f30eb4d8301c69, type: 3}
+    portrait: {fileID: 2800000, guid: 802968c0e5d340e449688435ace4f861, type: 3}
+    accent: {r: 0.3, g: 1, b: 0.5, a: 1}
+    unique: 1
+    combat:
+      impactDamage: 34.5
+      burnDamagePerSecond: 0
+      burnDuration: 0
+      slowMultiplier: 1
+      slowDuration: 0
+      knockdownDuration: 1.5
+      knockbackSpeed: 3
+      stunDuration: 0
+    combatConfigured: 1
+    usePrefabCombat: 1
+  - id: Malvada_ice
+    displayName: Hielo malvada
+    normal: {fileID: 8090887636212914041, guid: 7371c7a2c2ee2dd4a817fbb2d1c266e1, type: 3}
+    transformed: {fileID: 3416676678332506304, guid: 66e6cb71fd119db4385dff9b8acc521b, type: 3}
+    portrait: {fileID: 2800000, guid: fed43dcc12acce34b9a00ee0bdcff7c9, type: 3}
+    accent: {r: 0.3, g: 1, b: 0.5, a: 1}
+    unique: 0
+    combat:
+      impactDamage: 20.699999
+      burnDamagePerSecond: 0
+      burnDuration: 0
+      slowMultiplier: 0.8
+      slowDuration: 2
+      knockdownDuration: 0
+      knockbackSpeed: 0
+      stunDuration: 0
+    combatConfigured: 1
+    usePrefabCombat: 1
+  - id: Malvada_Infierno
+    displayName: Infierno malvada
+    normal: {fileID: 8729664433682641724, guid: bd4da987f199e984f82b7ad8ec42e640, type: 3}
+    transformed: {fileID: 7974336914468758617, guid: 1b2fb1f512ce58c4f9e299e89dbd0f82, type: 3}
+    portrait: {fileID: 2800000, guid: 370c7c61f8d4e1c44bc6e27608546e28, type: 3}
+    accent: {r: 0.3, g: 1, b: 0.5, a: 1}
+    unique: 1
+    combat:
+      impactDamage: 25.3
+      burnDamagePerSecond: 5
+      burnDuration: 4
+      slowMultiplier: 1
+      slowDuration: 0
+      knockdownDuration: 0
+      knockbackSpeed: 0
+      stunDuration: 0
+    combatConfigured: 1
+    usePrefabCombat: 1
+  - id: Malvada_Tornado
+    displayName: Tornado malvada
+    normal: {fileID: 4593392635023745548, guid: 266dd3900b275d4408ad679585ee334e, type: 3}
+    transformed: {fileID: 7907099160859815369, guid: a997652b2d641504fa35e81634e9d371, type: 3}
+    portrait: {fileID: 2800000, guid: 283983ae3a2336443bc03d6ae40fecdf, type: 3}
+    accent: {r: 0.3, g: 1, b: 0.5, a: 1}
+    unique: 0
+    combat:
+      impactDamage: 18.4
+      burnDamagePerSecond: 0
+      burnDuration: 0
+      slowMultiplier: 0.8
+      slowDuration: 2
+      knockdownDuration: 0
+      knockbackSpeed: 6
+      stunDuration: 0
+    combatConfigured: 1
+    usePrefabCombat: 1
+  - id: Malvada_Armashelt
+    displayName: Armashelt malvada
+    normal: {fileID: 3333508125497342966, guid: 01f93c73df6319d44bf4c5e09e0899fd, type: 3}
+    transformed: {fileID: 480170817438858239, guid: b46e510aabd9d5e4f8149480697f8fd1, type: 3}
+    portrait: {fileID: 2800000, guid: f1f814458c833184ba1876f168c266a9, type: 3}
+    accent: {r: 0.3, g: 1, b: 0.5, a: 1}
+    unique: 0
+    combat:
+      impactDamage: 28.75
+      burnDamagePerSecond: 0
+      burnDuration: 0
+      slowMultiplier: 0.8
+      slowDuration: 2
+      knockdownDuration: 1.8
+      knockbackSpeed: 4
+      stunDuration: 0
+    combatConfigured: 1
+    usePrefabCombat: 1

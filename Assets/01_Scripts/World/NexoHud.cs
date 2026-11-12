@@ -1,4 +1,6 @@
 using UnityEngine;
+using System.Linq;
+using System.Collections.Generic;
 namespace Nexoterra.World
 {
  public sealed class NexoHud : MonoBehaviour
@@ -29,6 +31,31 @@ namespace Nexoterra.World
    Panel(r);var inner=new Rect(r.x+12,r.y+10,r.width-24,r.height-20);int segments=32;float w=inner.width/segments;
    for(int i=0;i<segments;i++){var cell=new Rect(inner.x+i*w,inner.y,w-2,inner.height);Fill(cell,i/(float)segments<Mathf.Clamp01(fraction)?color:new Color(.035f,.08f,.08f));if(i/(float)segments<fraction)Fill(new Rect(cell.x+1,cell.y+2,Mathf.Max(1,cell.width*.3f),cell.height-4),new Color(.8f,1,1,.25f));}
   }
+  readonly Dictionary<EnemyCombatant,float> combatants=new Dictionary<EnemyCombatant,float>();
+  float nextCombatScan;
+  void DrawOpponents(){
+   if(Time.unscaledTime>=nextCombatScan){
+    nextCombatScan=Time.unscaledTime+.3f;
+    foreach(var enemy in FindObjectsByType<EnemyCombatant>(FindObjectsSortMode.None)){
+     var ai=enemy.GetComponent<EnemyShooter>();
+     if(!enemy.IsDead&&((ai&&ai.IsPursuing)||Time.time-enemy.LastDamageTime<8))combatants[enemy]=Time.time;
+    }
+    foreach(var enemy in combatants.Keys.ToArray())if(!enemy||enemy.IsDead||Time.time-combatants[enemy]>8)combatants.Remove(enemy);
+   }
+   var targets=combatants.Keys.Where(e=>e&&!e.IsDead).OrderBy(e=>(e.transform.position-player.transform.position).sqrMagnitude).ToArray();
+   float rowHeight=Mathf.Min(100,500f/Mathf.Max(1,targets.Length));
+   for(int i=0;i<targets.Length;i++){
+    var e=targets[i];float y=20+i*rowHeight;float h=Mathf.Min(90,rowHeight-4);float face=h-10;
+    var accent=new Color(.95f,.18f,.2f);NexoUi.Card(new Rect(906,y,354,h),accent);
+    NexoUi.Card(new Rect(1254-face,y+5,face,face),Cyan);
+    if(e.portrait)NexoUi.Portrait(new Rect(1256-face,y+7,face-4,face-4),e.portrait,Cyan);
+    Label(new Rect(918,y+6,325-face,22),e.displayName,14,NexoUi.Text);
+    var bar=new Rect(918,y+h*.4f,325-face,Mathf.Max(7,h*.22f));
+    Fill(bar,new Color(.12f,.025f,.035f));float fraction=e.Health/Mathf.Max(1,e.maxHealth);
+    for(int n=0;n<24;n++){float width=bar.width/24;var segment=new Rect(bar.x+n*width,bar.y,width-2,bar.height);float fill=Mathf.Clamp01(fraction*24-n);if(fill>0){segment.width*=fill;Fill(segment,accent);Fill(new Rect(segment.x,segment.y,segment.width,2),new Color(1,.6f,.5f));}}
+    Label(new Rect(918,y+h-23,325-face,19),Mathf.CeilToInt(e.Health)+" / "+e.maxHealth+" PV",12,NexoUi.Text,TextAnchor.MiddleRight);
+   }
+  }
   void OnGUI()
   {
    if(GameSession.Blocked||!health||!player||GetComponent<SlugInventory>().IsOpen)return;var old=GUI.matrix;Scale();
@@ -40,7 +67,7 @@ namespace Nexoterra.World
    Color color=shown<.25f?new Color(1,.27f,.22f):new Color(.25f,.88f,.55f);Fill(new Rect(bar.x,bar.y,bar.width*shown,bar.height),color);Fill(new Rect(bar.x,bar.y,bar.width*shown,3),Color.Lerp(color,Color.white,.5f));
    for(int i=1;i<10;i++)Fill(new Rect(bar.x+i*bar.width/10,bar.y,1,bar.height),new Color(.02f,.08f,.09f,.65f));
    Label(new Rect(126,679,210,17),Mathf.CeilToInt(health.Health)+" / "+health.maxHealth+" PV",12,NexoUi.Text,TextAnchor.MiddleRight);
-   if(boss&&boss.Active&&!boss.Active.IsDead){NexoUi.Card(new Rect(390,22,500,74),new Color(.9f,.2f,.18f));Label(new Rect(408,32,464,24),boss.Active.displayName.ToUpperInvariant(),18,NexoUi.Text,TextAnchor.MiddleCenter);var r=new Rect(409,67,462,12);Fill(r,new Color(.2f,.05f,.06f));Fill(new Rect(r.x,r.y,r.width*boss.Active.Health/boss.Active.maxHealth,r.height),new Color(.95f,.18f,.22f));}
+   DrawOpponents();
    if(boss&&boss.CampaignComplete){NexoUi.Card(new Rect(350,115,580,85),Gold);Label(new Rect(365,130,550,60),"HISTORIA COMPLETADA\nEsc · guardar partida",22,Cyan,TextAnchor.MiddleCenter);}
    GUI.matrix=old;
   }

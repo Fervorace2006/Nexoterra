@@ -9,7 +9,14 @@ namespace Nexoterra.World
         public static Vector3 Sample(Vector3 start,Vector3 end,float t,float height)
             =>Vector3.Lerp(start,end,t)+Vector3.up*(4*height*t*(1-t));
 
-        public static bool Plan(Vector3 start,Vector3 goal,float stride,float height,float footOffset,out Vector3 end)
+        public static bool Blocked(Vector3 origin,Vector3 delta,float radius,Transform ignore=null)
+        {
+            if(delta.sqrMagnitude<.000001f)return false;
+            foreach(var hit in Physics.SphereCastAll(origin,radius,delta.normalized,delta.magnitude,WorldMask,QueryTriggerInteraction.Ignore))
+                if(!ignore||!hit.collider.transform.IsChildOf(ignore))return true;
+            return false;
+        }
+        public static bool Plan(Vector3 start,Vector3 goal,float stride,float height,float footOffset,out Vector3 end,Transform ignore=null)
         {
             end=start;Vector3 forward=goal-start;forward.y=0;
             if(forward.sqrMagnitude<.001f)return false;
@@ -26,7 +33,7 @@ namespace Nexoterra.World
                 {
                     Vector3 next=Sample(start,candidate,i/10f,height)+Vector3.up*.12f;
                     Vector3 delta=next-previous;
-                    if(Physics.SphereCast(previous,.075f,delta.normalized,out _,delta.magnitude,WorldMask,QueryTriggerInteraction.Ignore)){clear=false;break;}
+                    if(Blocked(previous,delta,.075f,ignore)){clear=false;break;}
                     previous=next;
                 }
                 if(!clear)continue;

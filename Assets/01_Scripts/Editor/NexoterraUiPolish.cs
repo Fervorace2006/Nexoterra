@@ -19,10 +19,10 @@ namespace Nexoterra.Editor
    AssetDatabase.Refresh();var scene=UnityEngine.SceneManagement.SceneManager.GetActiveScene();if(scene.path==NexoterraBiomeBuilder.ScenePath&&scene.isDirty)EditorSceneManager.SaveScene(scene);EditorSceneManager.OpenScene(NexoterraBiomeBuilder.ScenePath);
    File.Copy(NexoterraBiomeBuilder.ScenePath,"Library/BeforeUiPolish_"+DateTime.Now.ToString("yyyyMMdd_HHmmss")+".unity",true);Directory.CreateDirectory(Folder);
    var inventory=UnityEngine.Object.FindAnyObjectByType<SlugInventory>();foreach(var d in inventory.catalog.species)d.portrait=Portrait(d.normal,d.id,false);EditorUtility.SetDirty(inventory.catalog);
-   var hud=UnityEngine.Object.FindAnyObjectByType<NexoHud>();hud.malePortrait=Portrait(AssetDatabase.LoadAssetAtPath<GameObject>("Assets/NexoterraWorld/Characters/Player_Male.prefab"),"Player_Male",true);hud.femalePortrait=Portrait(AssetDatabase.LoadAssetAtPath<GameObject>("Assets/NexoterraWorld/Characters/Player_Female.prefab"),"Player_Female",true);
+   var hud=UnityEngine.Object.FindAnyObjectByType<NexoHud>();hud.malePortrait=Portrait(AssetDatabase.LoadAssetAtPath<GameObject>("Assets/02_Prefabs/Gameplay/Models/Player_Male.prefab"),"Player_Male",true);hud.femalePortrait=Portrait(AssetDatabase.LoadAssetAtPath<GameObject>("Assets/02_Prefabs/Gameplay/Models/Player_Female.prefab"),"Player_Female",true);
    EditorUtility.SetDirty(hud);EditorSceneManager.MarkSceneDirty(hud.gameObject.scene);EditorSceneManager.SaveScene(hud.gameObject.scene);AssetDatabase.SaveAssets();File.WriteAllText("Library/UiPolish.result.txt","PASS: "+inventory.catalog.species.Length+" retratos de babosas y 2 retratos de jugador en 512 px.");
   }
-  static Texture2D Portrait(GameObject source,string id,bool character)
+  public static Texture2D Portrait(GameObject source,string id,bool character)
   {
    if(!source)throw new Exception("Falta modelo "+id);
    var stage=new GameObject("Estudio temporal de retratos");var model=UnityEngine.Object.Instantiate(source,stage.transform);model.SetActive(true);model.transform.position=new Vector3(0,3000,0);model.transform.rotation=Quaternion.identity;

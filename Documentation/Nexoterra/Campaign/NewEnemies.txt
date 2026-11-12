@@ -1,0 +1,9 @@
+Enemy2: humanoide válido, controlador Player_Animations, altura 1.9, vida 180
+Secuaz_Sir_Black: humanoide válido, controlador Player_Animations, altura 2.05, vida 220
+Sir_Black_2: humanoide válido, controlador Player_Animations, altura 2.2, vida 750
+Assets/00_Scenes/Campaign/Nexoterra_Jardines.unity: 8 enemigos, un secuaz; guardián Secuaz de Sir Black
+Assets/00_Scenes/Campaign/Nexoterra_Hielo.unity: 8 enemigos, un secuaz; guardián Secuaz de Sir Black
+Assets/00_Scenes/Campaign/Nexoterra_Agua.unity: 8 enemigos, un secuaz; guardián Secuaz de Sir Black
+Assets/00_Scenes/Campaign/Nexoterra_Tierra.unity: 8 enemigos, un secuaz; guardián Secuaz de Sir Black
+Assets/00_Scenes/Campaign/Nexoterra_Volcan.unity: 9 enemigos, un secuaz; guardián Sir Black 1
+Assets/00_Scenes/Campaign/Nexoterra_Carmesi.unity: 9 enemigos, un secuaz; guardián Sir Black 2

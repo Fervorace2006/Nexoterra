@@ -25,9 +25,11 @@ namespace Nexoterra.World
                 return new Rect(380,588,524,116).Contains(p)||new Rect(1070,654,190,48).Contains(p);
             }
         }
+        [Min(.5f)] public float docHealingRadius=6;
+        public int darkWater;
         public int Count=>owned.Count;
         readonly Dictionary<string,SlugProjectile> travelling=new Dictionary<string,SlugProjectile>();
-        public bool IsBusy(string species)=>travelling.TryGetValue(species,out var slug)&&slug;
+        public bool IsBusy(string species)=>(travelling.TryGetValue(species,out var slug)&&slug)||(GetComponent<CorruptionCompanion>()&&GetComponent<CorruptionCompanion>().IsLoose(species));
         public SlugProjectile Travelling(string species)=>travelling.TryGetValue(species,out var slug)?slug:null;
         public void Recover(string species,SlugProjectile slug)
         {
@@ -62,12 +64,12 @@ namespace Nexoterra.World
             for(int i=0;i<6;i++)if(keys[i].wasPressedThisFrame)selected=i;
             if(!IsOpen&&m!=null&&Mathf.Abs(m.scroll.ReadValue().y)>.01f)selected=(selected+(m.scroll.ReadValue().y>0?5:1))%6;
         }
-        public bool HasSpecies(string species)=>owned.Exists(id=>SlugCatalog.Canonical(id)==SlugCatalog.Canonical(species));
+        public bool HasSpecies(string species)=>owned.Exists(id=>SlugCatalog.BaseSpecies(id)==SlugCatalog.BaseSpecies(species));
         public bool Add(string species)
         {
             species=SlugCatalog.Canonical(species);
             var definition=catalog?catalog.Find(species):null;
-            if(definition!=null&&definition.unique&&HasSpecies(species)){Status="Ya domesticaste esta elemental única.";return false;}
+            if(definition!=null&&definition.unique&&HasSpecies(species)){Status="Ya domesticaste esta criatura única.";return false;}
             if(catalog==null||catalog.Find(species)==null){Status="Esta especie aún no está registrada.";return false;}
             owned.Add(species);int index=owned.Count-1;
             int empty=Array.IndexOf(equipped,-1);if(empty>=0){equipped[empty]=index;selected=empty;}
@@ -93,8 +95,9 @@ namespace Nexoterra.World
             if(IsBusy(definition.id)){Status=definition.displayName+" todavía está fuera. Espera a que regrese.";return null;}
             if(!definition.normal||!definition.transformed){Status="Falta el modelo de esta especie.";return null;}
             var go=new GameObject("Disparo · "+definition.id);go.layer=2;go.transform.position=muzzle.position;
-            var shot=go.AddComponent<SlugProjectile>();shot.speed=projectileSpeed;shot.transformDistance=transformationDistance;
-            travelling[definition.id]=shot;shot.Launch(definition,direction,this);var abilities=GetComponent<PlayerAbilities>();if(abilities)abilities.OnSlugLaunched(definition.id);return shot;
+            var shot=go.AddComponent<SlugProjectile>();shot.speed=projectileSpeed;shot.transformDistance=transformationDistance;shot.docHealingRadius=docHealingRadius;
+            if(definition.id.StartsWith("Malvada_")){var health=GetComponent<PlayerHealth>();if(health)health.CorruptionCost();}
+            travelling[definition.id]=shot;shot.Launch(definition,direction,this);if(ArenaSession.Current)ArenaSession.Current.SubmitShot(definition,muzzle.position,direction,shot);var abilities=GetComponent<PlayerAbilities>();if(abilities)abilities.OnSlugLaunched(definition.id);return shot;
         }
         public void Save()
         {
@@ -142,7 +145,7 @@ namespace Nexoterra.World
             var picture=new Rect(r.x+5,r.y+9,r.width-10,r.height-37);NexoUi.Portrait(picture,definition?.portrait,accent,busy?.45f:1);
             if(definition==null)NexoHud.Label(picture,"+",24,NexoUi.Muted,TextAnchor.MiddleCenter);
             NexoHud.Fill(new Rect(r.x+5,r.y+5,19,18),active?Gold:new Color(.06f,.13f,.17f));NexoHud.Label(new Rect(r.x+5,r.y+4,19,19),badge,12,active?Ink:NexoUi.Text,TextAnchor.MiddleCenter);
-            if(definition!=null&&definition.unique)NexoHud.Label(new Rect(r.xMax-25,r.y+4,20,20),"E",12,accent,TextAnchor.MiddleCenter);
+            if(definition!=null&&definition.IsElemental)NexoHud.Label(new Rect(r.xMax-25,r.y+4,20,20),"E",12,accent,TextAnchor.MiddleCenter);
             if(busy)DrawReturnRing(r,definition.id);
             NexoHud.Fill(new Rect(r.x+4,r.yMax-27,r.width-8,23),new Color(.02f,.04f,.055f,.9f));NexoHud.Label(new Rect(r.x+4,r.yMax-27,r.width-8,23),name,12,definition!=null?NexoUi.Text:NexoUi.Muted,TextAnchor.MiddleCenter);
             if(active)NexoHud.Fill(new Rect(r.center.x-12,r.yMax-2,24,2),Gold);
@@ -193,7 +196,7 @@ namespace Nexoterra.World
             if(NexoUi.Button(new Rect(1014,54,72,40),"CERRAR"))SetOpen(false);
             if(NexoUi.Button(new Rect(194,128,108,34),"TODAS",!onlyElementals)){onlyElementals=false;scroll=Vector2.zero;}
             if(NexoUi.Button(new Rect(312,128,148,34),"ELEMENTALES",onlyElementals)){onlyElementals=true;scroll=Vector2.zero;}
-            var visible=new List<int>();for(int i=0;i<owned.Count;i++)if(!onlyElementals||(catalog.Find(owned[i])?.unique??false))visible.Add(i);
+            var visible=new List<int>();for(int i=0;i<owned.Count;i++)if(!onlyElementals||(catalog.Find(owned[i])?.IsElemental??false))visible.Add(i);
             if(!visible.Contains(previewIndex))previewIndex=visible.Count>0?visible[0]:-1;
             if(visible.Count==0)NexoHud.Label(new Rect(218,236,490,105),owned.Count==0?"TU COLECCIÓN EMPIEZA AQUÍ\nRecoge hongos con E y alimenta babosas con F.":"AÚN NO TIENES ELEMENTALES\nExplora los lugares especiales de cada bioma.",18,NexoUi.Muted,TextAnchor.MiddleCenter);
             scroll=GUI.BeginScrollView(new Rect(192,178,588,300),scroll,new Rect(0,0,564,Mathf.Max(298,Mathf.Ceil(visible.Count/5f)*144)));
@@ -207,7 +210,7 @@ namespace Nexoterra.World
             GUI.EndScrollView();
             var focus=previewIndex>=0&&previewIndex<owned.Count?catalog.Find(owned[previewIndex]):SelectedDefinition();
             var accent=NexoUi.Accent(focus);NexoUi.Card(new Rect(798,128,288,350),accent);
-            NexoHud.Label(new Rect(814,140,256,24),focus?.unique==true?"ELEMENTAL · ÚNICA":"FICHA DE CRIATURA",12,accent,TextAnchor.MiddleCenter);
+            NexoHud.Label(new Rect(814,140,256,24),focus?.IsElemental==true?"ELEMENTAL · ÚNICA":focus?.unique==true?"CRIATURA · ÚNICA":"FICHA DE CRIATURA",12,accent,TextAnchor.MiddleCenter);
             NexoUi.Portrait(new Rect(838,168,208,172),focus?.portrait,accent);
             NexoHud.Label(new Rect(814,340,256,29),focus?.displayName??"Tu próxima compañera",21,NexoUi.Text,TextAnchor.MiddleCenter);
             NexoHud.Label(new Rect(820,379,246,78),NexoUi.Ability(focus),14,NexoUi.Muted,TextAnchor.UpperCenter);

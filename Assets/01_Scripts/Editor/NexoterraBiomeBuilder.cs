@@ -309,8 +309,8 @@ namespace Nexoterra.Editor
             var cc=player.AddComponent<CharacterController>();cc.height=2;cc.radius=.32f;cc.center=Vector3.up;cc.slopeLimit=45;cc.stepOffset=.3f;cc.minMoveDistance=0;
             var visual=new GameObject("Modelos estaticos · reemplazar por rig animado").transform;visual.SetParent(player.transform,false);visual.rotation=Quaternion.Euler(0,-35,0);
             // Normalize before moving into the scene: importer models are one metre tall.
-            var male=Model("Assets/NexoterraWorld/Characters/Player_Male.prefab",null,1.9f);male.transform.SetParent(visual,false);
-            var female=Model("Assets/NexoterraWorld/Characters/Player_Female.prefab",null,1.85f);female.transform.SetParent(visual,false);female.SetActive(false);
+            var male=Model("Assets/02_Prefabs/Gameplay/Models/Player_Male.prefab",null,1.9f);male.transform.SetParent(visual,false);
+            var female=Model("Assets/02_Prefabs/Gameplay/Models/Player_Female.prefab",null,1.85f);female.transform.SetParent(visual,false);female.SetActive(false);
             var mount=new GameObject("Soporte del lanzador · ajustar con el rig").transform;mount.SetParent(visual,false);mount.localPosition=new Vector3(.48f,1.1f,.28f);
             var weapon=Model("Assets/03_Models/Blast/Blast.fbx",null,.34f);weapon.transform.SetParent(mount,false);
             var muzzle=new GameObject("Salida del disparo").transform;muzzle.SetParent(mount,false);muzzle.localPosition=new Vector3(0,.20f,.44f);
@@ -322,7 +322,7 @@ namespace Nexoterra.Editor
             var line=new GameObject("Trazo de disparo de prueba").AddComponent<LineRenderer>();line.transform.SetParent(group);line.positionCount=2;line.startWidth=.025f;line.endWidth=.012f;line.sharedMaterial=glows[0];line.enabled=false;controller.tracer=line;
             controller.travelPoints=new Transform[6];
             for(int i=0;i<6;i++){var point=new GameObject(BiomeNames[i]).transform;point.SetParent(group);var pos=Visits[i];pos.y=Ground(pos)+.15f;point.position=pos;controller.travelPoints[i]=point;}
-            var companion=Model("Assets/NexoterraWorld/Characters/Player_Female.prefab",null,1.85f);companion.name="Comando · companera en el refugio";companion.transform.SetParent(group);var npc=p+new Vector3(-4,0,0);npc.y=Ground(npc);companion.transform.position+=npc;companion.transform.rotation=Quaternion.Euler(0,140,0);
+            var companion=Model("Assets/02_Prefabs/Gameplay/Models/Player_Female.prefab",null,1.85f);companion.name="Comando · companera en el refugio";companion.transform.SetParent(group);var npc=p+new Vector3(-4,0,0);npc.y=Ground(npc);companion.transform.position+=npc;companion.transform.rotation=Quaternion.Euler(0,140,0);
         }
         static GameObject Creature(string key,string path)
         {

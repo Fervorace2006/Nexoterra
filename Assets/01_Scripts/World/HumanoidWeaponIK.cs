@@ -14,6 +14,7 @@ namespace Nexoterra.World
    foreach(var goal in goals){animator.SetIKPositionWeight(goal,0);animator.SetIKRotationWeight(goal,0);}
    animator.SetLookAtWeight(0);
    var state=animator.GetCurrentAnimatorStateInfo(0);
+   if(state.IsName("CaidaAtras")||state.IsName("levantarsedecaida"))return;
    if((abilities&&abilities.IsDodging)||state.IsName("RollLeft")||state.IsName("RollRight")||state.IsName("Death")||(enemy&&(enemy.IsDead||enemy.IsKnockedDown)))return;
    float weight=driver?driver.AimWeight:enemy?animator.GetLayerWeight(Mathf.Max(0,animator.GetLayerIndex("AimUpperBody"))):0;
    var right=animator.GetBoneTransform(HumanBodyBones.RightHand);
