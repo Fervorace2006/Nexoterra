@@ -48,7 +48,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Nexoterra.World.SlugPrefabStats
   combat:
-    impactDamage: 6
+    impactDamage: 11.5
     burnDamagePerSecond: 0
     burnDuration: 0
     slowMultiplier: 1

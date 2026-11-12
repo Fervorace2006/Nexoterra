@@ -45,7 +45,7 @@ namespace Nexoterra.World
         public static SlugFlightEffects Create(Transform projectile,string species)
         {
             var go=new GameObject("Efecto transformado Ã‚Â· "+species);go.layer=2;go.transform.SetParent(projectile,false);
-            var effect=go.AddComponent<SlugFlightEffects>();effect.Kind=ForSpecies(species);effect.corrupted=species.StartsWith("Malvada_");effect.Configure();go.transform.localPosition=Vector3.back*.65f;if(effect.Kind==Style.Fire){var fire=ImportedSlugVfx.Spawn("FireTail",go.transform,Vector3.zero,.3f,Quaternion.Euler(-90,0,0));if(effect.corrupted)ImportedSlugVfx.Tint(fire,new Color(.15f,1,.55f));}return effect;
+            var effect=go.AddComponent<SlugFlightEffects>();effect.Kind=ForSpecies(species);effect.corrupted=species.StartsWith("Malvada_");effect.Configure();go.transform.localPosition=Vector3.back*.65f;if(effect.Kind==Style.Fire){var fire=ImportedSlugVfx.Spawn("FireTail",go.transform,Vector3.zero,.3f,Quaternion.Euler(-90,0,0));if(effect.corrupted)ImportedSlugVfx.Tint(fire,new Color(.15f,1,.55f));}if(effect.Kind==Style.Wind)ImportedSlugVfx.Spawn("AirTornado",go.transform,Vector3.zero,.22f,Quaternion.Euler(-90,0,0));return effect;
         }
         static Color ColorFor(Style style)
         {
@@ -68,7 +68,7 @@ namespace Nexoterra.World
         }
         void Configure()
         {
-            tint=ColorFor(Kind);if(corrupted)tint=Kind==Style.Wind?Color.red:new Color(.15f,1,.55f);
+            tint=ColorFor(Kind);if(corrupted)tint=Kind==Style.Wind?new Color(.75f,.79f,.83f):new Color(.15f,1,.55f);
             particles=MakeParticles(transform,tint,true,Kind==Style.Fire?.62f:.3f);
             particles.transform.localPosition=Vector3.back*.35f;
             var renderer=particles.GetComponent<ParticleSystemRenderer>();

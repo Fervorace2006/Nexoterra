@@ -34,7 +34,7 @@ public sealed class UpgradeReviewRunner:MonoBehaviour
   c.guardian.ReceiveDamage(10000);Check(WildSlug.Active.Any(s=>c.IsReward(s)&&s.species=="Elemental_Energia"),"secuaz suelta Energía limpia");
   var abilities=player.GetComponent<PlayerAbilities>();abilities.dodgeCooldown=0;
   player.enabled=true;player.Teleport(c.entrance.position);yield return new WaitForSeconds(.3f);
-  foreach(int side in new[]{1,-1}){Vector3 before=player.transform.position;Check(abilities.TryDodge(side,Vector3.forward,true),"inicia voltereta longitudinal "+side);yield return new WaitForSeconds(.18f);var a=player.GetComponent<NativePlayerAnimation>().male;Check(a.GetCurrentAnimatorStateInfo(0).IsName(side>0?"RollForward":"RollBackward"),"animación longitudinal "+side);yield return new WaitForSeconds(.6f);Check((player.transform.position.z-before.z)*side>2.5f,"desplazamiento longitudinal "+side);}
+  foreach(int side in new[]{1,-1})Check(!abilities.TryDodge(side,Vector3.forward,true),"sin volteretas adelante/atrás "+side);
   player.enabled=false;player.Teleport(new Vector3(-80,.3f,-50));var motor=player.GetComponent<CharacterController>();
   var returning=new GameObject("Prueba regreso corriendo").AddComponent<SlugProjectile>();returning.transform.position=new Vector3(-80,.5f,-68);returning.Launch(inv.catalog.Find("Infierno"),Vector3.forward,inv);returning.BeginReturn();float began=Time.time;
   while(returning&&!returning.HasArrived&&Time.time-began<10){motor.Move((Vector3.forward*player.sprintSpeed+Vector3.down*2)*Time.deltaTime);yield return null;}

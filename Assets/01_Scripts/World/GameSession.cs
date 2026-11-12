@@ -37,7 +37,7 @@ namespace Nexoterra.World
   {
    if(Keyboard.current==null||!Keyboard.current.escapeKey.wasPressedThisFrame)return;
    if(inventory.IsOpen){inventory.SetOpen(false);return;}
-   if(started)SetMenu(!menu);
+   SetMenu(!menu);
   }
   void SetMenu(bool value){menu=value;Time.timeScale=value&&!ArenaSession.Current?0:1;Cursor.lockState=value?CursorLockMode.None:CursorLockMode.Locked;Cursor.visible=value;confirmNew=false;}
   public void Resume(){started=true;SetMenu(false);}
@@ -109,10 +109,12 @@ namespace Nexoterra.World
    if(!menu)return;var matrix=GUI.matrix;NexoHud.Scale();
    float scale=Mathf.Min(Screen.width/1280f,Screen.height/720f);
    NexoHud.Fill(new Rect(-(Screen.width/scale-1280)*.5f,-(Screen.height/scale-720)*.5f,Screen.width/scale,Screen.height/scale),new Color(.005f,.025f,.04f,.8f));
-   NexoHud.Panel(new Rect(60,60,480,590));var logo=Resources.Load<Texture2D>("Nexoterra/UI/Logo");if(logo)GUI.DrawTexture(new Rect(78,78,444,100),logo,ScaleMode.ScaleToFit);
-   NexoHud.Label(new Rect(94,164,410,32),started?"EXPLORACIÓN EN PAUSA":"CRÓNICAS DEL SUBSUELO",18,NexoHud.Cyan);
-   NexoHud.Label(new Rect(94,215,400,95),"Seis biomas. Criaturas únicas.\nTu colección comienza explorando.",21,Color.white);
-   NexoHud.Label(new Rect(94,470,400,120),"WASD · caminar   Mayús · correr\nCtrl + WASD · voltereta\nRatón derecho · apuntar\nRatón izquierdo · disparar\nB · mochila   R · recargar   Esc · menú",16,new Color(.65f,.8f,.83f));
+   NexoHud.Panel(new Rect(60,60,480,590));var logo=Resources.Load<Texture2D>("Nexoterra/UI/Logo");if(logo)GUI.DrawTexture(new Rect(90,80,420,120),logo,ScaleMode.ScaleToFit);
+   NexoHud.Fill(new Rect(94,214,412,1),NexoHud.Gold*new Color(1,1,1,.6f));
+   NexoHud.Label(new Rect(94,226,410,28),started?"EXPLORACIÓN EN PAUSA":"CRÓNICAS DEL SUBSUELO",18,NexoHud.Cyan);
+   NexoHud.Label(new Rect(94,440,400,24),"CONTROLES",13,NexoHud.Gold);
+   NexoHud.Label(new Rect(94,264,400,95),"Seis biomas. Criaturas únicas.\nTu colección comienza explorando.",21,Color.white);
+   NexoHud.Label(new Rect(94,470,400,120),"WASD · caminar   Mayús · correr\nCtrl + A / D · voltereta lateral\nRatón derecho · apuntar\nRatón izquierdo · disparar\nB · mochila   R · recargar   Esc · menú",16,new Color(.65f,.8f,.83f));
    NexoHud.Panel(new Rect(640,92,480,554));float y=120;
    if(ArenaSession.Current){if(NexoHud.Button(new Rect(672,180,416,58),"REANUDAR"))Resume();if(NexoHud.Button(new Rect(672,270,416,58),"SALIR AL MENÚ PRINCIPAL")){Resume();if(MultiplayerRoom.Current)MultiplayerRoom.Current.Leave();else FrontEndMenu.Load(FrontEndMenu.MenuScene);}NexoHud.Label(new Rect(672,360,416,80),"La partida en línea continúa mientras abres el menú.",18,NexoHud.Cyan);GUI.matrix=matrix;return;}
    if(confirmNew){NexoHud.Label(new Rect(670,y,420,110),"¿Empezar una partida nueva?\nEl progreso sin guardar se perderá.\nTu archivo guardado se conserva.",19,Color.white);y+=125;if(NexoHud.Button(new Rect(672,y,416,58),"EMPEZAR CON INFIERNO"))NewGame();y+=72;if(NexoHud.Button(new Rect(672,y,416,58),"VOLVER"))confirmNew=false;}

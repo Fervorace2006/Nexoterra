@@ -34,7 +34,7 @@ namespace Nexoterra.World
   public static string Ability(SlugDefinition d)
   {
    if(d==null)return "Elige una babosa de tu colección.";
-   if(d.id.StartsWith("Malvada_"))return Ability(new SlugDefinition{id=SlugCatalog.BaseSpecies(d.id)})+"\n+5% de daño · cuesta 1% de vida por disparo.";
+   if(d.id.StartsWith("Malvada_"))return Ability(new SlugDefinition{id=SlugCatalog.BaseSpecies(d.id)})+"\n+5% de daño · cuesta 5 PV por disparo.";
    switch(d.id){case "Infierno":case "Elemental_Fuego":return "FUEGO\nImpacto y quemadura posterior.";case "Elemental_Agua":return "AGUA\nInmoviliza con un círculo de agua.";case "ice":return "HIELO\nCongela al objetivo temporalmente.";case "tazerling":return "ELECTRICIDAD\nBloquea movimiento y disparo.";case "Gon_Doc":case "Elemental_Energia":return "CURACIÓN\nRecupera vida al lanzarla.";case "Elemental_Aire":case "Tornado":return "VIENTO\nArrastra enemigos y aumenta tu velocidad.";case "Arana":return "TELARAÑA\nAtrapa los pies del enemigo.";default:return "IMPACTO\nGolpe contundente y derribo.";}
   }
  }

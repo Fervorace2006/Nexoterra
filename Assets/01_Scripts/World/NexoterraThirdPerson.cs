@@ -61,8 +61,6 @@ namespace Nexoterra.World
                     bool ctrl=k.leftCtrlKey.wasPressedThisFrame||k.rightCtrlKey.wasPressedThisFrame;
                     if(k.aKey.wasPressedThisFrame||(ctrl&&k.aKey.isPressed))abilities.TryDodge(-1,Quaternion.Euler(0,yaw,0)*Vector3.right);
                     else if(k.dKey.wasPressedThisFrame||(ctrl&&k.dKey.isPressed))abilities.TryDodge(1,Quaternion.Euler(0,yaw,0)*Vector3.right);
-                    else if(k.wKey.wasPressedThisFrame||(ctrl&&k.wKey.isPressed))abilities.TryDodge(1,Quaternion.Euler(0,yaw,0)*Vector3.forward,true);
-                    else if(k.sKey.wasPressedThisFrame||(ctrl&&k.sKey.isPressed))abilities.TryDodge(-1,Quaternion.Euler(0,yaw,0)*Vector3.forward,true);
                 }
                 if(k.eKey.wasPressedThisFrame)Collect();
                 if(k.fKey.wasPressedThisFrame)Feed();
@@ -72,8 +70,9 @@ namespace Nexoterra.World
             if(health&&!health.CanMove)input=Vector2.zero;
             Vector3 movement=Quaternion.Euler(0,yaw,0)*new Vector3(input.x,0,input.y).normalized;
             if(motor.isGrounded&&vertical<0)vertical=-2;
-            if(!(abilities&&abilities.IsDodging)&&motor.isGrounded&&k.spaceKey.wasPressedThisFrame&&Cursor.lockState==CursorLockMode.Locked&&(!health||health.CanMove))vertical=6;
-            vertical+=Physics.gravity.y*1.8f*Time.deltaTime;
+            if(!(abilities&&abilities.IsDodging)&&motor.isGrounded&&k.spaceKey.wasPressedThisFrame&&Cursor.lockState==CursorLockMode.Locked&&(!health||health.CanMove))vertical=6.6f;
+            // Snappy arc: lighter going up, heavier coming down (no floaty hang time).
+            vertical+=Physics.gravity.y*(vertical>0?2.2f:2.9f)*Time.deltaTime;
             float moveSpeed=(k.leftShiftKey.isPressed?sprintSpeed:walkSpeed)*(abilities?abilities.MovementMultiplier:1);
             if(abilities&&abilities.IsDodging){movement=abilities.DodgeDirection;moveSpeed=abilities.DodgeSpeed;}
             if(health&&!health.CanMove)movement=Vector3.zero;

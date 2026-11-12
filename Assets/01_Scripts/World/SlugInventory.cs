@@ -59,7 +59,7 @@ namespace Nexoterra.World
             if(GameSession.Blocked)return;
             var k=Keyboard.current;var m=Mouse.current;if(k==null)return;
             if(k.bKey.wasPressedThisFrame||k.iKey.wasPressedThisFrame)SetOpen(!IsOpen);
-            if(k.escapeKey.wasPressedThisFrame&&IsOpen){SetOpen(false);Cursor.lockState=CursorLockMode.None;Cursor.visible=true;}
+            if(!GameSession.Current&&k.escapeKey.wasPressedThisFrame&&IsOpen){SetOpen(false);Cursor.lockState=CursorLockMode.None;Cursor.visible=true;}
             var keys=new[]{k.digit1Key,k.digit2Key,k.digit3Key,k.digit4Key,k.digit5Key,k.digit6Key};
             for(int i=0;i<6;i++)if(keys[i].wasPressedThisFrame)selected=i;
             if(!IsOpen&&m!=null&&Mathf.Abs(m.scroll.ReadValue().y)>.01f)selected=(selected+(m.scroll.ReadValue().y>0?5:1))%6;

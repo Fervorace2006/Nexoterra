@@ -32,7 +32,7 @@ Shader "Nexoterra/Cavern Water"
             V Vert(A i)
             {
                 V o; o.world=TransformObjectToWorld(i.p.xyz);
-                float fade=saturate((1-i.uv.x)*8);
+                float fade=1;
                 o.world.y+=(sin(o.world.x*.7+_Time.y*_FlowSpeed)+cos(o.world.z*.6+_Time.y*_FlowSpeed))*.025*fade;
                 o.p=TransformWorldToHClip(o.world);o.uv=i.uv;o.fog=ComputeFogFactor(o.p.z);return o;
             }
@@ -42,8 +42,13 @@ Shader "Nexoterra/Cavern Water"
                 float a=sin(i.world.x*.65+i.world.z*.45+t+sin(i.world.z*.25-t));
                 float b=sin(i.world.z*.8-i.world.x*.28-t*.8+sin(i.world.x*.4));
                 float caustic=pow(saturate(1-abs(a+b)*2.8),10)*.16;
-                float shore=smoothstep(.62,1,i.uv.x);
-                float foam=smoothstep(.955,.985,i.uv.x+sin(i.uv.y*48+t)*.008);
+
+                float2 screenUV=GetNormalizedScreenSpaceUV(i.p);
+                float floorDepth=LinearEyeDepth(SampleSceneDepth(screenUV),_ZBufferParams);
+                float surfaceDepth=-TransformWorldToView(i.world).z;
+                float thickness=max(0,floorDepth-surfaceDepth);
+                float shore=1-smoothstep(.1,3,thickness);
+                float foam=(1-smoothstep(.03,.28,thickness))*smoothstep(0,.025,thickness);
                 float ripples=pow(saturate(sin(i.world.x*.34+i.world.z*.8+t*.4)),24)*.06;
                 half3 color=lerp(_DeepColor.rgb,_ShallowColor.rgb,.35+shore*.65);
                 color+=_FoamColor.rgb*(caustic+ripples);
@@ -53,10 +58,7 @@ Shader "Nexoterra/Cavern Water"
                 float fresnel=pow(1-abs(dot(n,v)),4);
                 Light sun=GetMainLight();
                 color+=sun.color*pow(saturate(dot(n,normalize(v+sun.direction))),80)*.3;
-                float2 screenUV=GetNormalizedScreenSpaceUV(i.p);
-                float floorDepth=LinearEyeDepth(SampleSceneDepth(screenUV),_ZBufferParams);
-                float surfaceDepth=-TransformWorldToView(i.world).z;
-                float thickness=max(0,floorDepth-surfaceDepth);
+
                 // Submerged rock softens into teal as the water column deepens.
                 float transmission=exp(-thickness*.36);
                 color=lerp(color*.65+_DeepColor.rgb*.35,color,transmission);

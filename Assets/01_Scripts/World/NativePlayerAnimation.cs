@@ -23,6 +23,7 @@ namespace Nexoterra.World
   public bool IsLoaded {get{var inventory=GetComponent<SlugInventory>();var selected=inventory?inventory.SelectedDefinition():null;return loaded&&selected!=null&&selected.id==loadedSpecies&&!inventory.IsBusy(selected.id);}}
   Vector3 weaponScale;Transform weaponSocket;
   NexoterraThirdPerson player;CharacterController motor;PlayerHealth health;PlayerAbilities abilities;
+  bool wasAirborne;float landRemaining,airTime,jumpWeight;string jumpState;
   string state,upperState;Animator current;float reloadRemaining,shootRemaining;
   void Awake(){player=GetComponent<NexoterraThirdPerson>();motor=GetComponent<CharacterController>();health=GetComponent<PlayerHealth>();abilities=GetComponent<PlayerAbilities>();if(!waterSensor)waterSensor=GetComponent<WaterAnimationSensor>();if(weapon)weaponScale=weapon.lossyScale;}
   public void BeginReload(float duration){if(IsReloading||IsLoaded)return;var inventory=GetComponent<SlugInventory>();var selected=inventory?inventory.SelectedDefinition():null;if(selected==null||inventory.IsBusy(selected.id))return;loadedSpecies=selected.id;loaded=false;reloadRemaining=Mathf.Max(.1f,duration);shootRemaining=0;}
@@ -33,13 +34,31 @@ namespace Nexoterra.World
    var selected=player.female.activeSelf?female:male;if(!selected)return;
    if(!selected.runtimeAnimatorController&&playerController){selected.runtimeAnimatorController=playerController;selected.Rebind();selected.Update(0);state=null;upperState=null;}
    if(!selected.runtimeAnimatorController)return;
-   if(current!=selected){current=selected;state=null;upperState=null;AttachWeapon();}
+   if(current!=selected){current=selected;state=null;upperState=null;jumpState=null;AttachWeapon();}
    float speed=new Vector2(motor.velocity.x,motor.velocity.z).magnitude;
    bool roll=abilities&&abilities.IsDodging;
    bool dead=health&&health.IsDead;
    var effects=GetComponent<EnemyControlEffects>();
    string knockdown=effects?effects.KnockdownPose:null;
-   string next=dead?"Death":knockdown!=null?knockdown:roll?(abilities.DodgeAxis>0?"RollForward":abilities.DodgeAxis<0?"RollBackward":abilities.DodgeLeft?"RollLeft":"RollRight"):speed>.15f?(speed>3.4f?"Run":"Walk"):"Idle";
+   // Jump/fall: ignore one-frame ground losses on steps and slopes; never while swimming.
+   bool swimming=waterSensor&&waterSensor.Swimming;
+   bool grounded=motor.isGrounded||swimming;
+   airTime=grounded?0:airTime+Time.deltaTime;
+   bool airborne=!grounded&&(motor.velocity.y>1f||airTime>.15f);
+   if(airborne)wasAirborne=true;
+   if(grounded&&wasAirborne){wasAirborne=false;if(!swimming)landRemaining=.18f;}
+   if(!grounded)landRemaining=0;
+   landRemaining=Mathf.Max(0,landRemaining-Time.deltaTime);
+   string next=dead?"Death":knockdown!=null?knockdown:roll?(abilities.DodgeLeft?"RollLeft":"RollRight"):speed>.15f?(speed>3.4f?"Run":"Walk"):"Idle";
+   // Jump clips play on a legs-only layer, so arms keep holding the pistol.
+   int jumpLayer=current.GetLayerIndex("JumpLower");
+   if(jumpLayer>=0){
+    string jump=dead||roll||knockdown!=null?null:airborne?"JumpStart":landRemaining>0?"JumpLand":null;
+    if(jump!=null&&jump!=jumpState)current.CrossFadeInFixedTime(jump,jump=="JumpLand"?.05f:.12f,jumpLayer);
+    jumpState=jump;
+    jumpWeight=Mathf.MoveTowards(jumpWeight,jump!=null?1:0,Time.deltaTime/(jump!=null?.08f:.12f));
+    current.SetLayerWeight(jumpLayer,jumpWeight);
+   }
    bool aim=knockdown==null&&!GameSession.Blocked&&!dead&&!roll&&Mouse.current!=null&&Mouse.current.rightButton.isPressed&&Cursor.lockState==CursorLockMode.Locked&&!(GetComponent<SlugInventory>()&&GetComponent<SlugInventory>().IsOpen);
    if(reloadRemaining>0 && reloadRemaining<=Time.deltaTime)loaded=true;
    reloadRemaining=Mathf.Max(0,reloadRemaining-Time.deltaTime);shootRemaining=Mathf.Max(0,shootRemaining-Time.deltaTime);

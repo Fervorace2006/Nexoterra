@@ -22,12 +22,13 @@ namespace Nexoterra.World
   {return TryDodge(side,right,false);}
   public bool TryDodge(int side,Vector3 axis,bool longitudinal)
   {
-   var cc=GetComponent<CharacterController>();if(GameSession.Blocked||!health.CanMove||IsDodging||Time.time<readyAt||!cc.isGrounded)return false;
+   var cc=GetComponent<CharacterController>();if(longitudinal)return false;if(GameSession.Blocked||!health.CanMove||IsDodging||Time.time<readyAt||!cc.isGrounded)return false;
    DodgeLeft=side<0;DodgeAxis=longitudinal?(side<0?-1:1):0;axis.y=0;DodgeDirection=axis.normalized*(DodgeLeft?-1:1);dodgeRemaining=dodgeDuration;readyAt=Time.time+dodgeDuration+dodgeCooldown;return true;
   }
   public void OnSlugLaunched(string id)
   {
    if(id=="Gon_Doc"||id=="Elemental_Energia"){health.Heal(id=="Gon_Doc"?docHealing:32);GetComponent<NexoterraThirdPerson>().Notify("Curación recibida");}
+   id=SlugCatalog.BaseSpecies(id);
    if(id=="Elemental_Aire"||id=="Tornado"){boostUntil=Time.time+windDuration;GetComponent<NexoterraThirdPerson>().Notify("Viento · movimiento +25% durante 6 s");}
   }
  }

@@ -147,7 +147,7 @@ MonoBehaviour:
     accent: {r: 0, g: 1, b: 1, a: 1}
     unique: 1
     combat:
-      impactDamage: 20
+      impactDamage: 28
       burnDamagePerSecond: 0
       burnDuration: 0
       slowMultiplier: 0.55
@@ -165,7 +165,7 @@ MonoBehaviour:
     accent: {r: 0, g: 1, b: 1, a: 1}
     unique: 1
     combat:
-      impactDamage: 20
+      impactDamage: 28
       burnDamagePerSecond: 0
       burnDuration: 0
       slowMultiplier: 1
@@ -183,7 +183,7 @@ MonoBehaviour:
     accent: {r: 0, g: 1, b: 1, a: 1}
     unique: 1
     combat:
-      impactDamage: 32
+      impactDamage: 42
       burnDamagePerSecond: 7
       burnDuration: 5
       slowMultiplier: 1
@@ -201,7 +201,7 @@ MonoBehaviour:
     accent: {r: 0, g: 1, b: 1, a: 1}
     unique: 1
     combat:
-      impactDamage: 30
+      impactDamage: 40
       burnDamagePerSecond: 0
       burnDuration: 0
       slowMultiplier: 1
@@ -237,7 +237,7 @@ MonoBehaviour:
     accent: {r: 0, g: 1, b: 1, a: 1}
     unique: 1
     combat:
-      impactDamage: 6
+      impactDamage: 10
       burnDamagePerSecond: 0
       burnDuration: 0
       slowMultiplier: 1
@@ -309,7 +309,7 @@ MonoBehaviour:
     accent: {r: 0.3, g: 1, b: 0.5, a: 1}
     unique: 1
     combat:
-      impactDamage: 23
+      impactDamage: 32.2
       burnDamagePerSecond: 0
       burnDuration: 0
       slowMultiplier: 0.55
@@ -327,7 +327,7 @@ MonoBehaviour:
     accent: {r: 0.3, g: 1, b: 0.5, a: 1}
     unique: 1
     combat:
-      impactDamage: 23
+      impactDamage: 32.2
       burnDamagePerSecond: 0
       burnDuration: 0
       slowMultiplier: 1
@@ -345,7 +345,7 @@ MonoBehaviour:
     accent: {r: 0.3, g: 1, b: 0.5, a: 1}
     unique: 1
     combat:
-      impactDamage: 36.8
+      impactDamage: 48.3
       burnDamagePerSecond: 7
       burnDuration: 5
       slowMultiplier: 1
@@ -363,7 +363,7 @@ MonoBehaviour:
     accent: {r: 0.3, g: 1, b: 0.5, a: 1}
     unique: 1
     combat:
-      impactDamage: 34.5
+      impactDamage: 46
       burnDamagePerSecond: 0
       burnDuration: 0
       slowMultiplier: 1

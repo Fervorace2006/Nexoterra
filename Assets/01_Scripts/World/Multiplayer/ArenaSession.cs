@@ -92,7 +92,7 @@ namespace Nexoterra.World
     packet.id=sender;packet.direction.Normalize();
     if(!Finite(packet.position)||Vector3.Distance(packet.position,peer.position)>3)packet.position=peer.position+Vector3.up*1.3f;
     if(definition.id=="Gon_Doc"||definition.id=="Elemental_Energia")peer.health=Mathf.Min(100,peer.health+(definition.id=="Gon_Doc"?25:32));
-    if(definition.id.StartsWith("Malvada_"))peer.health=Mathf.Max(1,peer.health-1);
+    if(definition.id.StartsWith("Malvada_"))peer.health=Mathf.Max(1,peer.health-5);
     if(sender==network.LocalClientId&&predictedHostShot)predictedHostShot.arenaAuthority=true;else Launch(packet,true);Broadcast(packet);return;
    }
   }
@@ -171,7 +171,7 @@ namespace Nexoterra.World
    }
   }
   void OnGUI(){
-   if(!network)return;GUI.Label(new Rect(20,20,450,30),"SALA "+MultiplayerRoom.Current.Code+" · "+peers.Count+"/4 jugadores");
+   if(GameSession.Blocked||!network)return;GUI.Label(new Rect(20,20,450,30),"SALA "+MultiplayerRoom.Current.Code+" · "+peers.Count+"/4 jugadores");
    if(GUI.Button(new Rect(20,55,160,32),"SALIR DE LA SALA"))MultiplayerRoom.Current.Leave();
   }
  }

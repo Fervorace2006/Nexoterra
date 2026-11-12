@@ -13292,6 +13292,7 @@ MonoBehaviour:
   grip: {x: 4.9994245, y: 0.81375057, z: -5.1075835}
   gripRotation: {x: 0.37201703, y: -0.73191273, z: -0.5361624, w: -0.1960543}
   weaponSocketOffset: {x: 0, y: -0.045, z: 0.035}
+  copyPlayerGrip: 1
 --- !u!114 &474110199
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -13321,6 +13322,8 @@ MonoBehaviour:
   boss: 1
   campaignMember: 1
   equippedElemental: 
+  slugSlots: []
+  dropSlugsOnDeath: 0
   aggroRange: 28
   attackRange: 18
   speed: 2.2
@@ -13369,6 +13372,8 @@ MonoBehaviour:
   maxHealth: 600
   displayName: Sir Black
   visualRoot: {fileID: 2121300860}
+  corpseLifetime: 8
+  portrait: {fileID: 0}
   onDeath:
     m_PersistentCalls:
       m_Calls: []
@@ -22407,7 +22412,7 @@ MeshRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 842394000}
-  m_Enabled: 1
+  m_Enabled: 0
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
@@ -37116,6 +37121,8 @@ MonoBehaviour:
   enemies:
   - {fileID: 474110202}
   guardian: {fileID: 474110202}
+  trapGuard: {fileID: 0}
+  ambushBoss: {fileID: 0}
   catalog: {fileID: 11400000, guid: 53caeb6650327c0479cd0e2b3796952d, type: 2}
   introduction: "Las cinco elementales est\xE1n a salvo. Derrota al verdadero Sir
     Black para liberar Nexoterra."
@@ -40610,6 +40617,88 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1001 &1514883106
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 1895497826}
+    m_Modifications:
+    - target: {fileID: -8679921383154817045, guid: 112402668f7d717428fcbcc9bd26af9e, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 0.60615444
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 112402668f7d717428fcbcc9bd26af9e, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 0.60615444
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 112402668f7d717428fcbcc9bd26af9e, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 0.60615444
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 112402668f7d717428fcbcc9bd26af9e, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 112402668f7d717428fcbcc9bd26af9e, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: -0.049649596
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 112402668f7d717428fcbcc9bd26af9e, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 112402668f7d717428fcbcc9bd26af9e, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 112402668f7d717428fcbcc9bd26af9e, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 112402668f7d717428fcbcc9bd26af9e, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 112402668f7d717428fcbcc9bd26af9e, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 112402668f7d717428fcbcc9bd26af9e, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 112402668f7d717428fcbcc9bd26af9e, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 112402668f7d717428fcbcc9bd26af9e, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: 112402668f7d717428fcbcc9bd26af9e, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: b202e137ed091074ba929173c402b9f0, type: 2}
+    - target: {fileID: 919132149155446097, guid: 112402668f7d717428fcbcc9bd26af9e, type: 3}
+      propertyPath: m_Name
+      value: Sir_Blast
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 112402668f7d717428fcbcc9bd26af9e, type: 3}
+      propertyPath: m_Layer
+      value: 2
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 112402668f7d717428fcbcc9bd26af9e, type: 3}
+--- !u!4 &1514883107 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 112402668f7d717428fcbcc9bd26af9e, type: 3}
+  m_PrefabInstance: {fileID: 1514883106}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1518083840
 GameObject:
   m_ObjectHideFlags: 0
@@ -50168,6 +50257,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 842394001}
+  - {fileID: 1514883107}
   m_Father: {fileID: 2121300860}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1898880291

@@ -33,7 +33,7 @@ namespace Nexoterra.World
    bool corrupted=species.StartsWith("Malvada_");
    switch(SlugCatalog.Canonical(species.Replace("Malvada_","")))
    {
-    case "Arana":RootRemaining=5.5f;ReplaceRoot(false);break;
+    case "Arana":RootRemaining=3f;ReplaceRoot(false);break;
     case "Elemental_Agua":RootRemaining=4;ReplaceRoot(true);break;
     case "ice":FreezeRemaining=4; if(!iceVisual)iceVisual=Ice();if(iceMat)iceMat.SetColor("_BaseColor",corrupted?new Color(.04f,.35f,.65f,.5f):new Color(.25f,.8f,1,.28f));break;
     case "Infierno":case "Elemental_Fuego":FreezeRemaining=0;Clear(ref iceVisual);break;
@@ -99,7 +99,8 @@ namespace Nexoterra.World
    if(funnel)
    {
     var fx=funnel.GetComponent<Hun0FX.HunFXController>();
-    if(fx){fx.intensity=.55f;fx.SetColor(corrupted?Color.red:Color.white);}
+    if(fx){fx.intensity=.55f;fx.SetColor(Color.white);}
+    ImportedSlugVfx.Tint(funnel,new Color(.8f,.84f,.88f));
     var body=GetComponent<CharacterController>();
     float height=body?body.height:2f;
     funnel.transform.localScale=Vector3.one*(height*.26f);

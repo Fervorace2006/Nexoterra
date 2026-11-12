@@ -18,13 +18,43 @@ namespace Nexoterra.World
    Fill(new Rect(r.x+14,r.y+12,r.width-28,2),Cyan*.6f);
    foreach(float x in new[]{r.x,r.xMax-13})foreach(float y in new[]{r.y,r.yMax-13})Fill(new Rect(x,y,13,13),Gold);
   }
+  static Texture2D vignette;static GUIStyle field;
+  // Full-screen menu backdrop: key art cropped to fill, deep-water tint, vignette and slow caustic bands.
+  public static void Backdrop(Texture2D art)
+  {
+   var screen=new Rect(0,0,Screen.width,Screen.height);
+   Fill(screen,new Color(.004f,.02f,.03f));
+   if(art){var old=GUI.color;GUI.color=new Color(.55f,.7f,.75f);GUI.DrawTexture(screen,art,ScaleMode.ScaleAndCrop);GUI.color=old;}
+   Fill(screen,new Color(.0f,.05f,.07f,.62f));
+   float t=Time.unscaledTime;
+   for(int i=0;i<7;i++){float y=Screen.height*(.12f*i+.04f)+Mathf.Sin(t*.35f+i*1.7f)*Screen.height*.025f;Fill(new Rect(0,y,Screen.width,Screen.height*.012f),new Color(.2f,.9f,.95f,.025f));}
+   if(!vignette){vignette=new Texture2D(64,64,TextureFormat.RGBA32,false){wrapMode=TextureWrapMode.Clamp};for(int y=0;y<64;y++)for(int x=0;x<64;x++){float d=Vector2.Distance(new Vector2(x,y),new Vector2(31.5f,31.5f))/45f;vignette.SetPixel(x,y,new Color(0,0,0,Mathf.SmoothStep(0,.85f,d)));}vignette.Apply();}
+   GUI.DrawTexture(screen,vignette);
+  }
+  public static string Field(Rect r,string value,int max)
+  {
+   if(field==null){field=new GUIStyle(GUI.skin.textField){fontSize=19,alignment=TextAnchor.MiddleLeft,padding=new RectOffset(14,14,6,6)};foreach(var s in new[]{field.normal,field.hover,field.focused,field.active}){s.background=Texture2D.whiteTexture;}field.normal.textColor=field.hover.textColor=NexoUi.Text;field.focused.textColor=field.active.textColor=Color.white;}
+   bool focus=r.Contains(Event.current.mousePosition);
+   Fill(r,focus?Cyan:NexoUi.Edge);
+   var old=GUI.backgroundColor;GUI.backgroundColor=new Color(.02f,.07f,.09f);
+   string result=GUI.TextField(new Rect(r.x+2,r.y+2,r.width-4,r.height-4),value,max,field);
+   GUI.backgroundColor=old;Fill(new Rect(r.x,r.yMax-2,r.width,2),Gold*new Color(1,1,1,.8f));
+   return result;
+  }
   static readonly System.Collections.Generic.Dictionary<int,GUIStyle> labelStyles=new System.Collections.Generic.Dictionary<int,GUIStyle>();
   public static void Label(Rect r,string value,int size,Color color,TextAnchor alignment=TextAnchor.UpperLeft){int key=size*16+(int)alignment;if(!labelStyles.TryGetValue(key,out var style)){style=new GUIStyle(GUI.skin.label){fontSize=size,fontStyle=size>=22?FontStyle.Bold:FontStyle.Normal,alignment=alignment,wordWrap=true};labelStyles[key]=style;}style.normal.textColor=color;GUI.Label(r,value,style);}
   public static bool Button(Rect r,string title)
   {
-   Panel(r);Fill(new Rect(r.x+10,r.y+10,r.width-20,r.height-20),GUI.enabled?new Color(.015f,.24f,.13f):new Color(.08f,.12f,.12f));
-   for(float y=r.y+13;y<r.yMax-10;y+=4)Fill(new Rect(r.x+12,y,r.width-24,1),new Color(.1f,.8f,.5f,.1f));
-   Label(r,title,22,GUI.enabled?new Color(.25f,1,.55f):Color.gray,TextAnchor.MiddleCenter);return GUI.Button(r,GUIContent.none,GUIStyle.none);
+   bool hover=GUI.enabled&&r.Contains(Event.current.mousePosition);
+   Color edge=GUI.enabled?(hover?Cyan:Gold):new Color(.25f,.3f,.32f);
+   Fill(new Rect(r.x+2,r.y+4,r.width,r.height),new Color(0,0,0,.5f));
+   Fill(r,edge);Fill(new Rect(r.x+2,r.y+2,r.width-4,r.height-4),new Color(.15f,.22f,.24f));
+   Fill(new Rect(r.x+6,r.y+6,r.width-12,r.height-12),hover?new Color(.025f,.28f,.21f):new Color(.015f,.12f,.105f));
+   Fill(new Rect(r.x+12,r.y+9,r.width-24,2),new Color(.22f,.95f,.65f,hover?.8f:.35f));
+   for(float y=r.y+15;y<r.yMax-10;y+=5)Fill(new Rect(r.x+10,y,r.width-20,1),new Color(.1f,.7f,.45f,.08f));
+   foreach(float x in new[]{r.x,r.xMax-9})foreach(float y in new[]{r.y,r.yMax-9})Fill(new Rect(x,y,9,9),edge);
+   Label(new Rect(r.x+12,r.y,r.width-24,r.height),title,r.width<320?18:21,GUI.enabled?new Color(.7f,1,.83f):NexoUi.Muted,TextAnchor.MiddleCenter);
+   return GUI.Button(r,GUIContent.none,GUIStyle.none);
   }
   public static void HealthBar(Rect r,float fraction,Color color)
   {
@@ -59,7 +89,7 @@ namespace Nexoterra.World
   void OnGUI()
   {
    if(GameSession.Blocked||!health||!player||GetComponent<SlugInventory>().IsOpen)return;var old=GUI.matrix;Scale();
-   var box=new Rect(20,596,336,108);NexoUi.Card(box,Cyan);NexoUi.Card(new Rect(28,604,86,92),Cyan);
+   var box=new Rect(20,596,336,108);Panel(box);NexoUi.Card(new Rect(28,604,86,92),Cyan);
    NexoUi.Portrait(new Rect(30,606,82,88),player.female.activeSelf?femalePortrait:malePortrait,Cyan);
    Label(new Rect(126,607,210,22),player.female.activeSelf?"COMANDO":"JUGADOR",17,NexoUi.Text);
    Label(new Rect(126,633,190,18),health.IsDead?"DERROTADO":shown<.25f?"VIDA CRÍTICA":"VITALIDAD",11,shown<.25f?new Color(1,.4f,.35f):NexoUi.Muted);
