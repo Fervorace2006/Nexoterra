@@ -53,7 +53,7 @@ namespace Nexoterra.World
    // Jump clips play on a legs-only layer, so arms keep holding the pistol.
    int jumpLayer=current.GetLayerIndex("JumpLower");
    if(jumpLayer>=0){
-    string jump=dead||roll||knockdown!=null?null:airborne?(motor.velocity.y>.5f?"JumpStart":"JumpFall"):landRemaining>0?"JumpLand":null;
+    string jump=dead||roll||knockdown!=null||speed>3.4f?null:airborne?(motor.velocity.y>.5f?"JumpStart":"JumpFall"):landRemaining>0?"JumpLand":null;
     if(jump!=null&&jump!=jumpState)current.CrossFadeInFixedTime(jump,jump=="JumpLand"?.05f:.12f,jumpLayer);
     jumpState=jump;
     jumpWeight=Mathf.MoveTowards(jumpWeight,jump!=null?1:0,Time.deltaTime/(jump!=null?.08f:.12f));

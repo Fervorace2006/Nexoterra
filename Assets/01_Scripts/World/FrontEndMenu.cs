@@ -30,7 +30,8 @@ namespace Nexoterra.World
    GUI.depth=-1000;var old=GUI.matrix;GUI.matrix=Matrix4x4.identity;NexoHud.Fill(new Rect(0,0,Screen.width,Screen.height),Color.black);
    if(loading)
    {
-    if(artwork)GUI.DrawTexture(new Rect(0,0,Screen.width,Screen.height),artwork,ScaleMode.ScaleToFit);
+    // Logo art at ~half size, centered slightly above the progress bar.
+    if(artwork){float w=Screen.width*.5f,h=Screen.height*.42f;GUI.DrawTexture(new Rect((Screen.width-w)*.5f,Screen.height*.43f-h*.5f,w,h),artwork,ScaleMode.ScaleToFit);}
     NexoHud.Scale();NexoHud.Fill(new Rect(350,635,580,8),new Color(.12f,.19f,.23f));NexoHud.Fill(new Rect(350,635,580*progress,8),NexoHud.Cyan);
     string dots=new string('.',1+(int)(Time.unscaledTime*3)%3);NexoHud.Label(new Rect(350,660,580,35),"CARGANDO"+dots+"  "+Mathf.RoundToInt(progress*100)+"%",18,Color.white,TextAnchor.MiddleCenter);
    }

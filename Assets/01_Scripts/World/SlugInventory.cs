@@ -239,17 +239,59 @@ namespace Nexoterra.World
                 int i=visible[k];var d=catalog.Find(owned[i]);int slot=Array.IndexOf(equipped,i);var r=new Rect(k%5*112,k/5*144,104,132);
                 Slot(r,d,slot==selected&&slot>=0,slot>=0?(slot+1).ToString():"·",d?.displayName??"No disponible");
                 if(r.Contains(Event.current.mousePosition))previewIndex=i;
-                if(GUI.Button(r,GUIContent.none,GUIStyle.none)&&d!=null){Equip(i,selected);previewIndex=i;}
+                var e=Event.current;
+                if(d!=null&&e.type==EventType.MouseDown&&e.button==0&&r.Contains(e.mousePosition)){dragOwned=i;dragFromSlot=-1;dragging=false;dragStart=e.mousePosition-scroll+new Vector2(192,178);e.Use();}
             }
             GUI.EndScrollView();
+            DrawEquipBar();
             var focus=previewIndex>=0&&previewIndex<owned.Count?catalog.Find(owned[previewIndex]):SelectedDefinition();
             var accent=NexoUi.Accent(focus);NexoUi.Card(new Rect(798,128,288,350),accent);
             NexoHud.Label(new Rect(814,140,256,24),focus?.IsElemental==true?"ELEMENTAL · ÚNICA":focus?.unique==true?"CRIATURA · ÚNICA":"FICHA DE CRIATURA",12,accent,TextAnchor.MiddleCenter);
             NexoUi.Portrait(new Rect(838,168,208,172),focus?.portrait,accent);
             NexoHud.Label(new Rect(814,340,256,29),focus?.displayName??"Tu próxima compañera",21,NexoUi.Text,TextAnchor.MiddleCenter);
             NexoHud.Label(new Rect(820,379,246,78),NexoUi.Ability(focus),14,NexoUi.Muted,TextAnchor.UpperCenter);
-            NexoHud.Label(new Rect(194,490,560,38),"Espacio "+(selected+1)+" seleccionado. Pulsa una criatura para equiparla.",14,NexoUi.Text);
+            NexoHud.Label(new Rect(194,490,560,38),"Arrastra una babosa a la barra de equipo, o púlsala para ponerla en el espacio "+(selected+1)+".",14,NexoUi.Text);
             GUI.enabled=equipped[selected]>=0;if(NexoUi.Button(new Rect(798,491,288,34),"RETIRAR DEL ESPACIO "+(selected+1))){equipped[selected]=-1;Status="Babosa guardada en la mochila.";}GUI.enabled=true;
+            HandleDrag();
+        }
+        // ---- Equipment bar under the collection + drag & drop ----
+        int dragOwned=-1,dragFromSlot=-1;bool dragging;Vector2 dragStart;
+        static readonly Rect GridArea=new Rect(192,178,588,300);
+        Rect EquipSlot(int s)=>new Rect(334+s*104,580,96,118);
+        void DrawEquipBar()
+        {
+            NexoHud.Plate(new Rect(320,552,640,156),false);
+            NexoHud.Label(new Rect(330,556,620,20),dragging?"SUELTA EN UN ESPACIO PARA EQUIPARLA":"EQUIPO · arrastra para ordenar",11,dragging?Gold:NexoUi.Text,TextAnchor.MiddleCenter);
+            var e=Event.current;
+            for(int s=0;s<6;s++)
+            {
+                int index=equipped[s];var def=index>=0&&index<owned.Count?catalog.Find(owned[index]):null;var r=EquipSlot(s);
+                Slot(r,def,s==selected,(s+1).ToString(),def?.displayName??"Vacío");
+                if(dragging&&r.Contains(e.mousePosition))NexoHud.Brackets(new Rect(r.x-3,r.y-3,r.width+6,r.height+6),NexoHud.Orange,14,3);
+                if(e.type==EventType.MouseDown&&e.button==0&&r.Contains(e.mousePosition)){selected=s;if(index>=0){dragOwned=index;dragFromSlot=s;dragging=false;dragStart=e.mousePosition;previewIndex=index;}e.Use();}
+            }
+        }
+        void HandleDrag()
+        {
+            var e=Event.current;if(dragOwned<0)return;
+            if(e.type==EventType.MouseDrag){if((e.mousePosition-dragStart).magnitude>6)dragging=true;e.Use();}
+            if(dragging&&e.type==EventType.Repaint&&dragOwned<owned.Count)
+            {
+                var d=catalog.Find(owned[dragOwned]);var r=new Rect(e.mousePosition.x-40,e.mousePosition.y-44,80,88);
+                NexoHud.Fill(r,new Color(0,0,0,.35f));NexoUi.Portrait(r,d?.portrait,NexoUi.Accent(d),.9f);
+            }
+            if(e.type==EventType.MouseUp&&e.button==0)
+            {
+                int target=-1;for(int s=0;s<6;s++)if(EquipSlot(s).Contains(e.mousePosition))target=s;
+                if(dragging)
+                {
+                    if(target>=0&&dragFromSlot>=0){int t=equipped[target];equipped[target]=equipped[dragFromSlot];equipped[dragFromSlot]=t;selected=target;Status="Equipamiento reordenado.";}
+                    else if(target>=0)Equip(dragOwned,target);
+                    else if(dragFromSlot>=0&&GridArea.Contains(e.mousePosition)){equipped[dragFromSlot]=-1;Status="Babosa guardada en la mochila.";}
+                }
+                else if(dragFromSlot<0){Equip(dragOwned,selected);previewIndex=dragOwned;}
+                dragOwned=-1;dragFromSlot=-1;dragging=false;e.Use();
+            }
         }
     }
 }

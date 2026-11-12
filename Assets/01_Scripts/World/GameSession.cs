@@ -112,9 +112,9 @@ namespace Nexoterra.World
    NexoHud.Panel(new Rect(60,60,480,590));var logo=Resources.Load<Texture2D>("Nexoterra/UI/Logo");if(logo)GUI.DrawTexture(new Rect(90,80,420,120),logo,ScaleMode.ScaleToFit);
    NexoHud.Fill(new Rect(94,214,412,1),NexoHud.Gold*new Color(1,1,1,.6f));
    NexoHud.Label(new Rect(94,226,410,28),started?"EXPLORACIÓN EN PAUSA":"CRÓNICAS DEL SUBSUELO",18,NexoHud.Cyan);
-   NexoHud.Label(new Rect(94,440,400,24),"CONTROLES",13,NexoHud.Gold);
-   NexoHud.Label(new Rect(94,264,400,95),"Seis biomas. Criaturas únicas.\nTu colección comienza explorando.",21,Color.white);
-   NexoHud.Label(new Rect(94,470,400,120),"WASD · caminar   Mayús · correr\nCtrl + A / D · voltereta lateral\nRatón derecho · apuntar\nRatón izquierdo · disparar\nB · mochila   R · recargar   Esc · menú",16,new Color(.65f,.8f,.83f));
+   NexoHud.Label(new Rect(94,350,400,22),"CONTROLES",13,NexoHud.Gold);NexoHud.Fill(new Rect(94,372,412,1),NexoHud.Gold*new Color(1,1,1,.4f));
+   NexoHud.Label(new Rect(94,262,400,80),"Seis biomas. Criaturas únicas.\nTu colección comienza explorando.",19,Color.white);
+   {float l=94,r=300,y0=384;NexoHud.ControlRow(l,y0,"caminar","W","A","S","D");NexoHud.ControlRow(l,y0+36,"correr","Mayús");NexoHud.ControlRow(l,y0+72,"saltar","Espacio");NexoHud.ControlRow(l,y0+108,"voltereta","Ctrl","+","A","/","D");NexoHud.ControlRow(l,y0+144,"recoger","E");NexoHud.ControlRow(l,y0+180,"alimentar","F");NexoHud.ControlRow(r,y0,"apuntar","Clic der");NexoHud.ControlRow(r,y0+36,"lanzar","Clic izq");NexoHud.ControlRow(r,y0+72,"recargar","R");NexoHud.ControlRow(r,y0+108,"mochila","B");NexoHud.ControlRow(r,y0+144,"mapa","M");NexoHud.ControlRow(r,y0+180,"menú","Esc");}
    NexoHud.Panel(new Rect(640,92,480,554));float y=120;
    if(ArenaSession.Current){if(NexoHud.Button(new Rect(672,180,416,58),"REANUDAR"))Resume();if(NexoHud.Button(new Rect(672,270,416,58),"SALIR AL MENÚ PRINCIPAL")){Resume();if(MultiplayerRoom.Current)MultiplayerRoom.Current.Leave();else FrontEndMenu.Load(FrontEndMenu.MenuScene);}NexoHud.Label(new Rect(672,360,416,80),"La partida en línea continúa mientras abres el menú.",18,NexoHud.Cyan);GUI.matrix=matrix;return;}
    if(confirmNew){NexoHud.Label(new Rect(670,y,420,110),"¿Empezar una partida nueva?\nEl progreso sin guardar se perderá.\nTu archivo guardado se conserva.",19,Color.white);y+=125;if(NexoHud.Button(new Rect(672,y,416,58),"EMPEZAR CON INFIERNO"))NewGame();y+=72;if(NexoHud.Button(new Rect(672,y,416,58),"VOLVER"))confirmNew=false;}

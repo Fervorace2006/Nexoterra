@@ -62,6 +62,26 @@ namespace Nexoterra.World
   {
    Label(new Rect(r.x+1,r.y+1,r.width,r.height),text,size,new Color(0,0,0,.8f),anchor);Label(r,text,size,color,anchor);
   }
+  // Keyboard key cap (light metal key, dark legend). Returns the x right after the key.
+  public static float KeyCap(float x,float y,string key,float h=26)
+  {
+   float w=Mathf.Max(h,14+key.Length*8.5f);
+   Fill(new Rect(x+1,y+3,w,h),new Color(0,0,0,.55f));
+   Fill(new Rect(x,y,w,h),new Color(.32f,.36f,.4f));
+   Gradient(new Rect(x+1,y+1,w-2,h-5),new Color(.93f,.96f,.98f),new Color(.66f,.72f,.76f));
+   Fill(new Rect(x+1,y+h-4,w-2,3),new Color(.42f,.47f,.5f));
+   Label(new Rect(x,y-1,w,h-3),key,key.Length>2?11:13,new Color(.06f,.09f,.12f),TextAnchor.MiddleCenter);
+   return x+w;
+  }
+  // One control line: keys ("+" and "/" act as separators) followed by a description.
+  public static void ControlRow(float x,float y,string description,params string[] keys)
+  {
+   foreach(var k in keys){
+    if(k=="+"||k=="/"){Label(new Rect(x,y,14,26),k,13,NexoUi.Muted,TextAnchor.MiddleCenter);x+=14;continue;}
+    x=KeyCap(x,y,k)+4;
+   }
+   Label(new Rect(x+4,y,220,26),description,13,NexoUi.Text,TextAnchor.MiddleLeft);
+  }
   static Texture2D vignette;static GUIStyle field;
   // Full-screen menu backdrop: key art cropped to fill, deep-water tint, vignette and slow caustic bands.
   public static void Backdrop(Texture2D art)

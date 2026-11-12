@@ -53,22 +53,31 @@ Shader "Nexoterra/Cavern Rock"
         float tips = pow(Fbm(p * 2.4), 2.2);                                       // stalactite clusters
         return saturate(blobs * .6 + tips * .55);
     }
-    void RockFrame(float3 positionWS, float3 normalWS, out float2 uv, out float3 t, out float3 b, out float wall)
+    // Walls use (along-wall, height) coordinates, ceilings use xz; curved corner pieces blend both
+    // by how much the surface faces up/down, so there is no seam on the rounded caves.
+    float3 RockNormal(float3 p, float3 n, out float h)
     {
-        wall = abs(normalWS.y) < .6 ? 1 : 0;
-        if (wall > .5) { t = normalize(float3(-normalWS.z, 0, normalWS.x)); b = float3(0,1,0); uv = float2(dot(positionWS, t), positionWS.y); }
-        else { t = float3(1,0,0); b = float3(0,0,1); uv = positionWS.xz; }
-    }
-    // Returns perturbed normal and height.
-    float3 RockNormal(float3 positionWS, float3 normalWS, out float h)
-    {
-        float2 uv; float3 t, b; float wall;
-        RockFrame(positionWS, normalWS, uv, t, b, wall);
         const float e = .05;
-        h = RockHeight(uv, wall);
-        float hu = RockHeight(uv + float2(e,0), wall), hv = RockHeight(uv + float2(0,e), wall);
-        float2 grad = float2(hu - h, hv - h) / e;
-        return normalize(normalWS - _Relief * .35 * (grad.x * t + grad.y * b));
+        float w = smoothstep(.45, .8, abs(n.y));
+        float3 nw = n, nc = n; float hw = 0, hc = 0;
+        if (w < .999)
+        {
+            float3 flat = float3(-n.z, 0, n.x); float len = length(flat);
+            float3 t = len > 1e-3 ? flat / len : float3(1,0,0);
+            float2 uv = float2(dot(p, t), p.y);
+            hw = RockHeight(uv, 1);
+            float du = (RockHeight(uv + float2(e,0), 1) - hw) / e, dv = (RockHeight(uv + float2(0,e), 1) - hw) / e;
+            nw = n - _Relief * .35 * (du * t + dv * float3(0,1,0));
+        }
+        if (w > .001)
+        {
+            float2 uv = p.xz;
+            hc = RockHeight(uv, 0);
+            float du = (RockHeight(uv + float2(e,0), 0) - hc) / e, dv = (RockHeight(uv + float2(0,e), 0) - hc) / e;
+            nc = n - _Relief * .35 * (du * float3(1,0,0) + dv * float3(0,0,1));
+        }
+        h = lerp(hw, hc, w);
+        return normalize(lerp(nw, nc, w));
     }
     ENDHLSL
 
@@ -112,8 +121,7 @@ Shader "Nexoterra/Cavern Rock"
                 float3 n0 = normalize(i.normalWS);
                 float h;
                 float3 n = RockNormal(i.positionWS, n0, h);
-                float2 uv; float3 t, b; float wall; RockFrame(i.positionWS, n0, uv, t, b, wall);
-                float tint = Fbm(uv * .07 * _Scale);
+                float tint = Fbm((i.positionWS.xz + i.positionWS.y * .7) * .07 * _Scale);
 
                 float shade = lerp(1, .55 + .75 * h, _Contrast);
                 float3 albedo = _BaseColor.rgb * shade;

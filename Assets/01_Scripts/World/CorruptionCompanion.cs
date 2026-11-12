@@ -38,7 +38,19 @@ namespace Nexoterra.World {
   }
   public void CollectWater(){if(Time.time<collectAt)return;foreach(var r in FindObjectsByType<MeshRenderer>(FindObjectsSortMode.None)){var mat=r.sharedMaterial;if(!mat||!mat.name.ToLower().Contains("carmesi"))continue;if(Vector3.Distance(r.bounds.ClosestPoint(transform.position),transform.position)>3)continue;inventory.darkWater++;collectAt=Time.time+2;player.Notify("Agua oscura: "+inventory.darkWater);return;}player.Notify("Acércate al agua carmesí y pulsa K");}
   public void Corrupt(){if(!companion||companion.changing||companion.IsRecalling)return;var id=companion.Species;if(id.StartsWith("Malvada_")){player.Notify("Esta babosa ya es malvada");return;}if(id=="Elemental_Energia"||inventory.catalog.Find("Malvada_"+id)==null){player.Notify("Esta especie no tiene versión malvada disponible");return;}if(inventory.darkWater<=0){player.Notify("Recoge agua oscura con K");return;}inventory.darkWater--;companion.Change("Malvada_"+id);}
-  void OnGUI(){if(GameSession.Blocked||!inventory.IsOpen)return;GUI.Label(new Rect(20,80,450,65),"Agua oscura: "+inventory.darkWater+"   K: recolectar cerca del lago");if(GUI.Button(new Rect(20,115,160,35),companion?"Llamar seleccionada (G)":"Soltar seleccionada (G)"))Release();if(GUI.Button(new Rect(20,155,160,35),"Convertir (J)"))Corrupt();}
+  // Dark-water panel shown beside the backpack, with key caps for K / G / J.
+  void OnGUI(){
+   if(GameSession.Blocked||!inventory.IsOpen)return;var before=GUI.matrix;NexoHud.Scale();
+   var inner=NexoHud.Plate(new Rect(8,34,156,262));
+   NexoHud.Label(new Rect(inner.x,inner.y+6,inner.width,16),"AGUA OSCURA",11,NexoHud.Cyan,TextAnchor.MiddleCenter);
+   NexoHud.Shadowed(new Rect(inner.x,inner.y+22,inner.width,34),inventory.darkWater.ToString(),26,Color.white,TextAnchor.MiddleCenter);
+   float x=NexoHud.KeyCap(inner.x+8,inner.y+66,"K");NexoHud.Label(new Rect(x+6,inner.y+62,inner.width-(x-inner.x)-8,34),"recolectar cerca del lago",11,NexoUi.Muted);
+   var release=new Rect(inner.x+4,inner.y+108,inner.width-8,56);if(NexoUi.Button(release,""))Release();
+   x=NexoHud.KeyCap(release.x+8,release.y+15,"G");NexoHud.Label(new Rect(x+6,release.y,release.xMax-x-8,release.height),(companion?"Llamar":"Soltar")+"\nseleccionada",12,NexoUi.Text,TextAnchor.MiddleLeft);
+   var convert=new Rect(inner.x+4,inner.y+172,inner.width-8,56);if(NexoUi.Button(convert,""))Corrupt();
+   x=NexoHud.KeyCap(convert.x+8,convert.y+15,"J");NexoHud.Label(new Rect(x+6,convert.y,convert.xMax-x-8,convert.height),"Convertir\nen malvada",12,NexoUi.Text,TextAnchor.MiddleLeft);
+   GUI.matrix=before;
+  }
  }
  public sealed class LooseSlug:MonoBehaviour {
   bool following;bool recalling;bool hopping;Vector3 hopStart,hopEnd;float hopProgress;public bool IsRecalling=>recalling;public void Recall(){recalling=true;}

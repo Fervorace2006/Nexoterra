@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -17,7 +18,7 @@ public static class NovemberUpgrade
  static void Poll(){
   if(EditorApplication.isCompiling||EditorApplication.isUpdating||EditorApplication.isPlayingOrWillChangePlaymode||!File.Exists("Library/NovemberUpgrade.request"))return;
   string mode=File.ReadAllText("Library/NovemberUpgrade.request").Trim();File.Delete("Library/NovemberUpgrade.request");
-  try{if(mode=="install")Install();else if(mode=="audit")Audit();else if(mode=="scenes")SceneWeapons();else if(mode=="water")WaterProbe();else if(mode=="jumplayer")JumpLayer();else if(mode=="gunshot")GunShot();else if(mode=="trimjump")TrimJump();else if(mode=="customjump")CustomJump();else if(mode=="rockwalls")RockWalls();else AssetDatabase.Refresh();File.WriteAllText("Library/NovemberUpgrade.result","PASS "+mode);}
+  try{if(mode=="install")Install();else if(mode=="audit")Audit();else if(mode=="scenes")SceneWeapons();else if(mode=="water")WaterProbe();else if(mode=="jumplayer")JumpLayer();else if(mode=="gunshot")GunShot();else if(mode=="trimjump")TrimJump();else if(mode=="customjump")CustomJump();else if(mode=="rockwalls")RockWalls();else if(mode=="cavecorners")CaveCorners();else AssetDatabase.Refresh();File.WriteAllText("Library/NovemberUpgrade.result","PASS "+mode);}
   catch(Exception e){File.WriteAllText("Library/NovemberUpgrade.result",e.ToString());Debug.LogException(e);}
  }
  const string Gameplay="Assets/02_Prefabs/Gameplay";
@@ -336,6 +337,65 @@ public static class NovemberUpgrade
    EditorUtility.SetDirty(mat);AssetDatabase.SaveAssets();report.AppendLine("applied color="+color);
   }
   File.WriteAllText("Library/NovemberRock.txt",report.ToString());
+ }
+ // Rounded, irregular rock fillets along the wall/ceiling edges and the vertical room corners,
+ // so the campaign caverns stop looking like a box. Uses the same cave-rock material.
+ static Mesh Fillet(Vector3 start,Vector3 dir,float length,Vector3 a,Vector3 b,float baseR,int seed){
+  int n=Mathf.Max(2,Mathf.CeilToInt(length/2f)),m=12;var verts=new List<Vector3>();var tris=new List<int>();
+  for(int i=0;i<=n;i++){
+   float t=i/(float)n,along=t*length;var c=start+dir*along;
+   float r=baseR*(.7f+.6f*Mathf.PerlinNoise(seed*.37f+along*.045f,seed*.11f));
+   var o=c+(a+b)*r;
+   for(int j=0;j<=m;j++){
+    float th=j/(float)m*Mathf.PI*.5f;var normal=(a*Mathf.Cos(th)+b*Mathf.Sin(th)).normalized;
+    float lump=(Mathf.PerlinNoise(seed+along*.18f,th*2.5f)-.45f)*r*.35f*Mathf.Sin(2*th);
+    verts.Add(o-normal*r+normal*lump);
+   }
+  }
+  for(int i=0;i<n;i++)for(int j=0;j<m;j++){int k=i*(m+1)+j;tris.AddRange(new[]{k,k+1,k+m+1,k+1,k+m+2,k+m+1});}
+  var mesh=new Mesh{indexFormat=UnityEngine.Rendering.IndexFormat.UInt32};mesh.SetVertices(verts);mesh.SetTriangles(tris,0);mesh.RecalculateNormals();
+  // Faces must point into the room (towards a+b).
+  var nrm=mesh.normals;if(Vector3.Dot(nrm[m/2],a+b)<0){tris.Reverse();mesh.SetTriangles(tris,0);mesh.RecalculateNormals();}
+  mesh.RecalculateBounds();return mesh;
+ }
+ static GameObject FindIn(Scene scene,string name){foreach(var r in scene.GetRootGameObjects())foreach(var t in r.GetComponentsInChildren<Transform>(true))if(t.name==name)return t.gameObject;return null;}
+ static void CaveCorners(){
+  var report=new StringBuilder();string active=SceneManager.GetActiveScene().path;
+  var mat=AssetDatabase.LoadAssetAtPath<Material>("Assets/NexoterraWorld/MapRepair/Techo_cafe_claro.mat");
+  const string folder="Assets/NexoterraWorld/Campaign/CaveCorners";Directory.CreateDirectory(folder);
+  foreach(var file in Directory.GetFiles("Assets/00_Scenes/Campaign","*.unity")){
+   string path=file.Replace((char)92,'/');var scene=SceneManager.GetSceneByPath(path);bool opened=!scene.isLoaded;
+   if(opened)scene=EditorSceneManager.OpenScene(path,OpenSceneMode.Additive);
+   try{
+    if(scene.isDirty){report.AppendLine(path+" OMITIDA (sin guardar)");continue;}
+    var west=FindIn(scene,"Pared oeste");var east=FindIn(scene,"Pared este");var south=FindIn(scene,"Pared entrada");var north=FindIn(scene,"Pared salida izquierda");var roof=FindIn(scene,"Techo");
+    if(!west||!east||!south||!north||!roof){report.AppendLine(path+" sin paredes estándar");continue;}
+    float x0=west.GetComponent<Renderer>().bounds.max.x,x1=east.GetComponent<Renderer>().bounds.min.x,z0=south.GetComponent<Renderer>().bounds.max.z,z1=north.GetComponent<Renderer>().bounds.min.z,top=roof.GetComponent<Renderer>().bounds.min.y,bottom=-1;
+    var old=FindIn(scene,"Esquinas de caverna");if(old)Object.DestroyImmediate(old);
+    var root=new GameObject("Esquinas de caverna");SceneManager.MoveGameObjectToScene(root,scene);
+    string name=Path.GetFileNameWithoutExtension(path);
+    var parts=new (string id,Vector3 start,Vector3 dir,float len,Vector3 a,Vector3 b,float r)[]{
+     ("techo_oeste",new Vector3(x0,top,z0-4),Vector3.forward,z1-z0+8,Vector3.right,Vector3.down,6),
+     ("techo_este",new Vector3(x1,top,z0-4),Vector3.forward,z1-z0+8,Vector3.left,Vector3.down,6),
+     ("techo_entrada",new Vector3(x0-4,top,z0),Vector3.right,x1-x0+8,Vector3.forward,Vector3.down,6),
+     ("techo_salida",new Vector3(x0-4,top,z1),Vector3.right,x1-x0+8,Vector3.back,Vector3.down,6),
+     ("rincon_so",new Vector3(x0,bottom,z0),Vector3.up,top-bottom,Vector3.right,Vector3.forward,4.5f),
+     ("rincon_se",new Vector3(x1,bottom,z0),Vector3.up,top-bottom,Vector3.left,Vector3.forward,4.5f),
+     ("rincon_no",new Vector3(x0,bottom,z1),Vector3.up,top-bottom,Vector3.right,Vector3.back,4.5f),
+     ("rincon_ne",new Vector3(x1,bottom,z1),Vector3.up,top-bottom,Vector3.left,Vector3.back,4.5f)};
+    int seed=name.GetHashCode()&1023;
+    foreach(var p in parts){
+     var mesh=Fillet(p.start,p.dir,p.len,p.a,p.b,p.r,seed+=7);
+     string assetPath=folder+"/"+name+"_"+p.id+".asset";var existing=AssetDatabase.LoadAssetAtPath<Mesh>(assetPath);
+     if(existing){EditorUtility.CopySerialized(mesh,existing);Object.DestroyImmediate(mesh);mesh=existing;EditorUtility.SetDirty(existing);}else AssetDatabase.CreateAsset(mesh,assetPath);
+     var go=new GameObject("Roca "+p.id);go.transform.SetParent(root.transform,false);go.isStatic=true;
+     go.AddComponent<MeshFilter>().sharedMesh=mesh;go.AddComponent<MeshRenderer>().sharedMaterial=mat;go.AddComponent<MeshCollider>().sharedMesh=mesh;
+    }
+    EditorSceneManager.MarkSceneDirty(scene);EditorSceneManager.SaveScene(scene);
+    report.AppendLine(path+" OK x["+x0+","+x1+"] z["+z0+","+z1+"] techo "+top);
+   }finally{if(opened&&scene.path!=active)EditorSceneManager.CloseScene(scene,true);}
+  }
+  AssetDatabase.SaveAssets();File.WriteAllText("Library/NovemberCorners.txt",report.ToString());
  }
  public static void Audit(){
   var report=new StringBuilder();
