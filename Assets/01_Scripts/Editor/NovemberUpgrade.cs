@@ -17,7 +17,7 @@ public static class NovemberUpgrade
  static void Poll(){
   if(EditorApplication.isCompiling||EditorApplication.isUpdating||EditorApplication.isPlayingOrWillChangePlaymode||!File.Exists("Library/NovemberUpgrade.request"))return;
   string mode=File.ReadAllText("Library/NovemberUpgrade.request").Trim();File.Delete("Library/NovemberUpgrade.request");
-  try{if(mode=="install")Install();else if(mode=="audit")Audit();else if(mode=="scenes")SceneWeapons();else if(mode=="water")WaterProbe();else if(mode=="jumplayer")JumpLayer();else if(mode=="gunshot")GunShot();else if(mode=="trimjump")TrimJump();else if(mode=="customjump")CustomJump();else AssetDatabase.Refresh();File.WriteAllText("Library/NovemberUpgrade.result","PASS "+mode);}
+  try{if(mode=="install")Install();else if(mode=="audit")Audit();else if(mode=="scenes")SceneWeapons();else if(mode=="water")WaterProbe();else if(mode=="jumplayer")JumpLayer();else if(mode=="gunshot")GunShot();else if(mode=="trimjump")TrimJump();else if(mode=="customjump")CustomJump();else if(mode=="rockwalls")RockWalls();else AssetDatabase.Refresh();File.WriteAllText("Library/NovemberUpgrade.result","PASS "+mode);}
   catch(Exception e){File.WriteAllText("Library/NovemberUpgrade.result",e.ToString());Debug.LogException(e);}
  }
  const string Gameplay="Assets/02_Prefabs/Gameplay";
@@ -309,9 +309,9 @@ public static class NovemberUpgrade
   var idle=IdleClip(controller);
   float F=JumpSign;
   // Rising: knees tuck up quickly, one leg a bit higher.
-  var rise=BuildJumpClip("Nexo_JumpRise",idle,false,(0,0,0,0,0,0,0),(.12f,.55f*F,-.75f,.25f,.35f*F,-.55f,.2f),(.35f,.65f*F,-.95f,.3f,.42f*F,-.7f,.25f));
+  var rise=BuildJumpClip("Nexo_JumpRise",idle,false,(0,0,0,0,0,0,0),(.12f,.24f*F,-.26f,-.08f,.2f*F,-.22f,-.08f),(.35f,.3f*F,-.32f,-.1f,.24f*F,-.26f,-.1f));
   // Falling: legs open up and reach for the floor.
-  var fall=BuildJumpClip("Nexo_JumpFall",idle,false,(0,.6f*F,-.9f,.3f,.4f*F,-.65f,.25f),(.25f,.22f*F,-.28f,.12f,.12f*F,-.2f,.1f));
+  var fall=BuildJumpClip("Nexo_JumpFall",idle,false,(0,.3f*F,-.32f,-.1f,.24f*F,-.26f,-.1f),(.25f,.08f*F,-.08f,-.04f,.06f*F,-.06f,-.04f));
   // Landing: quick knee absorb, then back to idle (layer fades out).
   var land=BuildJumpClip("Nexo_JumpLand",idle,false,(0,.1f*F,-.14f,.05f,.08f*F,-.12f,.05f),(.06f,.16f*F,-.24f,.1f,.15f*F,-.23f,.1f),(.2f,0,0,0,0,0,0));
   var mask=AssetDatabase.LoadAssetAtPath<AvatarMask>(JumpFolder+"/JumpLowerBody.mask");
@@ -324,6 +324,19 @@ public static class NovemberUpgrade
   AssetDatabase.SaveAssets();
  }
  const float JumpSign=1;
+ // Walls/ceilings share Techo_cafe_claro: switch it to the procedural cave-rock shader, keeping its color.
+ static void RockWalls(){
+  var shader=AssetDatabase.LoadAssetAtPath<Shader>("Assets/NexoterraWorld/Shaders/CavernRock.shader");
+  var report=new StringBuilder("errors="+ShaderUtil.ShaderHasError(shader));report.AppendLine();
+  foreach(var m in ShaderUtil.GetShaderMessages(shader))report.AppendLine(m.severity+" "+m.message+" line "+m.line);
+  if(!ShaderUtil.ShaderHasError(shader)){
+   var mat=AssetDatabase.LoadAssetAtPath<Material>("Assets/NexoterraWorld/MapRepair/Techo_cafe_claro.mat");
+   var color=mat.HasProperty("_BaseColor")?mat.GetColor("_BaseColor"):mat.color;
+   mat.shader=shader;mat.SetColor("_BaseColor",color);mat.SetFloat("_Scale",1);mat.SetFloat("_Relief",1.2f);mat.SetFloat("_Contrast",.95f);mat.SetFloat("_Smoothness",.18f);
+   EditorUtility.SetDirty(mat);AssetDatabase.SaveAssets();report.AppendLine("applied color="+color);
+  }
+  File.WriteAllText("Library/NovemberRock.txt",report.ToString());
+ }
  public static void Audit(){
   var report=new StringBuilder();
   foreach(var file in Directory.GetFiles("Assets/Characters/Animations/Jump","*.fbx")){
