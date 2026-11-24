@@ -105,7 +105,7 @@ namespace Nexoterra.World
             var go=new GameObject("Disparo · "+definition.id);go.layer=2;go.transform.position=muzzle.position;
             var shot=go.AddComponent<SlugProjectile>();shot.speed=projectileSpeed;shot.transformDistance=transformationDistance;shot.docHealingRadius=docHealingRadius;
             if(definition.id.StartsWith("Malvada_")){var health=GetComponent<PlayerHealth>();if(health)health.CorruptionCost();}
-            travelling[definition.id]=shot;shot.Launch(definition,direction,this);NexoAudio.Play("slug_launch",.9f,.06f);if(ArenaSession.Current)ArenaSession.Current.SubmitShot(definition,muzzle.position,direction,shot);var abilities=GetComponent<PlayerAbilities>();if(abilities)abilities.OnSlugLaunched(definition.id);return shot;
+            travelling[definition.id]=shot;shot.Launch(definition,direction,this);NexoAudio.Play(definition.id.StartsWith("Malvada_")?"slug_launch_malvada":"slug_launch",.9f,.04f);if(ArenaSession.Current)ArenaSession.Current.SubmitShot(definition,muzzle.position,direction,shot);var abilities=GetComponent<PlayerAbilities>();if(abilities)abilities.OnSlugLaunched(definition.id);return shot;
         }
         public void Save()
         {
