@@ -9,8 +9,12 @@ namespace Nexoterra.World
    foreach(var hit in Physics.RaycastAll(position+Vector3.up*2,Vector3.down,8,SlugHop.WorldMask,QueryTriggerInteraction.Ignore))
     if(hit.normal.y>.5f&&!hit.collider.GetComponentInParent<EnemyCombatant>()&&!hit.collider.GetComponentInParent<NexoterraThirdPerson>())ground=Mathf.Max(ground,hit.point.y);
    if(float.IsFinite(ground))position.y=ground+.05f;
+   if(definition==null||SlugCatalog.BaseSpecies(definition.id)=="Goon")return null;
    var go=new GameObject("Babosa liberada · "+definition.id);go.transform.position=position;go.AddComponent<EnemySlugLoot>().key=key;
-   var visual=Instantiate(definition.normal,go.transform);foreach(var c in visual.GetComponentsInChildren<Collider>())Destroy(c);
+   var visual=Instantiate(definition.normal,go.transform);foreach(var c in visual.GetComponentsInChildren<Collider>()){c.enabled=false;Destroy(c);}
+   foreach(var rb in visual.GetComponentsInChildren<Rigidbody>()){rb.isKinematic=true;rb.detectCollisions=false;}
+   foreach(var animator in visual.GetComponentsInChildren<Animator>())animator.applyRootMotion=false;
+   foreach(var nested in visual.GetComponentsInChildren<WildSlug>())nested.enabled=false;
    var rs=visual.GetComponentsInChildren<Renderer>();if(rs.Length>0){var b=rs[0].bounds;foreach(var r in rs)b.Encapsulate(r.bounds);float scale=.4f/Mathf.Max(.01f,b.size.y);Vector3 offset=b.center-go.transform.position;visual.transform.localScale*=scale;visual.transform.localPosition=-offset*scale+Vector3.up*.2f;}
    var collider=go.AddComponent<SphereCollider>();collider.center=Vector3.up*.2f;collider.radius=.35f;collider.isTrigger=true;
    var slug=go.AddComponent<WildSlug>();slug.species=definition.id;slug.roamRadius=18;

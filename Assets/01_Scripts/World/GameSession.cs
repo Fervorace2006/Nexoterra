@@ -36,6 +36,7 @@ namespace Nexoterra.World
   void Update()
   {
    if(Keyboard.current==null||!Keyboard.current.escapeKey.wasPressedThisFrame)return;
+   var emotes=GetComponent<PlayerEmotes>();if(emotes&&emotes.IsOpen){emotes.Cancel();return;}
    if(inventory.IsOpen){inventory.SetOpen(false);return;}
    SetMenu(!menu);
   }
@@ -114,9 +115,9 @@ namespace Nexoterra.World
    NexoHud.Label(new Rect(94,226,410,28),started?"EXPLORACIÓN EN PAUSA":"CRÓNICAS DEL SUBSUELO",18,NexoHud.Cyan);
    NexoHud.Label(new Rect(94,350,400,22),"CONTROLES",13,NexoHud.Gold);NexoHud.Fill(new Rect(94,372,412,1),NexoHud.Gold*new Color(1,1,1,.4f));
    NexoHud.Label(new Rect(94,262,400,80),"Seis biomas. Criaturas únicas.\nTu colección comienza explorando.",19,Color.white);
-   {float l=94,r=300,y0=384;NexoHud.ControlRow(l,y0,"caminar","W","A","S","D");NexoHud.ControlRow(l,y0+36,"correr","Mayús");NexoHud.ControlRow(l,y0+72,"saltar","Espacio");NexoHud.ControlRow(l,y0+108,"voltereta","Ctrl","+","A","/","D");NexoHud.ControlRow(l,y0+144,"recoger","E");NexoHud.ControlRow(l,y0+180,"alimentar","F");NexoHud.ControlRow(r,y0,"apuntar","Clic der");NexoHud.ControlRow(r,y0+36,"lanzar","Clic izq");NexoHud.ControlRow(r,y0+72,"recargar","R");NexoHud.ControlRow(r,y0+108,"mochila","B");NexoHud.ControlRow(r,y0+144,"mapa","M");NexoHud.ControlRow(r,y0+180,"menú","Esc");}
+   {float l=94,r=300,y0=384;NexoHud.ControlRow(l,y0,"caminar","W","A","S","D");NexoHud.ControlRow(l,y0+36,"correr","Mayús");NexoHud.ControlRow(l,y0+72,"saltar","Espacio");NexoHud.ControlRow(l,y0+108,"voltereta","Ctrl","W/A/D");NexoHud.ControlRow(l,y0+144,"recoger","E");NexoHud.ControlRow(l,y0+180,"alimentar","F");NexoHud.ControlRow(r,y0,"apuntar","Clic der");NexoHud.ControlRow(r,y0+36,"lanzar","Clic izq");NexoHud.ControlRow(r,y0+72,"recargar","R");NexoHud.ControlRow(r,y0+108,"mochila","Alt");NexoHud.ControlRow(r,y0+144,"mapa","M");NexoHud.ControlRow(r,y0+180,"menú","Esc");NexoHud.ControlRow(l,y0+216,"gestos","B");}
    NexoHud.Panel(new Rect(640,92,480,554));float y=120;
-   if(ArenaSession.Current){if(NexoHud.Button(new Rect(672,180,416,58),"REANUDAR"))Resume();if(NexoHud.Button(new Rect(672,270,416,58),"SALIR AL MENÚ PRINCIPAL")){Resume();if(MultiplayerRoom.Current)MultiplayerRoom.Current.Leave();else FrontEndMenu.Load(FrontEndMenu.MenuScene);}NexoHud.Label(new Rect(672,360,416,80),"La partida en línea continúa mientras abres el menú.",18,NexoHud.Cyan);GUI.matrix=matrix;return;}
+   if(ArenaSession.Current){if(NexoHud.Button(new Rect(672,180,416,58),"REANUDAR"))Resume();if(NexoHud.Button(new Rect(672,270,416,58),"SALIR AL MENÚ PRINCIPAL")){Resume();if(MultiplayerRoom.Current)MultiplayerRoom.Current.Leave();else FrontEndMenu.Load(FrontEndMenu.MenuScene);}NexoHud.Label(new Rect(672,360,416,80),"La partida en línea continúa mientras abres el menú.",18,NexoHud.Cyan);GameplayOptions.DrawAutoReload(new Rect(672,480,416,54));GUI.matrix=matrix;return;}
    if(confirmNew){NexoHud.Label(new Rect(670,y,420,110),"¿Empezar una partida nueva?\nEl progreso sin guardar se perderá.\nTu archivo guardado se conserva.",19,Color.white);y+=125;if(NexoHud.Button(new Rect(672,y,416,58),"EMPEZAR CON INFIERNO"))NewGame();y+=72;if(NexoHud.Button(new Rect(672,y,416,58),"VOLVER"))confirmNew=false;}
    else
    {
@@ -127,7 +128,7 @@ namespace Nexoterra.World
     GUI.enabled=HasSave;if(NexoHud.Button(new Rect(672,y,416,58),"CARGAR GUARDADO"))LoadGame();GUI.enabled=true;y+=72;
     if(NexoHud.Button(new Rect(672,y,416,58),"MENÚ PRINCIPAL")){if(MultiplayerRoom.Current){MultiplayerRoom.Current.Leave();return;}FrontEndMenu.Load(FrontEndMenu.MenuScene);}
     y+=72;
-
+    GameplayOptions.DrawAutoReload(new Rect(672,y,416,54));
    }
    NexoHud.Label(new Rect(665,570,430,64),message,15,NexoHud.Cyan);GUI.matrix=matrix;
   }

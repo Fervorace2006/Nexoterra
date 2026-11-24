@@ -1,0 +1,40 @@
+RUNNING
+START RUNNER
+PASS catalog/model/portrait Demoledora
+PASS catalog/model/portrait Malvada_Demoledora
+PASS catalog/model/portrait Malvada_Goon
+PASS balanced impact 26
+PASS evil increased damage
+PASS single damage and knockdown
+PASS evil Demoledora breaks ceiling rock
+PASS Goon never drops
+PASS Goon continues and target falls small
+PASS corruption updates inventory and busy lock
+PASS Doc continues while evil slug falls
+PASS Doc restores flying slug
+PASS Doc Goon mutual small stun
+PASS stun delays recovery
+PASS both return after stun
+PASS Goon area corrupts wild slug
+PASS enemy loot roams
+PASS red tail Malvada_Demoledora
+PASS red tail Malvada_Goon
+PASS dance starts while standing
+PASS dance animator state
+PASS dance stays in place
+PASS movement cancels dance
+PASS female retarget supports dance
+PASS female dance state
+PASS forward roll starts
+PASS forward roll plays supplied clip
+PASS forward roll displaces controller
+PASS roll does not snap back
+PASS backward roll remains disabled
+PASS automatic reload off respects manual mode
+PASS automatic reload starts on available selected slug
+PASS automatic reload waits for animation
+PASS loaded slug cannot reload twice
+PASS changing selected slot loads its slug
+PASS returning slug blocks automatic reload
+PASS automatic reload resumes after return
+COMPLETE 37 checks

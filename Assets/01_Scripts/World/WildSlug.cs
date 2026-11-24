@@ -44,7 +44,7 @@ namespace Nexoterra.World
                 if(delta.magnitude<.2f){moving=false;return;}
                 if(!SlugHop.Plan(transform.position,target,hopDistance,hopHeight,0,out hopEnd)){moving=false;changeAt=0;return;}
                 // Keep wild creatures out of the lake beds.
-                if(hopEnd.y<-.15f || (freeRoaming && !habitat.Contains(new Vector2(hopEnd.x,hopEnd.z))) || (!freeRoaming && Vector2.Distance(new Vector2(hopEnd.x,hopEnd.z),new Vector2(home.x,home.z))>roamRadius)){moving=false;return;}
+                if((hopEnd.y<-.15f&&!GetComponent<EnemySlugLoot>()) || (freeRoaming && !habitat.Contains(new Vector2(hopEnd.x,hopEnd.z))) || (!freeRoaming && Vector2.Distance(new Vector2(hopEnd.x,hopEnd.z),new Vector2(home.x,home.z))>roamRadius)){moving=false;return;}
                 hopStart=transform.position;hopTime=0;hopping=true;
                 var direction=hopEnd-hopStart;direction.y=0;transform.rotation=Quaternion.LookRotation(direction);
             }

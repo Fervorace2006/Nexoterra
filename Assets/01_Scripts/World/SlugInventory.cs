@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -29,18 +30,24 @@ namespace Nexoterra.World
         public int darkWater;
         public int Count=>owned.Count;
         readonly Dictionary<string,SlugProjectile> travelling=new Dictionary<string,SlugProjectile>();
-        public bool IsBusy(string species)=>(travelling.TryGetValue(species,out var slug)&&slug)||(GetComponent<CorruptionCompanion>()&&GetComponent<CorruptionCompanion>().IsLoose(species));
-        public SlugProjectile Travelling(string species)=>travelling.TryGetValue(species,out var slug)?slug:null;
+        public bool IsBusy(string species)=>travelling.Values.Any(s=>s&&s.Species==species)||(GetComponent<CorruptionCompanion>()&&GetComponent<CorruptionCompanion>().IsLoose(species));
+        public SlugProjectile Travelling(string species)=>travelling.Values.FirstOrDefault(s=>s&&s.Species==species);
+        public void ChangeTravellingSpecies(string previous,string next,SlugProjectile slug)
+        {
+            if(!travelling.Values.Contains(slug))return;
+            int index=owned.IndexOf(previous);if(index>=0)owned[index]=next;
+            RemoveTravelling(slug);travelling[next+"#"+Guid.NewGuid().ToString("N")]=slug;
+        }
+        void RemoveTravelling(SlugProjectile slug)
+        {
+            foreach(var key in travelling.Where(pair=>pair.Value==slug).Select(pair=>pair.Key).ToArray())travelling.Remove(key);
+        }
         public void Recover(string species,SlugProjectile slug)
         {
-            if(travelling.TryGetValue(species,out var current)&&current==slug)
-            {travelling.Remove(species);Status=(catalog.Find(species)?.displayName??species)+" ha regresado. Lista para lanzar.";}
+            if(!travelling.Values.Contains(slug))return;
+            RemoveTravelling(slug);Status=(catalog.Find(species)?.displayName??species)+" ha regresado. Lista para lanzar.";
         }
-        public void ReleaseLost(string species,SlugProjectile slug)
-        {
-            // Scene unloading or external destruction must not leave a stale species lock.
-            if(travelling.TryGetValue(species,out var current)&&current==slug)travelling.Remove(species);
-        }
+        public void ReleaseLost(string species,SlugProjectile slug){RemoveTravelling(slug);}
         public string Status { get; private set; }="Alimenta una babosa con F para incorporarla.";
         NexoterraThirdPerson player;
         Vector2 scroll;bool onlyElementals;int previewIndex=-1;
@@ -58,7 +65,7 @@ namespace Nexoterra.World
         {
             if(GameSession.Blocked)return;
             var k=Keyboard.current;var m=Mouse.current;if(k==null)return;
-            if(k.bKey.wasPressedThisFrame||k.iKey.wasPressedThisFrame)SetOpen(!IsOpen);
+            if(k.leftAltKey.wasPressedThisFrame||k.rightAltKey.wasPressedThisFrame)SetOpen(!IsOpen);
             if(!GameSession.Current&&k.escapeKey.wasPressedThisFrame&&IsOpen){SetOpen(false);Cursor.lockState=CursorLockMode.None;Cursor.visible=true;}
             var keys=new[]{k.digit1Key,k.digit2Key,k.digit3Key,k.digit4Key,k.digit5Key,k.digit6Key};
             for(int i=0;i<6;i++)if(keys[i].wasPressedThisFrame)selected=i;
@@ -205,7 +212,7 @@ namespace Nexoterra.World
             NexoHud.Label(caption,state,12,current?Gold:Color.white,TextAnchor.MiddleCenter);
             // Info tiles (bottom-left).
             Tile(new Rect(16,616,84,90),(player?player.food:0).ToString(),"HONGOS",new Color(.85f,.55f,1f),false);
-            if(Tile(new Rect(106,616,84,90),owned.Count.ToString(),"MOCHILA [B]",Gold,IsOpen))SetOpen(!IsOpen);
+            if(Tile(new Rect(106,616,84,90),owned.Count.ToString(),"MOCHILA [ALT]",Gold,IsOpen))SetOpen(!IsOpen);
             var abilities=GetComponent<PlayerAbilities>();float cd=abilities?abilities.DodgeCooldown:0;
             Tile(new Rect(196,616,84,90),cd>0?cd.ToString("0.0"):"OK","ESQUIVA",new Color(.3f,.85f,1f),false);
             if(abilities&&abilities.BoostRemaining>0)Tile(new Rect(286,616,84,90),Mathf.CeilToInt(abilities.BoostRemaining).ToString(),"VIENTO",new Color(.85f,.9f,.95f),true);

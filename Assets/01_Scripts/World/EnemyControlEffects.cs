@@ -15,7 +15,7 @@ namespace Nexoterra.World
   public static bool CausesKnockdown(string id)
   {
    string species=SlugCatalog.BaseSpecies(id);
-   return species=="Carnero"||species=="Armashelt"||species=="Elemental_Tierra";
+   return species=="Demoledora"||species=="Carnero"||species=="Armashelt"||species=="Elemental_Tierra";
   }
   public void BeginKnockdown()
   {

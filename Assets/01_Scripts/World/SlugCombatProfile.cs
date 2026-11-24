@@ -22,6 +22,8 @@ namespace Nexoterra.World
     case "Elemental_Fuego":p.impactDamage=32;p.burnDamagePerSecond=7;p.burnDuration=5;break;
     case "Elemental_Agua":p.impactDamage=20;p.slowMultiplier=.55f;p.slowDuration=4;break;
     case "ice":p.impactDamage=18;p.slowMultiplier=1;p.slowDuration=0;break;
+    case "Demoledora":p.impactDamage=26;p.knockdownDuration=1.8f;p.knockbackSpeed=4;break;
+    case "Goon":p.impactDamage=4;break;
     case "Carnero":p.impactDamage=28;p.knockdownDuration=2.2f;p.knockbackSpeed=5;break;
     case "Armashelt":p.impactDamage=25;p.knockdownDuration=1.8f;p.knockbackSpeed=4;break;
     case "Elemental_Tierra":p.impactDamage=30;p.knockdownDuration=1.5f;p.knockbackSpeed=3;break;

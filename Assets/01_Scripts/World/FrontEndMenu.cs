@@ -6,7 +6,7 @@ namespace Nexoterra.World
  public sealed class FrontEndMenu : MonoBehaviour
  {
   public const string MenuScene="Nexoterra_Menu",WorldScene="Nexoterra_Jardines";
-  static FrontEndMenu loader;bool multiplayer,direct;string ip="127.0.0.1",port="7777";string joinCode="";bool loading;float progress;string error;Texture2D artwork,logo;
+  static FrontEndMenu loader;bool multiplayer,direct,settings;string ip="127.0.0.1",port="7777";string joinCode="";bool loading;float progress;string error;Texture2D artwork,logo;
   void Awake(){artwork=Resources.Load<Texture2D>("Nexoterra/Loading");logo=Resources.Load<Texture2D>("Nexoterra/UI/Logo");Time.timeScale=1;Cursor.lockState=CursorLockMode.None;Cursor.visible=true;}
   public static void Load(string scene)
   {
@@ -34,6 +34,14 @@ namespace Nexoterra.World
     if(artwork){float w=Screen.width*.5f,h=Screen.height*.42f;GUI.DrawTexture(new Rect((Screen.width-w)*.5f,Screen.height*.43f-h*.5f,w,h),artwork,ScaleMode.ScaleToFit);}
     NexoHud.Scale();NexoHud.Fill(new Rect(350,635,580,8),new Color(.12f,.19f,.23f));NexoHud.Fill(new Rect(350,635,580*progress,8),NexoHud.Cyan);
     string dots=new string('.',1+(int)(Time.unscaledTime*3)%3);NexoHud.Label(new Rect(350,660,580,35),"CARGANDO"+dots+"  "+Mathf.RoundToInt(progress*100)+"%",18,Color.white,TextAnchor.MiddleCenter);
+   }
+   else if(settings)
+   {
+    NexoHud.Backdrop(artwork);NexoHud.Scale();NexoHud.Panel(new Rect(350,145,580,420));
+    NexoHud.Label(new Rect(390,175,500,45),"CONFIGURACIÓN",28,Color.white,TextAnchor.MiddleCenter);
+    GameplayOptions.DrawAutoReload(new Rect(390,245,500,58));
+    NexoHud.Label(new Rect(395,325,490,100),"Carga automáticamente la babosa seleccionada cuando esté disponible. Respeta la animación de recarga y espera a las que estén regresando.\n\nDesactivada: recarga manual con R.",17,NexoUi.Muted);
+    if(NexoHud.Button(new Rect(450,465,380,56),"VOLVER"))settings=false;
    }
    else if(multiplayer)
    {
@@ -71,17 +79,18 @@ namespace Nexoterra.World
     if(logo)GUI.DrawTexture(new Rect(330,22,620,236),logo,ScaleMode.ScaleToFit);
     NexoHud.Fill(new Rect(400,270,480,1),NexoHud.Gold*new Color(1,1,1,.6f));
     NexoHud.Label(new Rect(400,274,480,24),"EL SUBSUELO TE ESPERA, LANZADOR",13,NexoHud.Cyan,TextAnchor.MiddleCenter);
-    if(NexoHud.Button(new Rect(430,310,420,60),"INICIAR HISTORIA"))GameSession.BeginNew();
-    GUI.enabled=GameSession.SavedGameExists;if(NexoHud.Button(new Rect(430,385,420,60),"CONTINUAR PARTIDA")){if(!GameSession.BeginSaved(out error))Debug.LogWarning(error);}GUI.enabled=true;
-    if(NexoHud.Button(new Rect(430,460,420,60),"MULTIJUGADOR"))multiplayer=true;
-    if(NexoHud.Button(new Rect(430,535,420,60),"SALIR")){
+    if(NexoHud.Button(new Rect(430,310,420,50),"INICIAR HISTORIA"))GameSession.BeginNew();
+    GUI.enabled=GameSession.SavedGameExists;if(NexoHud.Button(new Rect(430,372,420,50),"CONTINUAR PARTIDA")){if(!GameSession.BeginSaved(out error))Debug.LogWarning(error);}GUI.enabled=true;
+    if(NexoHud.Button(new Rect(430,434,420,50),"MULTIJUGADOR"))multiplayer=true;
+    if(NexoHud.Button(new Rect(430,496,420,50),"CONFIGURACIÓN"))settings=true;
+    if(NexoHud.Button(new Rect(430,558,420,50),"SALIR")){
 #if UNITY_EDITOR
      UnityEditor.EditorApplication.isPlaying=false;
 #else
      Application.Quit();
 #endif
     }
-    NexoHud.Label(new Rect(350,612,580,40),error??"El progreso se guarda desde el menú de pausa.",15,NexoUi.Muted,TextAnchor.MiddleCenter);
+    NexoHud.Label(new Rect(350,626,580,40),error??"El progreso se guarda desde el menú de pausa.",15,NexoUi.Muted,TextAnchor.MiddleCenter);
     NexoHud.Label(new Rect(24,686,400,22),"NEXOTERRA · DARK WATERS",12,new Color(.4f,.55f,.6f));
    }
    GUI.matrix=old;

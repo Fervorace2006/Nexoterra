@@ -43,7 +43,8 @@ namespace Nexoterra.World
             }
             if(k.escapeKey.wasPressedThisFrame&&!GameSession.Current)Release();
             bool inventoryOpen=inventory&&inventory.IsOpen;
-            bool capturing=m.leftButton.wasPressedThisFrame&&Cursor.lockState!=CursorLockMode.Locked&&!map&&!inventoryOpen&&!(inventory&&inventory.PointerOverBar);
+            bool emoteMenu=GetComponent<PlayerEmotes>()&&GetComponent<PlayerEmotes>().IsOpen;
+            bool capturing=m.leftButton.wasPressedThisFrame&&Cursor.lockState!=CursorLockMode.Locked&&!map&&!inventoryOpen&&!emoteMenu&&!(inventory&&inventory.PointerOverBar);
             if(capturing)
             {Cursor.lockState=CursorLockMode.Locked;Cursor.visible=false;}
             if(k.hKey.wasPressedThisFrame)help=!help;
@@ -53,7 +54,7 @@ namespace Nexoterra.World
             if(k.homeKey.wasPressedThisFrame||transform.position.y < -6)Teleport(spawn);
             if(!CampaignLevel.Current&&k.tKey.wasPressedThisFrame&&travelPoints.Length>0){travelIndex=(travelIndex+1)%travelPoints.Length;Teleport(travelPoints[travelIndex].position);Notify("Visita de prueba: "+travelPoints[travelIndex].name);}
             Vector2 input=Vector2.zero;
-            if(Cursor.lockState==CursorLockMode.Locked&&!map&&!inventoryOpen)
+            if(Cursor.lockState==CursorLockMode.Locked&&!map&&!inventoryOpen&&!emoteMenu)
             {
                 Vector2 mouse=m.delta.ReadValue()*.09f;yaw+=mouse.x;pitch=Mathf.Clamp(pitch-mouse.y,-30,65);
                 input=new Vector2((k.dKey.isPressed?1:0)-(k.aKey.isPressed?1:0),(k.wKey.isPressed?1:0)-(k.sKey.isPressed?1:0));
@@ -61,6 +62,7 @@ namespace Nexoterra.World
                     bool ctrl=k.leftCtrlKey.wasPressedThisFrame||k.rightCtrlKey.wasPressedThisFrame;
                     if(k.aKey.wasPressedThisFrame||(ctrl&&k.aKey.isPressed))abilities.TryDodge(-1,Quaternion.Euler(0,yaw,0)*Vector3.right);
                     else if(k.dKey.wasPressedThisFrame||(ctrl&&k.dKey.isPressed))abilities.TryDodge(1,Quaternion.Euler(0,yaw,0)*Vector3.right);
+                    else if(k.wKey.wasPressedThisFrame||(ctrl&&k.wKey.isPressed))abilities.TryDodge(1,Quaternion.Euler(0,yaw,0)*Vector3.forward,true);
                 }
                 if(k.eKey.wasPressedThisFrame)Collect();
                 if(k.fKey.wasPressedThisFrame)Feed();
@@ -70,7 +72,7 @@ namespace Nexoterra.World
             if(health&&!health.CanMove)input=Vector2.zero;
             Vector3 movement=Quaternion.Euler(0,yaw,0)*new Vector3(input.x,0,input.y).normalized;
             if(motor.isGrounded&&vertical<0)vertical=-2;
-            if(!(abilities&&abilities.IsDodging)&&motor.isGrounded&&k.spaceKey.wasPressedThisFrame&&Cursor.lockState==CursorLockMode.Locked&&(!health||health.CanMove))vertical=6.6f;
+            if(!emoteMenu&&!(abilities&&abilities.IsDodging)&&motor.isGrounded&&k.spaceKey.wasPressedThisFrame&&Cursor.lockState==CursorLockMode.Locked&&(!health||health.CanMove))vertical=6.6f;
             // Snappy arc: lighter going up, heavier coming down (no floaty hang time).
             vertical+=Physics.gravity.y*(vertical>0?2.2f:2.9f)*Time.deltaTime;
             float moveSpeed=(k.leftShiftKey.isPressed?sprintSpeed:walkSpeed)*(abilities?abilities.MovementMultiplier:1);
@@ -150,7 +152,7 @@ namespace Nexoterra.World
                 GUI.Label(new Rect(32,25,540,28),"NEXOTERRA / "+BiomeAt(transform.position),title);
                 GUI.Label(new Rect(32,54,540,24),"WASD · mover   Mayús · correr   Espacio · saltar   Ratón · cámara",label);
                 GUI.Label(new Rect(32,78,540,24),"Clic der. · apuntar   Clic izq. · lanzar babosa   V · personaje",label);
-                GUI.Label(new Rect(32,101,540,24),"E · recoger   F · alimentar   B · mochila   M · mapa   T · visitar zona",label);
+                GUI.Label(new Rect(32,101,540,24),"E · recoger   F · alimentar   Alt · mochila   B · gestos   M · mapa   T · visitar zona",label);
             }
 
             if(Time.time<noticeUntil)GUI.Label(new Rect(cx-260,Screen.height-195,590,30),notice,label);

@@ -28,7 +28,9 @@ namespace Nexoterra.World
   static readonly string[] commonLoadout={"Infierno","Arana","ice","Carnero","tazerling","Armashelt"};
   static readonly string[] bossLoadout={"Infierno","ice","tazerling","Arana","Tornado"};
   public string NextSpecies(){EnsureSlots();int slot=ReadySlot();return slot<0?null:SlugCatalog.BaseSpecies(slugSlots[slot]);}
+  bool slotsInitialized;
   void EnsureSlots(){
+   if(slotsInitialized)return;slotsInitialized=true;
    if(slugSlots==null||slugSlots.Length==0){var defaults=boss?bossLoadout:commonLoadout;slugSlots=defaults.Take(3).ToArray();if(!string.IsNullOrEmpty(equippedElemental))slugSlots[0]=equippedElemental;}
    slugSlots=slugSlots.Take(3).Where(s=>!string.IsNullOrEmpty(s)).Select(s=>SlugCatalog.BaseSpecies(s)=="Elemental_Energia"?"Elemental_Energia":"Malvada_"+SlugCatalog.BaseSpecies(s)).ToArray();
   }
@@ -124,7 +126,7 @@ namespace Nexoterra.World
    if(dropped||!dropSlugsOnDeath||!catalog)return;dropped=true;
    var campaign=CampaignLevel.Current;int enemyIndex=campaign?Array.IndexOf(campaign.enemies,GetComponent<EnemyCombatant>()):-1;
    for(int i=0;i<slugSlots.Length;i++){
-    string species=slugSlots[i];
+    string species=slugSlots[i];if(SlugCatalog.BaseSpecies(species)=="Goon")continue;
     if(campaign&&campaign.guardian==GetComponent<EnemyCombatant>()&&SlugCatalog.BaseSpecies(species)==CampaignLevel.Rewards[campaign.index])continue;
     string key=enemyIndex+":"+i;if(campaign&&campaign.LootCollected(key))continue;
     var definition=catalog.Find(species);if(definition==null)continue;

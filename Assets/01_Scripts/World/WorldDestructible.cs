@@ -14,8 +14,8 @@ namespace Nexoterra.World
   public bool Hit(string species,bool transformed)
   {
    if(!transformed||IsDormant||IsFalling)return false;
-   string id=SlugCatalog.Canonical(species);
-   if(kind!=Kind.Barrel&&id!="Carnero"&&id!="Armashelt"&&id!="Elemental_Tierra")return false;
+   string id=SlugCatalog.BaseSpecies(species);
+   if(kind!=Kind.Barrel&&id!="Demoledora"&&id!="Carnero"&&id!="Armashelt"&&id!="Elemental_Tierra")return false;
    if(kind==Kind.CeilingRock){IsFalling=true;fallSpeed=0;foreach(var c in colliders)c.enabled=false;}
    else Detonate();return true;
   }

@@ -445,3 +445,57 @@ MonoBehaviour:
       stunDuration: 0
     combatConfigured: 1
     usePrefabCombat: 1
+  - id: Demoledora
+    displayName: Demoledora
+    normal: {fileID: 3374239925014076017, guid: 832debb1893b2474f83bdae79a954e90, type: 3}
+    transformed: {fileID: 1694462576102980665, guid: 3d878d981dc1b33418d99c5bb57a5d26, type: 3}
+    portrait: {fileID: 2800000, guid: abfb2cd00b373c142b497e8d436725f7, type: 3}
+    accent: {r: 1, g: 0.6, b: 0.2, a: 1}
+    unique: 0
+    combat:
+      impactDamage: 26
+      burnDamagePerSecond: 0
+      burnDuration: 0
+      slowMultiplier: 1
+      slowDuration: 0
+      knockdownDuration: 1.8
+      knockbackSpeed: 4
+      stunDuration: 0
+    combatConfigured: 1
+    usePrefabCombat: 0
+  - id: Malvada_Demoledora
+    displayName: Demoledora malvada
+    normal: {fileID: 3598453478848947481, guid: b5ad613a33594a149a52d0d61bbcbe1f, type: 3}
+    transformed: {fileID: 4459395591238970237, guid: 279310419d6715640a78fc3e2858a26e, type: 3}
+    portrait: {fileID: 2800000, guid: 3165e807ab0cade4e8e1cf354378f696, type: 3}
+    accent: {r: 1, g: 0.1, b: 0.15, a: 1}
+    unique: 0
+    combat:
+      impactDamage: 26
+      burnDamagePerSecond: 0
+      burnDuration: 0
+      slowMultiplier: 1
+      slowDuration: 0
+      knockdownDuration: 1.8
+      knockbackSpeed: 4
+      stunDuration: 0
+    combatConfigured: 1
+    usePrefabCombat: 0
+  - id: Malvada_Goon
+    displayName: Goon malvada
+    normal: {fileID: 6263407289140850144, guid: 343b103eb77640240a72a7ecf5005ab7, type: 3}
+    transformed: {fileID: 486705796801495552, guid: ced28f72103c0524e8205b8b9064ded9, type: 3}
+    portrait: {fileID: 2800000, guid: cd6a4b656bb09e04caf487a2377cdcd4, type: 3}
+    accent: {r: 1, g: 0.1, b: 0.15, a: 1}
+    unique: 0
+    combat:
+      impactDamage: 4
+      burnDamagePerSecond: 0
+      burnDuration: 0
+      slowMultiplier: 1
+      slowDuration: 0
+      knockdownDuration: 0
+      knockbackSpeed: 0
+      stunDuration: 0
+    combatConfigured: 1
+    usePrefabCombat: 0

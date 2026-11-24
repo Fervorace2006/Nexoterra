@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace Nexoterra.World
 {
-    public sealed class SlugProjectile : MonoBehaviour
+    public sealed partial class SlugProjectile : MonoBehaviour
     {
         public float docHealingRadius=6;
         bool healedArea;
@@ -80,16 +80,20 @@ namespace Nexoterra.World
             while(remaining>.00001f)
             {
                 float step=remaining;if(!IsTransformed)step=Mathf.Min(step,Mathf.Max(.00001f,transformDistance-Travelled));
-                if(Sweep(step,out var hit))
-                {transform.position=hit.point+hit.normal*.23f;ArenaHit(hit.collider);HealArea(hit.point);Purify(hit.collider);var enemy=hit.collider.GetComponentInParent<EnemyCombatant>();if(enemy&&!hostile)enemy.ReceiveSlug(definition,Direction,IsTransformed);var player=hit.collider.GetComponentInParent<PlayerHealth>();if(player&&hostile)player.ReceiveSlug(definition,IsTransformed,Direction);var prop=hit.collider.GetComponentInParent<WorldDestructible>();if(prop)prop.Hit(definition.id,IsTransformed);if(effects){effects.End(true,hit.point);effects=null;}BeginReturn();return;}
+                bool collided=Sweep(step,out var hit);
+                if(IsReturning)return;
+                CheckProjectileContacts(collided?Mathf.Min(step,hit.distance):step);
+                if(IsReturning)return;
+                if(collided)
+                {transform.position=hit.point+hit.normal*.23f;ArenaHit(hit.collider);DemoledoraImpact(hit.point);HealArea(hit.point);Purify(hit.collider);var enemy=hit.collider.GetComponentInParent<EnemyCombatant>();if(enemy&&!hostile)enemy.ReceiveSlug(definition,Direction,IsTransformed);var player=hit.collider.GetComponentInParent<PlayerHealth>();if(player&&hostile)player.ReceiveSlug(definition,IsTransformed,Direction);var prop=hit.collider.GetComponentInParent<WorldDestructible>();if(prop)prop.Hit(definition.id,IsTransformed);if(effects){effects.End(true,hit.point);effects=null;}BeginReturn();return;}
                 if(IsReturning)return;transform.position+=Direction*step;Travelled+=step;remaining-=step;
                 if(!IsTransformed&&Travelled>=transformDistance-.0001f){IsTransformed=true;Show(definition.transformed,1.8f);effects=SlugFlightEffects.Create(transform,definition.id);effects.transform.localScale=Vector3.one*.7f;effects.transform.localPosition*=.7f;}
             }
             if(Travelled>=maxDistance-.001f||flightTime>=8)BeginReturn();
         }
-        void HealArea(Vector3 point){if(healedArea||!CanPurify)return;healedArea=true;var inventory=owner?owner:FindAnyObjectByType<SlugInventory>();HealingRadiusVisual.Burst(point,docHealingRadius);foreach(var wild in FindObjectsByType<WildSlug>(FindObjectsSortMode.None))if(!wild.adopted&&Vector3.Distance(wild.transform.position,point)<=docHealingRadius)PurifyWild(wild,inventory);foreach(var loose in FindObjectsByType<LooseSlug>(FindObjectsSortMode.None))if(Vector3.Distance(loose.transform.position,point)<=docHealingRadius)loose.Purify();}
-        void Purify(Collider collider){if(!CanPurify)return;var loose=collider.GetComponentInParent<LooseSlug>();if(loose)loose.Purify();PurifyWild(collider.GetComponentInParent<WildSlug>(),owner?owner:FindAnyObjectByType<SlugInventory>());}
-        static void PurifyWild(WildSlug wild,SlugInventory inventory){if(!wild||!inventory||!wild.species.StartsWith("Malvada_"))return;var clean=inventory.catalog.Find(SlugCatalog.BaseSpecies(wild.species));if(clean==null||wild.GetComponent<SlugPurification>())return;
+        void HealArea(Vector3 point){if(CanCorrupt){CorruptArea(point);return;}if(healedArea||!CanPurify)return;healedArea=true;var inventory=owner?owner:FindAnyObjectByType<SlugInventory>();HealingRadiusVisual.Burst(point,docHealingRadius);foreach(var wild in FindObjectsByType<WildSlug>(FindObjectsSortMode.None))if(!wild.adopted&&Vector3.Distance(wild.transform.position,point)<=docHealingRadius)PurifyWild(wild,inventory);foreach(var loose in FindObjectsByType<LooseSlug>(FindObjectsSortMode.None))if(Vector3.Distance(loose.transform.position,point)<=docHealingRadius)loose.Purify();}
+        void Purify(Collider collider){if(CanCorrupt){CorruptTarget(collider);return;}if(!CanPurify)return;var loose=collider.GetComponentInParent<LooseSlug>();if(loose)loose.Purify();PurifyWild(collider.GetComponentInParent<WildSlug>(),owner?owner:FindAnyObjectByType<SlugInventory>());}
+        static void PurifyWild(WildSlug wild,SlugInventory inventory){if(!wild||!inventory||!wild.species.StartsWith("Malvada_"))return;var clean=inventory.catalog.Find(SlugCatalog.BaseSpecies(wild.species));if(clean==null||wild.GetComponent<SlugPurification>()||wild.GetComponent<WildSlugCorruption>())return;
 SlugPurification.Begin(wild.gameObject,()=>ApplyPurifiedWild(wild,clean));}
         static void ApplyPurifiedWild(WildSlug wild,SlugDefinition clean){if(!wild)return;wild.species=clean.id;foreach(var r in wild.GetComponentsInChildren<Renderer>())if(!r.GetComponentInParent<ParticleSystem>())r.enabled=false;var visual=Instantiate(clean.normal,wild.transform);foreach(var c in visual.GetComponentsInChildren<Collider>())c.enabled=false;var rs=visual.GetComponentsInChildren<Renderer>();if(rs.Length==0)return;var b=rs[0].bounds;foreach(var r in rs)b.Encapsulate(r.bounds);float scale=.35f/Mathf.Max(.01f,b.size.y);Vector3 center=b.center-wild.transform.position;visual.transform.localScale*=scale;visual.transform.localPosition=-center*scale+Vector3.up*.175f;}
         void ArenaHit(Collider c){if(!arenaShot||!arenaAuthority||!ArenaSession.Current)return;var target=c.GetComponentInParent<ArenaTarget>();if(target)ArenaSession.Current.Hit(target.clientId,definition,IsTransformed,Direction);}
@@ -98,7 +102,7 @@ SlugPurification.Begin(wild.gameObject,()=>ApplyPurifiedWild(wild,clean));}
             var arena=c?c.GetComponentInParent<ArenaTarget>():null;
             if(arenaShot&&arena)return arena.clientId!=arenaOwner;
             if(!c||c.transform.IsChildOf(transform)||(shooter&&c.transform.IsChildOf(shooter)))return false;
-            if(CanPurify&&(c.GetComponentInParent<LooseSlug>()||c.GetComponentInParent<WildSlug>()))return true;
+            if((CanPurify||CanCorrupt)&&(c.GetComponentInParent<LooseSlug>()||c.GetComponentInParent<WildSlug>()))return true;
             var enemy=c.GetComponentInParent<EnemyCombatant>();var player=c.GetComponentInParent<PlayerHealth>();
             if(enemy)return !hostile&&!enemy.IsDead;
             if(player)return hostile&&!player.IsDead;
@@ -107,18 +111,18 @@ SlugPurification.Begin(wild.gameObject,()=>ApplyPurifiedWild(wild,clean));}
         bool Sweep(float distance,out RaycastHit nearest)
         {
             float radius=IsTransformed?transformedHitRadius:normalHitRadius;nearest=default;float best=float.PositiveInfinity;
-            int count=Physics.SphereCastNonAlloc(transform.position,radius,Direction,flightHits,distance,(hostile||CanPurify||arenaShot)?~0:SlugHop.WorldMask,QueryTriggerInteraction.Collide);
+            int count=Physics.SphereCastNonAlloc(transform.position,radius,Direction,flightHits,distance,(hostile||CanPurify||CanCorrupt||arenaShot)?~0:SlugHop.WorldMask,QueryTriggerInteraction.Collide);
             // Dense geometry must not silently discard a nearer wall or target.
-            var hits=count==flightHits.Length?Physics.SphereCastAll(transform.position,radius,Direction,distance,(hostile||CanPurify||arenaShot)?~0:SlugHop.WorldMask,QueryTriggerInteraction.Collide):flightHits;
+            var hits=count==flightHits.Length?Physics.SphereCastAll(transform.position,radius,Direction,distance,(hostile||CanPurify||CanCorrupt||arenaShot)?~0:SlugHop.WorldMask,QueryTriggerInteraction.Collide):flightHits;
             if(hits!=flightHits)count=hits.Length;
             for(int i=0;i<count;i++)if(Eligible(hits[i].collider)&&hits[i].distance<best){nearest=hits[i];best=nearest.distance;}
             // Sphere casts do not report a collider already overlapping the launch point.
-            int overlapCount=Physics.OverlapSphereNonAlloc(transform.position,radius,flightOverlaps,(hostile||CanPurify||arenaShot)?~0:SlugHop.WorldMask,QueryTriggerInteraction.Collide);
-            var overlaps=overlapCount==flightOverlaps.Length?Physics.OverlapSphere(transform.position,radius,(hostile||CanPurify||arenaShot)?~0:SlugHop.WorldMask,QueryTriggerInteraction.Collide):flightOverlaps;
+            int overlapCount=Physics.OverlapSphereNonAlloc(transform.position,radius,flightOverlaps,(hostile||CanPurify||CanCorrupt||arenaShot)?~0:SlugHop.WorldMask,QueryTriggerInteraction.Collide);
+            var overlaps=overlapCount==flightOverlaps.Length?Physics.OverlapSphere(transform.position,radius,(hostile||CanPurify||CanCorrupt||arenaShot)?~0:SlugHop.WorldMask,QueryTriggerInteraction.Collide):flightOverlaps;
             if(overlaps!=flightOverlaps)overlapCount=overlaps.Length;
             for(int i=0;i<overlapCount;i++)if(Eligible(overlaps[i]))
             {
-                var c=overlaps[i];ArenaHit(c);HealArea(transform.position);Purify(c);var enemy=c.GetComponentInParent<EnemyCombatant>();var player=c.GetComponentInParent<PlayerHealth>();
+                var c=overlaps[i];ArenaHit(c);DemoledoraImpact(transform.position);HealArea(transform.position);Purify(c);var enemy=c.GetComponentInParent<EnemyCombatant>();var player=c.GetComponentInParent<PlayerHealth>();
                 if(enemy&&!hostile)enemy.ReceiveSlug(definition,Direction,IsTransformed);
                 if(player&&hostile)player.ReceiveSlug(definition,IsTransformed,Direction);
                 var prop=c.GetComponentInParent<WorldDestructible>();if(prop)prop.Hit(definition.id,IsTransformed);
@@ -151,7 +155,7 @@ SlugPurification.Begin(wild.gameObject,()=>ApplyPurifiedWild(wild,clean));}
             {
                 if(TryRecall(goal)){grounded=true;hopping=false;fallSpeed=0;pause=0;stalled=0;returnElapsed=0;bestDistance=float.PositiveInfinity;}
             }
-            if(Vector3.Distance(transform.position,goal)<Mathf.Clamp(.85f+targetSpeed*.06f,.85f,1.5f))
+            if(stunRemaining<=0&&Vector3.Distance(transform.position,goal)<Mathf.Clamp(.85f+targetSpeed*.06f,.85f,1.5f))
             {
                 // Never recover through a wall just because the player is nearby.
                 if(!SlugHop.Blocked(transform.position,goal-transform.position,.035f,ReturnTarget))
@@ -165,6 +169,7 @@ SlugPurification.Begin(wild.gameObject,()=>ApplyPurifiedWild(wild,clean));}
                 else transform.position+=Vector3.down*step;
                 return;
             }
+            if(stunRemaining>0){stunRemaining=Mathf.Max(0,stunRemaining-dt);return;}
             if(!hopping)
             {
                 pause-=dt;if(pause>0)return;
@@ -198,7 +203,7 @@ SlugPurification.Begin(wild.gameObject,()=>ApplyPurifiedWild(wild,clean));}
             }
             return false;
         }
-        void OnDestroy(){if(enemyOwner)enemyOwner.RecoverSlug(enemySlot,this);if(effects)effects.End(false);if(owner&&definition!=null)owner.ReleaseLost(definition.id,this);}
+        void OnDestroy(){Flying.Remove(this);if(enemyOwner)enemyOwner.RecoverSlug(enemySlot,this);if(effects)effects.End(false);if(owner&&definition!=null)owner.ReleaseLost(definition.id,this);}
     }
 }
 

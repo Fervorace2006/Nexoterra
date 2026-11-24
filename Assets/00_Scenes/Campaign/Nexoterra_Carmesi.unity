@@ -34014,6 +34014,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Sir Black 2
       objectReference: {fileID: 0}
+    - target: {fileID: 2032780274249383988, guid: 0423281af6918e845b8856087d5e33cf, type: 3}
+      propertyPath: 'slugSlots.Array.data[2]'
+      value: Malvada_Goon
+      objectReference: {fileID: 0}
     - target: {fileID: 8275473703737176928, guid: 0423281af6918e845b8856087d5e33cf, type: 3}
       propertyPath: m_LocalPosition.x
       value: 90

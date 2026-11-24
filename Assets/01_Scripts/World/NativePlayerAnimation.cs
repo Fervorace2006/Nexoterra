@@ -15,6 +15,8 @@ namespace Nexoterra.World
   public Quaternion maleGripRotation=Quaternion.identity,femaleGripRotation=Quaternion.identity;
   public float gripHeightCorrection=.09f;
   public WaterAnimationSensor waterSensor;
+  public float forwardRollClipDuration=1.0f;
+  public bool HasDance=>current&&current.HasState(0,Animator.StringToHash("Dance1"));
   public float reloadDuration=1.1f,shootDuration=.32f;
   public Vector3 weaponSocketOffset=new Vector3(0,-.025f,.04f);
   public float AimWeight {get;private set;}
@@ -25,8 +27,18 @@ namespace Nexoterra.World
   NexoterraThirdPerson player;CharacterController motor;PlayerHealth health;PlayerAbilities abilities;
   bool wasAirborne;float landRemaining,airTime,jumpWeight;string jumpState;
   string state,upperState;Animator current;float reloadRemaining,shootRemaining;
-  void Awake(){player=GetComponent<NexoterraThirdPerson>();motor=GetComponent<CharacterController>();health=GetComponent<PlayerHealth>();abilities=GetComponent<PlayerAbilities>();if(!waterSensor)waterSensor=GetComponent<WaterAnimationSensor>();if(weapon)weaponScale=weapon.lossyScale;}
+  void Awake(){if(!GetComponent<PlayerEmotes>())gameObject.AddComponent<PlayerEmotes>();player=GetComponent<NexoterraThirdPerson>();motor=GetComponent<CharacterController>();health=GetComponent<PlayerHealth>();abilities=GetComponent<PlayerAbilities>();if(!waterSensor)waterSensor=GetComponent<WaterAnimationSensor>();if(weapon)weaponScale=weapon.lossyScale;}
   public void BeginReload(float duration){if(IsReloading||IsLoaded)return;var inventory=GetComponent<SlugInventory>();var selected=inventory?inventory.SelectedDefinition():null;if(selected==null||inventory.IsBusy(selected.id))return;loadedSpecies=selected.id;loaded=false;reloadRemaining=Mathf.Max(.1f,duration);shootRemaining=0;}
+  public bool TryAutoReload(bool enabled)
+  {
+   if(!enabled||GameSession.Blocked||IsReloading||IsLoaded||!current)return false;
+   var inventory=GetComponent<SlugInventory>();var slug=inventory?inventory.SelectedDefinition():null;
+   if(!inventory||inventory.IsOpen||slug==null||inventory.IsBusy(slug.id))return false;
+   var emotes=GetComponent<PlayerEmotes>();if(emotes&&(emotes.IsDancing||emotes.IsOpen))return false;
+   var controls=GetComponent<EnemyControlEffects>();
+   if((health&&health.IsDead)||(controls&&!controls.CanShoot)||(abilities&&abilities.IsDodging))return false;
+   var driver=GetComponent<PlayerAnimationDriver>();BeginReload(driver?driver.reloadDuration:reloadDuration);return IsReloading;
+  }
   public void PlayShot(){loaded=false;shootRemaining=shootDuration;reloadRemaining=0;}
   void Update()
   {
@@ -49,20 +61,24 @@ namespace Nexoterra.World
    if(grounded&&wasAirborne){wasAirborne=false;if(!swimming)landRemaining=.18f;}
    if(!grounded)landRemaining=0;
    landRemaining=Mathf.Max(0,landRemaining-Time.deltaTime);
-   string next=dead?"Death":knockdown!=null?knockdown:roll?(abilities.DodgeLeft?"RollLeft":"RollRight"):speed>.15f?(speed>3.4f?"Run":"Walk"):"Idle";
+   var emotes=GetComponent<PlayerEmotes>();bool dancing=emotes&&emotes.IsDancing;
+   if(dancing&&(speed>.15f||dead||roll||knockdown!=null||airborne||swimming||IsReloading||shootRemaining>0||GameSession.Blocked)){emotes.Cancel();dancing=false;}
+   string next=dead?"Death":knockdown!=null?knockdown:roll?(abilities.DodgeAxis>0?"RollForward":abilities.DodgeLeft?"RollLeft":"RollRight"):dancing?"Dance1":speed>.15f?(speed>3.4f?"Run":"Walk"):"Idle";
    // Jump clips play on a legs-only layer, so arms keep holding the pistol.
    int jumpLayer=current.GetLayerIndex("JumpLower");
    if(jumpLayer>=0){
-    string jump=dead||roll||knockdown!=null||speed>3.4f?null:airborne?(motor.velocity.y>.5f?"JumpStart":"JumpFall"):landRemaining>0?"JumpLand":null;
+    string jump=dancing||dead||roll||knockdown!=null||speed>3.4f?null:airborne?(motor.velocity.y>.5f?"JumpStart":"JumpFall"):landRemaining>0?"JumpLand":null;
     if(jump!=null&&jump!=jumpState)current.CrossFadeInFixedTime(jump,jump=="JumpLand"?.05f:.12f,jumpLayer);
     jumpState=jump;
     jumpWeight=Mathf.MoveTowards(jumpWeight,jump!=null?1:0,Time.deltaTime/(jump!=null?.08f:.12f));
     current.SetLayerWeight(jumpLayer,jumpWeight);
    }
-   bool aim=knockdown==null&&!GameSession.Blocked&&!dead&&!roll&&Mouse.current!=null&&Mouse.current.rightButton.isPressed&&Cursor.lockState==CursorLockMode.Locked&&!(GetComponent<SlugInventory>()&&GetComponent<SlugInventory>().IsOpen);
+   bool aim=!dancing&&knockdown==null&&!GameSession.Blocked&&!dead&&!roll&&Mouse.current!=null&&Mouse.current.rightButton.isPressed&&Cursor.lockState==CursorLockMode.Locked&&!(GetComponent<SlugInventory>()&&GetComponent<SlugInventory>().IsOpen);
    if(reloadRemaining>0 && reloadRemaining<=Time.deltaTime)loaded=true;
    reloadRemaining=Mathf.Max(0,reloadRemaining-Time.deltaTime);shootRemaining=Mathf.Max(0,shootRemaining-Time.deltaTime);
+   TryAutoReload(GameplayOptions.AutoReload);
    AimWeight=Mathf.MoveTowards(AimWeight,aim?1:0,Time.deltaTime/.2f);
+   if(dancing)AimWeight=0;
    if(roll||dead||knockdown!=null){AimWeight=0;reloadRemaining=shootRemaining=0;}
    int layer=current.GetLayerIndex("AimUpperBody");
    if(layer>=0){bool overridePose=reloadRemaining>0||shootRemaining>0;current.SetLayerWeight(layer,Mathf.Max(AimWeight,overridePose?1:0));
@@ -70,8 +86,9 @@ namespace Nexoterra.World
     if(upper!=upperState&&upper!=null){current.CrossFadeInFixedTime(upper,.09f,layer);upperState=upper;}
     if(upper==null)upperState=null;
    }
+   if(dancing||roll)current.applyRootMotion=false;
    if(next!=state){current.CrossFadeInFixedTime(next,next.StartsWith("Roll")?.05f:.18f,0);state=next;}
-   current.speed=GameSession.Blocked?0:IsReloading?1:next=="Run"?Mathf.Clamp(speed/Mathf.Max(.1f,runReferenceSpeed),.35f,1.6f):next=="Walk"?Mathf.Clamp(speed/Mathf.Max(.1f,walkReferenceSpeed),.35f,1.6f):next.StartsWith("Roll")?rollClipDuration/Mathf.Max(.1f,abilities.dodgeDuration):1;
+   current.speed=GameSession.Blocked?0:IsReloading?1:next=="Run"?Mathf.Clamp(speed/Mathf.Max(.1f,runReferenceSpeed),.35f,1.6f):next=="Walk"?Mathf.Clamp(speed/Mathf.Max(.1f,walkReferenceSpeed),.35f,1.6f):next.StartsWith("Roll")?(abilities.DodgeAxis>0?forwardRollClipDuration:rollClipDuration)/Mathf.Max(.1f,abilities.dodgeDuration):1;
   }
   void LateUpdate(){PositionWeapon();GroundModel();}
   // The CharacterController hovers by its skin width and the imported models carry a lift,

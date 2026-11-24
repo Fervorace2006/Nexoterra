@@ -10,13 +10,14 @@ namespace Nexoterra.World
         public Style Kind { get; private set; }
         public bool Finished { get; private set; }
         Color tint;
-        bool corrupted;
+        bool corrupted,redTail;
         ParticleSystem particles;
         TrailRenderer trail;
         LineRenderer[] arcs;
         Light glow;
         float age, nextArc;
-        static Material particleMaterial, lineMaterial;
+        static Material particleMaterial, lineMaterial,redParticleMaterial,redLineMaterial;
+        static Material RedMaterial(bool line){var cached=line?redLineMaterial:redParticleMaterial;if(cached)return cached;cached=new Material(Material(line)){hideFlags=HideFlags.HideAndDontSave};cached.SetFloat("_DstBlend",(float)BlendMode.OneMinusSrcAlpha);if(line)redLineMaterial=cached;else redParticleMaterial=cached;return cached;}
         public static Material RibbonMaterial=>Material(true);
         static Material Material(bool line)
         {
@@ -36,7 +37,7 @@ namespace Nexoterra.World
                 case "ice":return Style.Ice;
                 case "tazerling":case "Elemental_Energia":return Style.Lightning;
                 case "Elemental_Aire":case "Tornado":return Style.Wind;
-                case "Elemental_Tierra":case "Armashelt":return Style.Earth;
+                case "Demoledora":case "Elemental_Tierra":case "Armashelt":return Style.Earth;
                 case "Arana":return Style.Web;
                 case "Gon_Doc":return Style.Spore;
                 default:return Style.Impact;
@@ -45,7 +46,7 @@ namespace Nexoterra.World
         public static SlugFlightEffects Create(Transform projectile,string species)
         {
             var go=new GameObject("Efecto transformado Ã‚Â· "+species);go.layer=2;go.transform.SetParent(projectile,false);
-            var effect=go.AddComponent<SlugFlightEffects>();effect.Kind=ForSpecies(species);effect.corrupted=species.StartsWith("Malvada_");effect.Configure();go.transform.localPosition=Vector3.back*.65f;if(effect.Kind==Style.Fire){var fire=ImportedSlugVfx.Spawn("FireTail",go.transform,Vector3.zero,.3f,Quaternion.Euler(-90,0,0));if(effect.corrupted)ImportedSlugVfx.Tint(fire,new Color(.15f,1,.55f));}if(effect.Kind==Style.Wind)ImportedSlugVfx.Spawn("AirTornado",go.transform,Vector3.zero,.22f,Quaternion.Euler(-90,0,0));return effect;
+            var effect=go.AddComponent<SlugFlightEffects>();effect.Kind=ForSpecies(species);effect.corrupted=species.StartsWith("Malvada_");effect.redTail=species=="Malvada_Demoledora"||species=="Malvada_Goon";effect.Configure();go.transform.localPosition=Vector3.back*.65f;if(effect.Kind==Style.Fire){var fire=ImportedSlugVfx.Spawn("FireTail",go.transform,Vector3.zero,.3f,Quaternion.Euler(-90,0,0));if(effect.corrupted)ImportedSlugVfx.Tint(fire,new Color(.15f,1,.55f));}if(effect.Kind==Style.Wind)ImportedSlugVfx.Spawn("AirTornado",go.transform,Vector3.zero,.22f,Quaternion.Euler(-90,0,0));return effect;
         }
         static Color ColorFor(Style style)
         {
@@ -69,20 +70,22 @@ namespace Nexoterra.World
         void Configure()
         {
             tint=ColorFor(Kind);if(corrupted)tint=Kind==Style.Wind?new Color(.75f,.79f,.83f):new Color(.15f,1,.55f);
+            if(redTail)tint=new Color(1,.025f,.055f);
             particles=MakeParticles(transform,tint,true,Kind==Style.Fire?.62f:.3f);
             particles.transform.localPosition=Vector3.back*.35f;
             var renderer=particles.GetComponent<ParticleSystemRenderer>();
             if(Kind==Style.Fire||Kind==Style.Ice){renderer.renderMode=ParticleSystemRenderMode.Stretch;renderer.lengthScale=1.3f;renderer.velocityScale=.035f;}
             var velocity=particles.velocityOverLifetime;velocity.enabled=true;velocity.space=ParticleSystemSimulationSpace.Local;velocity.x=new ParticleSystem.MinMaxCurve(0,0);velocity.y=new ParticleSystem.MinMaxCurve(0,0);velocity.z=new ParticleSystem.MinMaxCurve(-3,-1);
-            var emission=particles.emission;emission.rateOverTime=Kind==Style.Fire?90:55;particles.Play();
+            var emission=particles.emission;emission.rateOverTime=redTail?85:Kind==Style.Fire?90:55;particles.Play();
             if(Kind==Style.Water){var main=particles.main;main.startSize=new ParticleSystem.MinMaxCurve(.06f,.18f);main.startLifetime=new ParticleSystem.MinMaxCurve(.25f,.65f);emission.rateOverTime=75;renderer.renderMode=ParticleSystemRenderMode.Stretch;renderer.lengthScale=1.6f;renderer.velocityScale=.03f;}
-            trail=gameObject.AddComponent<TrailRenderer>();trail.sharedMaterial=Material(true);trail.time=Kind==Style.Wind?.4f:.3f;trail.minVertexDistance=.08f;trail.widthMultiplier=Kind==Style.Fire?.7f:.42f;trail.widthCurve=AnimationCurve.EaseInOut(0,1,1,0);trail.colorGradient=Fade(tint,.65f);trail.shadowCastingMode=ShadowCastingMode.Off;trail.receiveShadows=false;trail.Clear();
+            trail=gameObject.AddComponent<TrailRenderer>();trail.sharedMaterial=Material(true);trail.time=redTail?.48f:Kind==Style.Wind?.4f:.3f;trail.minVertexDistance=.08f;trail.widthMultiplier=redTail?.85f:Kind==Style.Fire?.7f:.42f;trail.widthCurve=AnimationCurve.EaseInOut(0,1,1,0);trail.colorGradient=Fade(tint,.65f);trail.shadowCastingMode=ShadowCastingMode.Off;trail.receiveShadows=false;trail.Clear();
             var lightObject=new GameObject("Luz elemental");lightObject.layer=2;lightObject.transform.SetParent(transform,false);glow=lightObject.AddComponent<Light>();glow.color=tint;glow.intensity=1.4f;glow.range=3;glow.shadows=LightShadows.None;
-            int count=Kind==Style.Lightning?3:(Kind==Style.Wind||Kind==Style.Water||Kind==Style.Web?2:0);
+            if(redTail){renderer.sharedMaterial=RedMaterial(false);trail.sharedMaterial=RedMaterial(true);var colors=particles.colorOverLifetime;colors.color=RedWake();trail.colorGradient=RedWake();var m=particles.main;m.startSize=new ParticleSystem.MinMaxCurve(.12f,.32f);}
+            int count=redTail?4:Kind==Style.Lightning?3:(Kind==Style.Wind||Kind==Style.Water||Kind==Style.Web?2:0);
             arcs=new LineRenderer[count];
             for(int i=0;i<count;i++)
             {
-                var arc=new GameObject("Arco elemental");arc.layer=2;arc.transform.SetParent(transform,false);var line=arc.AddComponent<LineRenderer>();line.sharedMaterial=Material(true);line.useWorldSpace=false;line.positionCount=Kind==Style.Lightning?9:36;line.widthMultiplier=Kind==Style.Lightning?.045f:.035f;line.colorGradient=Fade(tint,.8f);line.shadowCastingMode=ShadowCastingMode.Off;line.receiveShadows=false;arcs[i]=line;
+                var arc=new GameObject("Arco elemental");arc.layer=2;arc.transform.SetParent(transform,false);var line=arc.AddComponent<LineRenderer>();line.sharedMaterial=Material(true);line.useWorldSpace=false;line.positionCount=Kind==Style.Lightning?9:36;line.widthMultiplier=Kind==Style.Lightning?.045f:.035f;line.colorGradient=Fade(tint,.8f);line.shadowCastingMode=ShadowCastingMode.Off;line.receiveShadows=false;if(redTail){line.sharedMaterial=RedMaterial(true);line.colorGradient=RedWake();line.widthMultiplier=.28f;line.widthCurve=AnimationCurve.EaseInOut(0,1,1,0);}arcs[i]=line;
             }
             Burst(transform.position,tint,false);
             UpdateArcs();
@@ -127,6 +130,10 @@ namespace Nexoterra.World
             if(glow)glow.intensity=1.2f+Mathf.Sin(age*8)*.2f;
             if(Kind!=Style.Lightning||age>=nextArc){UpdateArcs();nextArc=age+.055f;}
         }
+        static Gradient RedWake()
+        {
+            var g=new Gradient();g.SetKeys(new[]{new GradientColorKey(new Color(1,.015f,.025f),0),new GradientColorKey(new Color(.75f,.005f,.015f),.55f),new GradientColorKey(new Color(.3f,0,.01f),1)},new[]{new GradientAlphaKey(.9f,0),new GradientAlphaKey(.75f,.6f),new GradientAlphaKey(0,1)});return g;
+        }
         void UpdateArcs()
         {
             for(int a=0;a<arcs.Length;a++)
@@ -134,7 +141,9 @@ namespace Nexoterra.World
                 var line=arcs[a];int count=line.positionCount;
                 for(int i=0;i<count;i++)
                 {
-                    float t=i/(float)(count-1),angle=t*Mathf.PI*4+age*7+a*Mathf.PI;
+                    float t=i/(float)(count-1);
+                    if(redTail){float phase=a*Mathf.PI*.5f;float spread=.12f+t*.35f;float wave=Mathf.Sin(t*9-age*12+a)*t*.12f;line.SetPosition(i,new Vector3(Mathf.Cos(phase)*spread+wave,Mathf.Sin(phase)*spread+wave*.65f,-.05f-t*2.7f));continue;}
+                    float angle=t*Mathf.PI*4+age*7+a*Mathf.PI;
                     float radius=.32f+Mathf.Sin(t*Mathf.PI)*.2f;
                     if(Kind==Style.Lightning){angle=a*Mathf.PI*2/3+Mathf.Sin(i*12.7f+nextArc*71)*.55f;radius=.42f+Mathf.Sin(i*19.3f+nextArc*47)*.17f;}
                     line.SetPosition(i,new Vector3(Mathf.Cos(angle)*radius,Mathf.Sin(angle)*radius,Mathf.Lerp(-2.1f,-.15f,t)));

@@ -27742,6 +27742,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 6964840523831329963, guid: 1c81839d39732864e895769499b72243, type: 3}
+      propertyPath: 'slugSlots.Array.data[2]'
+      value: Malvada_Goon
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -28055,6 +28059,10 @@ PrefabInstance:
     - target: {fileID: 7528778331068505539, guid: 465861c115e2214439ffeac2ad92d95d, type: 3}
       propertyPath: 'slugSlots.Array.data[0]'
       value: Malvada_Arana
+      objectReference: {fileID: 0}
+    - target: {fileID: 7528778331068505539, guid: 465861c115e2214439ffeac2ad92d95d, type: 3}
+      propertyPath: 'slugSlots.Array.data[2]'
+      value: Malvada_Goon
       objectReference: {fileID: 0}
     - target: {fileID: 7954215233949599666, guid: 465861c115e2214439ffeac2ad92d95d, type: 3}
       propertyPath: m_Name
