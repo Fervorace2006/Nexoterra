@@ -6,8 +6,8 @@ namespace Nexoterra.World
  public sealed class FrontEndMenu : MonoBehaviour
  {
   public const string MenuScene="Nexoterra_Menu",WorldScene="Nexoterra_Jardines";
-  static FrontEndMenu loader;bool multiplayer,direct,settings;string ip="127.0.0.1",port="7777";string joinCode="";bool loading;float progress;string error;Texture2D artwork,logo;
-  void Awake(){artwork=Resources.Load<Texture2D>("Nexoterra/Loading");logo=Resources.Load<Texture2D>("Nexoterra/UI/Logo");Time.timeScale=1;Cursor.lockState=CursorLockMode.None;Cursor.visible=true;}
+  static FrontEndMenu loader;bool multiplayer,direct,settings;string ip="127.0.0.1",port="7777";string joinCode="";bool loading;float progress;string error;Texture2D artwork,logo,logoCutout,menuBackground;
+  void Awake(){artwork=Resources.Load<Texture2D>("Nexoterra/Loading");logo=Resources.Load<Texture2D>("Nexoterra/UI/Logo");logoCutout=Resources.Load<Texture2D>("Nexoterra/UI/Logo_Cutout");menuBackground=Resources.Load<Texture2D>("Nexoterra/UI/MenuBackground");Time.timeScale=1;Cursor.lockState=CursorLockMode.None;Cursor.visible=true;}
   public static void Load(string scene)
   {
    if(loader&&loader.loading)return;
@@ -73,21 +73,25 @@ namespace Nexoterra.World
    }
    else
    {
-    NexoHud.Backdrop(null);NexoHud.Scale();NexoUi.BeginNav();
-    if(logo)GUI.DrawTexture(new Rect(400,36,480,180),logo,ScaleMode.ScaleToFit);
-    float x=460,w=360,h=52,gap=12,y=268;
-    if(NexoHud.PrimaryButton(new Rect(x,y,w,h),"INICIAR HISTORIA"))GameSession.BeginNew();y+=h+gap;
-    GUI.enabled=GameSession.SavedGameExists;if(NexoHud.Button(new Rect(x,y,w,h),"CONTINUAR PARTIDA")){if(!GameSession.BeginSaved(out error))Debug.LogWarning(error);}GUI.enabled=true;y+=h+gap;
-    if(NexoHud.Button(new Rect(x,y,w,h),"MULTIJUGADOR")){multiplayer=true;NexoUi.ResetFocus();}y+=h+gap;
-    if(NexoHud.Button(new Rect(x,y,w,h),"CALIDAD GRÁFICA")){settings=true;NexoUi.ResetFocus();}y+=h+gap;
-    if(NexoHud.Button(new Rect(x,y,w,h),"SALIR")){
+    // Start screen: map backdrop, logo, framed green button stack, square icon buttons in the top corners.
+    if(menuBackground){GUI.DrawTexture(new Rect(0,0,Screen.width,Screen.height),menuBackground,ScaleMode.ScaleAndCrop);NexoHud.Fill(new Rect(0,0,Screen.width,Screen.height),new Color(0,.02f,.04f,.25f));}
+    else NexoHud.Backdrop(null);
+    NexoHud.Scale();NexoUi.BeginNav();
+    if(logoCutout)GUI.DrawTexture(new Rect(370,26,540,180),logoCutout,ScaleMode.ScaleToFit);
+    if(NexoUi.IconButton(new Rect(24,20,84,72),"Icon_Gear")){settings=true;NexoUi.ResetFocus();}
+    if(NexoUi.IconButton(new Rect(1172,20,84,72),"Icon_Close")){
 #if UNITY_EDITOR
      UnityEditor.EditorApplication.isPlaying=false;
 #else
      Application.Quit();
 #endif
     }
-    NexoUi.Write(new Rect(340,y+h+20,600,22),error??"",13,error!=null?NexoUi.Danger:NexoUi.Muted,TextAnchor.MiddleCenter);
+    var stack=new Rect(470,300,340,268);NexoUi.Panel(stack);
+    float x=stack.x+16,w=stack.width-32,h=66,gap=16,y=stack.y+16;
+    if(NexoHud.Button(new Rect(x,y,w,h),"HISTORIA"))GameSession.BeginNew();y+=h;NexoHud.Fill(new Rect(x+8,y+6,w-16,4),new Color(0,0,0,.85f));y+=gap;
+    GUI.enabled=GameSession.SavedGameExists;if(NexoHud.Button(new Rect(x,y,w,h),"CONTINUAR")){if(!GameSession.BeginSaved(out error))Debug.LogWarning(error);}GUI.enabled=true;y+=h;NexoHud.Fill(new Rect(x+8,y+6,w-16,4),new Color(0,0,0,.85f));y+=gap;
+    if(NexoHud.Button(new Rect(x,y,w,h),"MULTIJUGADOR")){multiplayer=true;NexoUi.ResetFocus();}
+    if(error!=null)NexoUi.Write(new Rect(340,stack.yMax+16,600,22),error,13,NexoUi.Danger,TextAnchor.MiddleCenter);
     NexoUi.EndNav();
    }
    GUI.matrix=old;

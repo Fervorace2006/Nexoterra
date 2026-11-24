@@ -86,6 +86,10 @@ public sealed class NovemberReview : MonoBehaviour
   var effect=wind.GetComponent<UnityEngine.VFX.VisualEffect>();
   Check(effect.HasVector4("core color 1")&&Mathf.Abs(effect.GetVector4("core color 1").x-effect.GetVector4("core color 1").z)<.1f,"Tornado blanco/gris");
   yield return new WaitForSeconds(.6f);ScreenCapture.CaptureScreenshot(Folder+"Tornado.png");yield return new WaitForSeconds(.3f);
+  {// Menu backdrop: a clean shot of our own map (HUD hidden).
+   var hud=new Behaviour[]{player.GetComponent<NexoHud>(),inventory,FindAnyObjectByType<CampaignLevel>(),player};foreach(var h in hud)if(h)h.enabled=false;
+   player.view.transform.position=new Vector3(-40,6,-100);player.view.transform.LookAt(new Vector3(15,4,5));yield return new WaitForSeconds(.4f);
+   ScreenCapture.CaptureScreenshot("Assets/Resources/Nexoterra/UI/MenuBackground.png");yield return new WaitForSeconds(.4f);foreach(var h in hud)if(h&&h!=player)h.enabled=true;}
   foreach(var shot in new[]{(new Vector3(98,7,-98),new Vector3(125,19,-125),"Corner"),(new Vector3(0,12,-60),new Vector3(-125,22,-20),"Ceiling"),(new Vector3(0,75,-150),new Vector3(0,0,10),"Overview")}){
    player.view.transform.position=shot.Item1;player.view.transform.LookAt(shot.Item2);yield return new WaitForSeconds(.3f);ScreenCapture.CaptureScreenshot(Folder+shot.Item3+".png");yield return new WaitForSeconds(.3f);}
   inventory.SetOpen(true);yield return new WaitForSecondsRealtime(.4f);ScreenCapture.CaptureScreenshot(Folder+"Inventory.png");yield return new WaitForSecondsRealtime(.3f);inventory.SetOpen(false);

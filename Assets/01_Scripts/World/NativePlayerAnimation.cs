@@ -28,7 +28,7 @@ namespace Nexoterra.World
   bool wasAirborne;float landRemaining,airTime,jumpWeight;string jumpState;
   string state,upperState;Animator current;float reloadRemaining,shootRemaining;
   void Awake(){if(!GetComponent<PlayerEmotes>())gameObject.AddComponent<PlayerEmotes>();player=GetComponent<NexoterraThirdPerson>();motor=GetComponent<CharacterController>();health=GetComponent<PlayerHealth>();abilities=GetComponent<PlayerAbilities>();if(!waterSensor)waterSensor=GetComponent<WaterAnimationSensor>();if(weapon)weaponScale=weapon.lossyScale;}
-  public void BeginReload(float duration){if(IsReloading||IsLoaded)return;var inventory=GetComponent<SlugInventory>();var selected=inventory?inventory.SelectedDefinition():null;if(selected==null||inventory.IsBusy(selected.id))return;loadedSpecies=selected.id;loaded=false;reloadRemaining=Mathf.Max(.1f,duration);shootRemaining=0;}
+  public void BeginReload(float duration){if(IsReloading||IsLoaded)return;var inventory=GetComponent<SlugInventory>();var selected=inventory?inventory.SelectedDefinition():null;if(selected==null||inventory.IsBusy(selected.id))return;loadedSpecies=selected.id;loaded=false;reloadRemaining=Mathf.Max(.1f,duration);shootRemaining=0;NexoAudio.Play("slug_reload",.8f,.04f);}
   public bool TryAutoReload(bool enabled)
   {
    if(!enabled||GameSession.Blocked||IsReloading||IsLoaded||!current)return false;

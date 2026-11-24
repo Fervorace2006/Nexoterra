@@ -66,7 +66,7 @@ namespace Nexoterra.World
   }
 
   // ---- Focus navigation ----
-  static bool navActive,keyboardMode;static int navCount,lastCount,focus=-1,activate=-1,navFrame=-1;static Vector2 lastMouse;
+  static int hoverId;static bool navActive,keyboardMode;static int navCount,lastCount,focus=-1,activate=-1,navFrame=-1;static Vector2 lastMouse;
   public static bool BackPressed {get;private set;}
   public static void BeginNav()
   {
@@ -116,6 +116,9 @@ namespace Nexoterra.World
    pressed=GUIUtility.hotControl==id&&hover;
    focused=index>=0&&index==focus&&keyboardMode&&enabled;
    if(index>=0&&index==activate){activate=-1;if(enabled)clicked=true;}
+   // Sounds: hover when the pointer/focus enters a control, click when it activates.
+   if(e.type==EventType.Repaint){bool over=hover||focused;if(over&&hoverId!=id){hoverId=id;NexoAudio.Play("ui_hover",.35f);}else if(!over&&hoverId==id)hoverId=0;}
+   if(clicked)NexoAudio.Play("ui_click",.7f);
    return clicked;
   }
 
@@ -147,7 +150,7 @@ namespace Nexoterra.World
    for(float x=r.x+r.width*.12f;x<r.xMax-r.height*.6f;x+=r.height*.9f)
     for(int k=0;k<3;k++){float y=r.center.y+(k-1)*r.height*.18f;NexoHud.Fill(new Rect(x+(1-Mathf.Abs(k-1))*r.height*.18f,y-1,r.height*.3f,2),c);}
   }
-  static readonly Color Green=new Color(.12f,.78f,.22f),GreenHot=new Color(.25f,.95f,.35f),GreenEdge=new Color(.5f,1f,.55f),Olive=new Color(.32f,.36f,.24f),Cyan=new Color(.12f,.72f,.88f);
+  static readonly Color Green=new Color(.05f,.52f,.13f),GreenHot=new Color(.09f,.68f,.2f),GreenEdge=new Color(.3f,.95f,.38f),Olive=new Color(.32f,.36f,.24f),Cyan=new Color(.12f,.72f,.88f);
   // Main action button: green chamfered plate with light top band and faint chevrons.
   // primary = slightly brighter. States: hover (brighter), pressed (darker, text down), disabled (olive), focused (cyan ring).
   public static bool Action(Rect r,string label,bool primary=false)
@@ -165,9 +168,25 @@ namespace Nexoterra.World
     NexoHud.Fill(new Rect(face.x+10,face.y+3,face.width-20,Mathf.Max(2,face.height*.12f)),new Color(1,1,1,enabled?.18f:.06f));
     Chevrons(face,new Color(1,1,1,enabled?.07f:.04f));
     var text=new Rect(r.x+14,r.y+(pressed?2:0),r.width-28,r.height);
-    int size=r.height<44?15:18;
-    Write(new Rect(text.x+1,text.y+2,text.width,text.height),label,size,new Color(0,.12f,0,.75f),TextAnchor.MiddleCenter,true);
-    Write(text,label,size,enabled?Color.white:new Color(.75f,.78f,.62f),TextAnchor.MiddleCenter,true);
+    int size=r.height<44?15:r.height<58?19:22;
+    Write(new Rect(text.x+1,text.y+2,text.width,text.height),label,size,new Color(0,.1f,0,.8f),TextAnchor.MiddleCenter,true);
+    Write(text,label,size,!enabled?new Color(.72f,.76f,.58f):lit?new Color(.88f,1f,.8f):new Color(.62f,1f,.48f),TextAnchor.MiddleCenter,true);
+   }
+   return clicked;
+  }
+  // Square icon button (top-corner style): teal glass face, metal rim, orange corner brackets.
+  public static bool IconButton(Rect r,string icon)
+  {
+   bool clicked=Interact(r,out bool hover,out bool pressed,out bool focused);bool lit=hover||focused;
+   if(Event.current.type==EventType.Repaint)
+   {
+    NexoHud.Fill(new Rect(r.x+2,r.y+4,r.width,r.height),new Color(0,0,0,.45f));
+    Chamfer(r,ChamferFill,new Color(.16f,.2f,.22f),12);
+    var face=new Rect(r.x+6,r.y+6,r.width-12,r.height-12);
+    Chamfer(face,ChamferFill,pressed?new Color(.03f,.22f,.24f):lit?new Color(.08f,.45f,.48f):new Color(.05f,.32f,.35f),9);
+    Chamfer(face,ChamferRing,lit?new Color(.6f,1,1):new Color(.25f,.75f,.78f),9);
+    NexoHud.Brackets(new Rect(r.x-3,r.y-3,r.width+6,r.height+6),new Color(1f,.58f,.12f),14,4);
+    var t=Kit(icon);if(t){float s=Mathf.Min(face.width,face.height)*.66f;var old=GUI.color;GUI.color=lit?Color.white:new Color(.75f,.95f,.95f);GUI.DrawTexture(new Rect(face.center.x-s/2,face.center.y-s/2+(pressed?1:0),s,s),t,ScaleMode.ScaleToFit,true);GUI.color=old;}
    }
    return clicked;
   }
