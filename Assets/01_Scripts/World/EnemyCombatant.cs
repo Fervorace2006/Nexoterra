@@ -31,13 +31,14 @@ namespace Nexoterra.World
   int lastStatus;
   static GUIStyle label;
   Transform healthHead;
-  Collider healthBody;
+  Collider healthBody;CharacterController motor;NativeEnemyAnimation nativeAnimation;EnemyShooter shooter;
 
   void Start()
   {
    var animator=GetComponentInChildren<Animator>();
    if(animator && animator.isHuman) healthHead=animator.GetBoneTransform(HumanBodyBones.Head);
    healthBody=GetComponent<Collider>();
+   motor=GetComponent<CharacterController>();nativeAnimation=GetComponent<NativeEnemyAnimation>();shooter=GetComponent<EnemyShooter>();
   }
   void Awake(){Controls=GetComponent<EnemyControlEffects>();if(!Controls)Controls=gameObject.AddComponent<EnemyControlEffects>();Health=maxHealth;upright=visualRoot?visualRoot.localRotation:Quaternion.identity;}
   public void ReceiveSlug(SlugDefinition slug,Vector3 direction,bool transformed)
@@ -68,16 +69,14 @@ namespace Nexoterra.World
    {
     Vector3 delta=knockVelocity*((1-Mathf.Exp(-7*dt))/7);knockVelocity*=Mathf.Exp(-7*dt);
     float distance=delta.magnitude;
-    foreach(var hit in Physics.SphereCastAll(transform.position+Vector3.up*.8f,.32f,delta.normalized,distance,1,QueryTriggerInteraction.Ignore))
-     if(!hit.collider.transform.IsChildOf(transform))distance=Mathf.Min(distance,Mathf.Max(0,hit.distance-.02f));
-    var cc=GetComponent<CharacterController>();if(cc&&cc.enabled)cc.Move(delta.normalized*distance);else transform.position+=delta.normalized*distance;
+    if(motor&&motor.enabled)motor.Move(delta.normalized*distance);else transform.position+=delta.normalized*distance;
    }
    RefreshVisuals();
   }
   void Update(){Advance(Time.deltaTime);if(IsBurning&&!burnVisual)burnVisual=ImportedSlugVfx.BurningCharacter(transform);if(corruptedBurn&&burnVisual)ImportedSlugVfx.Tint(burnVisual,new Color(.15f,1,.55f));if(!IsBurning&&burnVisual)Destroy(burnVisual);}
   void LateUpdate()
   {
-   if(visualRoot)visualRoot.localRotation=Quaternion.Slerp(visualRoot.localRotation,upright*Quaternion.Euler(0,0,(IsDead||IsKnockedDown)&&!GetComponent<NativeEnemyAnimation>()?82:0),1-Mathf.Exp(-12*Time.deltaTime));
+   if(visualRoot)visualRoot.localRotation=Quaternion.Slerp(visualRoot.localRotation,upright*Quaternion.Euler(0,0,(IsDead||IsKnockedDown)&&!nativeAnimation?82:0),1-Mathf.Exp(-12*Time.deltaTime));
   }
   void RefreshVisuals()
   {
@@ -97,7 +96,7 @@ namespace Nexoterra.World
   void FixedUpdate(){if(IsDead&&Time.time-diedAt>=corpseLifetime)HideCorpse();else if(!IsDead&&hiddenRenderers!=null){foreach(var r in hiddenRenderers)if(r)r.enabled=true;foreach(var c in hiddenColliders)if(c)c.enabled=true;hiddenRenderers=null;hiddenColliders=null;}}
   void DrawLegacyWorldBar()
   {
-   if(GameSession.Blocked)return;var shooter=GetComponent<EnemyShooter>();if(shooter&&shooter.boss)return;
+   if(GameSession.Blocked)return;if(shooter&&shooter.boss)return;
    var cam=Camera.main;if(!cam||Vector3.Distance(cam.transform.position,transform.position)>45)return;
    Vector3 anchor=transform.position+Vector3.up*1.9f;
    if(healthHead) anchor=healthHead.position+Vector3.up*.28f;

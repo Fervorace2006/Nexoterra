@@ -23,7 +23,7 @@ namespace Nexoterra.World
   public HumanoidPose pose;
   public Vector3 MotionVelocity {get;private set;}
   public float MotionSpeed=>MotionVelocity.magnitude;
-  EnemyCombatant health;CharacterController motor;PlayerHealth target;
+  EnemyCombatant health;CharacterController motor;PlayerHealth target;NativeEnemyAnimation native;
   int volley;float reloadUntil;bool loaded;
   static readonly string[] commonLoadout={"Infierno","Arana","ice","Carnero","tazerling","Armashelt"};
   static readonly string[] bossLoadout={"Infierno","ice","tazerling","Arana","Tornado"};
@@ -42,12 +42,12 @@ namespace Nexoterra.World
   public bool IsPursuing {get;private set;}
   public bool IsAiming {get;private set;}
   public Vector3 AimDirection=>target&&weapon?(target.transform.position+Vector3.up-weapon.position).normalized:transform.forward;
-  void Start(){health=GetComponent<EnemyCombatant>();EnsureSlots();health.onDeath.AddListener(DropSlugs);motor=GetComponent<CharacterController>();target=FindAnyObjectByType<PlayerHealth>();home=transform.position;if(model)modelOrigin=model.localPosition;volley=Mathf.Abs(Mathf.RoundToInt(home.x*3+home.z*7))%commonLoadout.Length;patrolPoint=volley%4;flankSide=(volley%2==0)?1:-1;fireAt=Time.time+2;}
+  void Start(){health=GetComponent<EnemyCombatant>();EnsureSlots();health.onDeath.AddListener(DropSlugs);motor=GetComponent<CharacterController>();native=GetComponent<NativeEnemyAnimation>();target=FindAnyObjectByType<PlayerHealth>();home=transform.position;if(model)modelOrigin=model.localPosition;volley=Mathf.Abs(Mathf.RoundToInt(home.x*3+home.z*7))%commonLoadout.Length;patrolPoint=volley%4;flankSide=(volley%2==0)?1:-1;fireAt=Time.time+2;}
   void Update()
   {
    IsPursuing=false;IsAiming=false;if(GameSession.Blocked)return;
    if(health.IsDead){deadTime+=Time.deltaTime;if(!boss&&!campaignMember&&deadTime>=respawnSeconds){motor.enabled=false;transform.position=home;motor.enabled=true;health.Revive();deadTime=0;}return;}
-   Vector3 move=Vector3.zero;var native=GetComponent<NativeEnemyAnimation>();bool evading=native&&native.IsDodging;
+   Vector3 move=Vector3.zero;bool evading=native&&native.IsDodging;
    if(target&&health.CanAct&&!target.IsDead)
    {
     float distance=Vector3.Distance(transform.position,target.transform.position);
@@ -66,7 +66,7 @@ namespace Nexoterra.World
     if(loaded&&!evading&&health.CanShoot&&engaged&&distance<attackRange&&Time.time>=fireAt)
     {
      Vector3 origin=weapon?weapon.position+weapon.forward*.65f:transform.position+Vector3.up*1.4f+transform.forward*.85f,aim=target.transform.position+Vector3.up;
-     bool blocked=false;foreach(var hit in Physics.RaycastAll(origin,(aim-origin).normalized,Vector3.Distance(origin,aim),~0,QueryTriggerInteraction.Ignore))if(!hit.transform.IsChildOf(transform)&&hit.collider.GetComponentInParent<PlayerHealth>()!=target){blocked=true;break;}
+     bool blocked=Physics.Linecast(origin,aim,out var obstruction,~0,QueryTriggerInteraction.Ignore)&&!obstruction.transform.IsChildOf(transform)&&obstruction.collider.GetComponentInParent<PlayerHealth>()!=target;
      if(!blocked&&TryLaunch(origin,aim)){loaded=false;fireAt=Time.time+shotCooldown;}
      else fireAt=Time.time+.2f;
     }
@@ -113,7 +113,7 @@ namespace Nexoterra.World
    return Physics.Raycast(ahead+Vector3.up*.7f,Vector3.down,out var floor,1.7f,Physics.DefaultRaycastLayers,QueryTriggerInteraction.Ignore)
        &&Vector3.Angle(floor.normal,Vector3.up)<=motor.slopeLimit;
   }
-  void LateUpdate(){if(!GetComponent<NativeEnemyAnimation>()&&pose&&health&&!health.IsDead&&!health.IsKnockedDown)pose.Pose(MotionSpeed,false,0,weapon,recoil,0);}
+  void LateUpdate(){if(!native&&pose&&health&&!health.IsDead&&!health.IsKnockedDown)pose.Pose(MotionSpeed,false,0,weapon,recoil,0);}
   public bool TryLaunch(Vector3 origin,Vector3 aim)
   {
    if(!catalog||IsDead)return false;EnsureSlots();int slot=ReadySlot();if(slot<0)return false;var baseSlug=catalog.Find(slugSlots[slot]);if(baseSlug==null)return false;
