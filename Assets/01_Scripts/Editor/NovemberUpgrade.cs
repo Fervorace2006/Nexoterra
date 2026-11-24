@@ -18,7 +18,7 @@ public static class NovemberUpgrade
  static void Poll(){
   if(EditorApplication.isCompiling||EditorApplication.isUpdating||EditorApplication.isPlayingOrWillChangePlaymode||!File.Exists("Library/NovemberUpgrade.request"))return;
   string mode=File.ReadAllText("Library/NovemberUpgrade.request").Trim();File.Delete("Library/NovemberUpgrade.request");
-  try{if(mode=="install")Install();else if(mode=="audit")Audit();else if(mode=="scenes")SceneWeapons();else if(mode=="water")WaterProbe();else if(mode=="jumplayer")JumpLayer();else if(mode=="gunshot")GunShot();else if(mode=="trimjump")TrimJump();else if(mode=="customjump")CustomJump();else if(mode=="rockwalls")RockWalls();else if(mode=="cavecorners")CaveCorners();else if(mode=="uikit")UiKit();else if(mode=="openlevels")OpenLevels();else if(mode=="groundmats")GroundMats();else AssetDatabase.Refresh();File.WriteAllText("Library/NovemberUpgrade.result","PASS "+mode);}
+  try{if(mode=="install")Install();else if(mode=="audit")Audit();else if(mode=="scenes")SceneWeapons();else if(mode=="water")WaterProbe();else if(mode=="jumplayer")JumpLayer();else if(mode=="gunshot")GunShot();else if(mode=="trimjump")TrimJump();else if(mode=="customjump")CustomJump();else if(mode=="rockwalls")RockWalls();else if(mode=="cavecorners")CaveCorners();else if(mode=="uikit")UiKit();else if(mode=="openlevels")OpenLevels();else if(mode=="groundmats")GroundMats();else if(mode=="relief")Relief();else if(mode=="routes")Routes();else if(mode=="fixground")FixGround();else if(mode=="relief2")Relief(2.2f,1f);else if(mode=="reliefsoft"){soft=true;softMode=true;try{Relief(1f,2.2f);}finally{soft=false;softMode=false;}}else if(mode=="renav")Renav();else AssetDatabase.Refresh();File.WriteAllText("Library/NovemberUpgrade.result","PASS "+mode);}
   catch(Exception e){File.WriteAllText("Library/NovemberUpgrade.result",e.ToString());Debug.LogException(e);}
  }
  const string Gameplay="Assets/02_Prefabs/Gameplay";
@@ -419,10 +419,10 @@ public static class NovemberUpgrade
  // cavern sky replaces the roof. Nexoterra_Tierra keeps its roof with falling stone spikes.
  static Mesh RimSide(Vector3 origin,Vector3 along,Vector3 outward,float length,int seed,float gapFrom,float gapTo){
   var verts=new List<Vector3>();var tris=new List<int>();
-  var profile=new[]{(-5.5f,-.6f),(-3.5f,.35f),(-1.5f,.8f),(0f,1f),(4f,.95f),(14f,.55f)};int m=profile.Length;
+  var profile=new[]{(-6.5f,-.03f),(-4.5f,.35f),(-2f,.82f),(0f,1f),(5f,.97f),(18f,.6f)};int m=profile.Length;
   int n=Mathf.CeilToInt(length/2f);
   for(int i=0;i<=n;i++){
-   float t=-length/2+length*i/n;float H=5+5*Mathf.PerlinNoise(seed+t*.06f,seed*.3f)+2.5f*Mathf.PerlinNoise(seed*2+t*.25f,1.7f);
+   float t=-length/2+length*i/n;float H=16+12*Mathf.PerlinNoise(seed+t*.06f,seed*.3f)+5f*Mathf.PerlinNoise(seed*2+t*.25f,1.7f); // tall cliffs: 16-33 m
    float push=(t>gapFrom&&t<gapTo)?6.5f:0;float jitter=(Mathf.PerlinNoise(seed+t*.2f,4.2f)-.5f)*3f;
    for(int j=0;j<m;j++){var (d,h)=profile[j];float dd=d+push+(j<3?jitter*(1-j/3f):0);
     verts.Add(origin+along*t+outward*dd+Vector3.up*(h*H+(j>0&&j<5?(Mathf.PerlinNoise(t*.4f+j,seed)-.5f)*1.4f:0)));}
@@ -489,6 +489,151 @@ public static class NovemberUpgrade
    AssetDatabase.SaveAssets();
   }
   File.WriteAllText("Library/NovemberGround.txt",report.ToString());
+ }
+ // Terraced hills for the open campaign levels. Height is 0 around the entrance, exit, water and landmark
+ // structures; everything resting on the floor is lifted by the same height and the NavMesh is rebuilt.
+ // Idempotent: the flat original mesh is kept as <mesh>_plano.asset and scenes get a "Relieve aplicado" marker.
+ static float Relief(float x,float z,int seed){
+  float b=0,a=.6f,f=.011f;for(int o=0;o<3;o++){b+=a*Mathf.PerlinNoise(seed*.37f+x*f+31,seed*.53f+z*f+17);a*=.45f;f*=2.1f;}
+  b=Mathf.Clamp01((b-.28f)*1.6f);float t=b*4f,level=Mathf.Floor(t),frac=t-level;
+  return (level+Mathf.SmoothStep(0,1,Mathf.InverseLerp(.72f,1f,frac)))*1.35f;
+ }
+ // Smooth rolling hills (no steps), max ~2.6 m with gentle walkable slopes.
+ static float SoftRelief(float x,float z,int seed){
+  float b=.65f*Mathf.PerlinNoise(seed*.37f+x*.009f+31,seed*.53f+z*.009f+17)+.35f*Mathf.PerlinNoise(seed*.21f+x*.02f+5,seed*.11f+z*.02f+9);
+  b=Mathf.SmoothStep(0,1,Mathf.Clamp01((b-.3f)*1.7f));return b*2.6f;
+ }
+ static bool softMode,soft;
+ static void Relief(){Relief(1f,0f);}
+ static void Relief(float scale,float previous){
+  var report=new StringBuilder();string active=SceneManager.GetActiveScene().path;var doneMeshes=new HashSet<string>();
+  foreach(var file in Directory.GetFiles("Assets/00_Scenes/Campaign","*.unity")){
+   string path=file.Replace((char)92,'/');string name=Path.GetFileNameWithoutExtension(path);
+   if(name.Contains("Arena")){continue;}
+   var scene=SceneManager.GetSceneByPath(path);bool opened=!scene.isLoaded;if(opened)scene=EditorSceneManager.OpenScene(path,OpenSceneMode.Additive);
+   try{
+    if(scene.isDirty){report.AppendLine(name+" OMITIDA (sin guardar)");continue;}
+    var prevMarker=FindIn(scene,"Relieve aplicado");if(previous<=0&&prevMarker){report.AppendLine(name+" ya tenía relieve");continue;}if(previous>0&&!prevMarker){report.AppendLine(name+" sin relieve previo");continue;}if(prevMarker)Object.DestroyImmediate(prevMarker);
+    var ground=FindIn(scene,"Suelo del bioma");if(!ground){report.AppendLine(name+" sin suelo");continue;}
+    // Protected zones (kept flat).
+    var keep=new List<Bounds>();
+    foreach(var root in scene.GetRootGameObjects())foreach(var r in root.GetComponentsInChildren<Renderer>(true)){
+     string n=r.name;bool water=r.sharedMaterial&&r.sharedMaterial.shader.name.Contains("Water");
+     if(water||n.StartsWith("Cornisa")||n.StartsWith("Puente")||n.StartsWith("Sendero")||n.StartsWith("Santuario")||n.StartsWith("Túnel")||n.StartsWith("Islote")||n.StartsWith("Orillas")||n.StartsWith("Acceso"))keep.Add(r.bounds);
+    }
+    foreach(var n in new[]{"Entrada","Salida al próximo bioma","Recompensa del guardián"}){var g=FindIn(scene,n);if(g)keep.Add(new Bounds(g.transform.position,Vector3.one*14));}
+    int seed=name.GetHashCode()&255;
+    float H(Vector3 p){
+     float m=1;foreach(var b in keep){float d=Mathf.Sqrt(b.SqrDistance(new Vector3(p.x,b.center.y,p.z)));m=Mathf.Min(m,Mathf.SmoothStep(0,1,Mathf.InverseLerp(4,16,d)));}
+     return (softMode?SoftRelief(p.x,p.z,seed):Relief(p.x,p.z,seed))*m;
+    }
+    var mf=ground.GetComponent<MeshFilter>();var mesh=mf.sharedMesh;string mp=AssetDatabase.GetAssetPath(mesh);
+    string flatPath=mp.Replace(".asset","_plano.asset");var flat=AssetDatabase.LoadAssetAtPath<Mesh>(flatPath);
+    if(!flat){flat=Object.Instantiate(mesh);AssetDatabase.CreateAsset(flat,flatPath);}
+    var shaped=Object.Instantiate(flat);string shapedPath=mp.Replace(".asset","_"+name+"_relieve.asset");
+    var tr=ground.transform;var v=flat.vertices;
+    for(int i=0;i<v.Length;i++){var w=tr.TransformPoint(v[i]);w.y+=H(w)*scale;v[i]=tr.InverseTransformPoint(w);}
+    float OldH(Vector3 q){softMode=false;float o=H(q)*previous;softMode=soft;return o;}
+    shaped.vertices=v;shaped.RecalculateNormals();shaped.RecalculateBounds();
+    var ex=AssetDatabase.LoadAssetAtPath<Mesh>(shapedPath);if(ex){EditorUtility.CopySerialized(shaped,ex);Object.DestroyImmediate(shaped);shaped=ex;}else AssetDatabase.CreateAsset(shaped,shapedPath);
+    mf.sharedMesh=shaped;var mc=ground.GetComponent<MeshCollider>();if(mc){mc.sharedMesh=null;mc.sharedMesh=shaped;}
+    // Lift things that stand on the floor.
+    int moved=0;var skip=new[]{"Suelo del bioma","Borde rocoso","Techo","Esquinas de caverna","Luz de caverna","Main Camera","Navegación","Objetivo de historia"};
+    void Lift(Transform t){var p=t.position;float h=soft?H(p)*scale-OldH(p):H(p)*(scale-previous);if(Mathf.Abs(h)>.01f){t.position=p+Vector3.up*h;moved++;}}
+    foreach(var root in scene.GetRootGameObjects()){
+     if(skip.Any(s=>root.name.StartsWith(s))||root.name.StartsWith("Pared")||root.name.StartsWith("Túnel")||root.name.StartsWith("Fondo")||root.name.StartsWith("Arco"))continue;
+     bool container=!root.GetComponent<Renderer>()&&!root.GetComponent<Collider>()&&!root.GetComponent<MonoBehaviour>()&&root.transform.childCount>0&&root.transform.position.sqrMagnitude<.01f;
+     if(container)foreach(Transform c in root.transform)Lift(c);else Lift(root.transform);
+    }
+    var marker=new GameObject("Relieve aplicado");SceneManager.MoveGameObjectToScene(marker,scene);
+    // Rebuild navigation.
+    foreach(var root in scene.GetRootGameObjects())foreach(var comp in root.GetComponentsInChildren<MonoBehaviour>(true)){
+     if(comp&&comp.GetType().Name=="NavMeshSurface"){comp.GetType().GetMethod("BuildNavMesh")?.Invoke(comp,null);report.AppendLine("  navmesh "+comp.name);}
+    }
+    EditorSceneManager.MarkSceneDirty(scene);EditorSceneManager.SaveScene(scene);report.AppendLine(name+" relieve OK, objetos elevados: "+moved+", zonas planas: "+keep.Count);
+   }finally{if(opened&&scene.path!=active)EditorSceneManager.CloseScene(scene,true);}
+  }
+  AssetDatabase.SaveAssets();File.WriteAllText("Library/NovemberRelief.txt",report.ToString());
+ }
+ static void Renav(){
+  var report=new StringBuilder();string active=SceneManager.GetActiveScene().path;
+  foreach(var file in Directory.GetFiles("Assets/00_Scenes/Campaign","*.unity")){
+   string path=file.Replace((char)92,'/');if(path.Contains("Arena"))continue;
+   var scene=SceneManager.GetSceneByPath(path);bool opened=!scene.isLoaded;if(opened)scene=EditorSceneManager.OpenScene(path,OpenSceneMode.Additive);
+   try{
+    var level=scene.GetRootGameObjects().Select(r=>r.GetComponentInChildren<CampaignLevel>(true)).FirstOrDefault(l=>l);
+    if(!level){report.AppendLine(path+" sin nivel");continue;}
+    CampaignLandmarkRestore.RebuildNavigation(scene,level.index);EditorSceneManager.MarkSceneDirty(scene);EditorSceneManager.SaveScene(scene);report.AppendLine(path+" navmesh nivel "+level.index);
+   }catch(Exception e){report.AppendLine(path+" ERROR "+e.Message);}
+   finally{if(opened&&scene.path!=active)EditorSceneManager.CloseScene(scene,true);}
+  }
+  File.WriteAllText("Library/NovemberRenav.txt",report.ToString());
+ }
+ // Coherent dirt paths: trails from the entrance to a central clearing, on to the exit, and branches to the
+ // guardian and the reward, plus a loop around the clearing. Stored in the ground mesh colors (R = path, G = 0).
+ static List<Vector2> Trail(Vector2 a,Vector2 b,int seed){
+  var pts=new List<Vector2>();float len=Vector2.Distance(a,b);int n=Mathf.Max(2,Mathf.CeilToInt(len/3));var dir=(b-a).normalized;var side=new Vector2(-dir.y,dir.x);
+  for(int i=0;i<=n;i++){float t=i/(float)n;float wob=(Mathf.PerlinNoise(seed+t*len*.025f,seed*.7f)-.5f)*Mathf.Min(18,len*.18f)*Mathf.Sin(t*Mathf.PI);pts.Add(Vector2.Lerp(a,b,t)+side*wob);}
+  return pts;
+ }
+ static float SegDist(Vector2 p,Vector2 a,Vector2 b){var ab=b-a;float t=Mathf.Clamp01(Vector2.Dot(p-a,ab)/Mathf.Max(.0001f,ab.sqrMagnitude));return Vector2.Distance(p,a+ab*t);}
+ static void Routes(){
+  var report=new StringBuilder();string active=SceneManager.GetActiveScene().path;
+  foreach(var file in Directory.GetFiles("Assets/00_Scenes/Campaign","*.unity")){
+   string path=file.Replace((char)92,'/');string name=Path.GetFileNameWithoutExtension(path);if(name.Contains("Arena"))continue;
+   var scene=SceneManager.GetSceneByPath(path);bool opened=!scene.isLoaded;if(opened)scene=EditorSceneManager.OpenScene(path,OpenSceneMode.Additive);
+   try{
+    var ground=FindIn(scene,"Suelo del bioma");var level=scene.GetRootGameObjects().Select(r=>r.GetComponentInChildren<CampaignLevel>(true)).FirstOrDefault(l=>l);
+    if(!ground||!level){report.AppendLine(name+" sin suelo/nivel");continue;}
+    Vector2 P(Vector3 v)=>new Vector2(v.x,v.z);int seed=name.GetHashCode()&255;
+    var entry=FindIn(scene,"Entrada");var e=entry?P(entry.transform.position):new Vector2(0,-118);
+    var exitGo=FindIn(scene,"Salida al próximo bioma");var x=exitGo?P(exitGo.transform.position):new Vector2(80,120);
+    var c=new Vector2((Mathf.PerlinNoise(seed,1)-.5f)*30,(Mathf.PerlinNoise(seed,2)-.5f)*30);
+    var trails=new List<List<Vector2>>{Trail(e,c,seed),Trail(c,x,seed+1)};
+    if(level.guardian)trails.Add(Trail(c,P(level.guardian.transform.position),seed+2));
+    if(level.rewardPoint)trails.Add(Trail(c,P(level.rewardPoint.position),seed+3));
+    var ring=new List<Vector2>();for(int i=0;i<=24;i++){float a=i/24f*Mathf.PI*2;float r=38+8*Mathf.PerlinNoise(seed+i*.4f,3);ring.Add(c+new Vector2(Mathf.Cos(a),Mathf.Sin(a))*r);}trails.Add(ring);
+    var mf=ground.GetComponent<MeshFilter>();var mesh=mf.sharedMesh;var tr=ground.transform;var v=mesh.vertices;var colors=new Color[v.Length];
+    for(int i=0;i<v.Length;i++){
+     var p=P(tr.TransformPoint(v[i]));float d=float.MaxValue;
+     foreach(var t in trails)for(int k=1;k<t.Count;k++)d=Mathf.Min(d,SegDist(p,t[k-1],t[k]));
+     float w=1-Mathf.SmoothStep(0,1,Mathf.InverseLerp(1.4f,3.6f,d));colors[i]=new Color(w,0,0,1);
+    }
+    mesh.colors=colors;EditorUtility.SetDirty(mesh);report.AppendLine(name+" caminos: "+trails.Count+" ("+AssetDatabase.GetAssetPath(mesh)+")");
+   }finally{if(opened&&scene.path!=active)EditorSceneManager.CloseScene(scene,true);}
+  }
+  AssetDatabase.SaveAssets();File.WriteAllText("Library/NovemberRoutes.txt",report.ToString());
+ }
+ // Rebuild each level's ground from the builder's ORIGINAL mesh + smooth hills (objects already match it),
+ // then drop the intermediate relief meshes.
+ static void FixGround(){
+  var report=new StringBuilder();string active=SceneManager.GetActiveScene().path;var used=new HashSet<string>();
+  foreach(var file in Directory.GetFiles("Assets/00_Scenes/Campaign","*.unity")){
+   string path=file.Replace((char)92,'/');string name=Path.GetFileNameWithoutExtension(path);if(name.Contains("Arena"))continue;
+   var scene=SceneManager.GetSceneByPath(path);bool opened=!scene.isLoaded;if(opened)scene=EditorSceneManager.OpenScene(path,OpenSceneMode.Additive);
+   try{
+    var ground=FindIn(scene,"Suelo del bioma");if(!ground)continue;var mf=ground.GetComponent<MeshFilter>();
+    string cur=AssetDatabase.GetAssetPath(mf.sharedMesh);string basePath=cur.Contains("_Nexoterra_")?cur.Substring(0,cur.IndexOf("_Nexoterra_"))+".asset":cur;
+    var original=AssetDatabase.LoadAssetAtPath<Mesh>(basePath);if(!original){report.AppendLine(name+" sin malla original "+basePath);continue;}
+    var keep=new List<Bounds>();
+    foreach(var root in scene.GetRootGameObjects())foreach(var r in root.GetComponentsInChildren<Renderer>(true)){
+     string n=r.name;bool water=r.sharedMaterial&&r.sharedMaterial.shader.name.Contains("Water");
+     if(water||n.StartsWith("Cornisa")||n.StartsWith("Puente")||n.StartsWith("Sendero")||n.StartsWith("Santuario")||n.StartsWith("Túnel")||n.StartsWith("Islote")||n.StartsWith("Orillas")||n.StartsWith("Acceso"))keep.Add(r.bounds);
+    }
+    foreach(var n in new[]{"Entrada","Salida al próximo bioma","Recompensa del guardián"}){var g=FindIn(scene,n);if(g)keep.Add(new Bounds(g.transform.position,Vector3.one*14));}
+    int seed=name.GetHashCode()&255;
+    float H(Vector3 p){float m=1;foreach(var b in keep){float d=Mathf.Sqrt(b.SqrDistance(new Vector3(p.x,b.center.y,p.z)));m=Mathf.Min(m,Mathf.SmoothStep(0,1,Mathf.InverseLerp(4,16,d)));}return SoftRelief(p.x,p.z,seed)*m;}
+    var shaped=Object.Instantiate(original);var tr=ground.transform;var v=original.vertices;
+    for(int i=0;i<v.Length;i++){var w=tr.TransformPoint(v[i]);w.y+=H(w);v[i]=tr.InverseTransformPoint(w);}
+    shaped.vertices=v;shaped.RecalculateNormals();shaped.RecalculateBounds();
+    string outPath=basePath.Replace(".asset","_"+name+"_suave.asset");var ex=AssetDatabase.LoadAssetAtPath<Mesh>(outPath);
+    if(ex){EditorUtility.CopySerialized(shaped,ex);Object.DestroyImmediate(shaped);shaped=ex;}else AssetDatabase.CreateAsset(shaped,outPath);
+    mf.sharedMesh=shaped;var mc=ground.GetComponent<MeshCollider>();if(mc){mc.sharedMesh=null;mc.sharedMesh=shaped;}used.Add(outPath);
+    EditorSceneManager.MarkSceneDirty(scene);EditorSceneManager.SaveScene(scene);report.AppendLine(name+" -> "+outPath);
+   }finally{if(opened&&scene.path!=active)EditorSceneManager.CloseScene(scene,true);}
+  }
+  foreach(var f in Directory.GetFiles("Assets/NexoterraWorld/Campaign","*.asset")){var p=f.Replace((char)92,'/');if((p.Contains("_relieve")||p.Contains("_plano"))&&!used.Contains(p)){AssetDatabase.DeleteAsset(p);report.AppendLine("borrado "+Path.GetFileName(p));}}
+  AssetDatabase.SaveAssets();File.WriteAllText("Library/NovemberFix.txt",report.ToString());
  }
  public static void Audit(){
   var report=new StringBuilder();

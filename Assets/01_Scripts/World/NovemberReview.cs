@@ -48,7 +48,7 @@ public sealed class NovemberReview : MonoBehaviour
    inv0.selected=System.Array.FindIndex(inv0.equipped,e=>e>=0);cc.Release();yield return new WaitForSeconds(.3f);var loose=cc.companion;Check(loose,"Babosa soltada con G");
    var start=player0.transform.position;player0.Teleport(start+new Vector3(24,0,0));yield return new WaitForSeconds(7);
    Vector3 gap=player0.transform.position-loose.transform.position;gap.y=0;Check(gap.magnitude<cc.followRadius+.5f,"Babosa sigue dentro del radio ("+gap.magnitude.ToString("0.0")+" m)");
-   cc.Recall();float until=Time.time+10;while(cc.companion&&Time.time<until)yield return null;Check(!cc.companion,"Babosa vuelve al inventario con G");
+   cc.Recall();float until=Time.time+10;while(cc.companion&&Time.time<until)yield return null;if(cc.companion)File.AppendAllText(Folder+"Checks.txt","INFO babosa en "+cc.companion.transform.position+" jugador "+player0.transform.position+Environment.NewLine);Check(!cc.companion,"Babosa vuelve al inventario con G");
    player0.Teleport(start);yield return new WaitForSeconds(.3f);}
 
   health.Restore(100);health.CorruptionCost();Check(Mathf.Approximately(health.Health,95),"Disparo malvado cuesta exactamente 5 PV");
@@ -86,7 +86,7 @@ public sealed class NovemberReview : MonoBehaviour
   var effect=wind.GetComponent<UnityEngine.VFX.VisualEffect>();
   Check(effect.HasVector4("core color 1")&&Mathf.Abs(effect.GetVector4("core color 1").x-effect.GetVector4("core color 1").z)<.1f,"Tornado blanco/gris");
   yield return new WaitForSeconds(.6f);ScreenCapture.CaptureScreenshot(Folder+"Tornado.png");yield return new WaitForSeconds(.3f);
-  foreach(var shot in new[]{(new Vector3(98,7,-98),new Vector3(125,19,-125),"Corner"),(new Vector3(0,12,-60),new Vector3(-125,22,-20),"Ceiling")}){
+  foreach(var shot in new[]{(new Vector3(98,7,-98),new Vector3(125,19,-125),"Corner"),(new Vector3(0,12,-60),new Vector3(-125,22,-20),"Ceiling"),(new Vector3(0,75,-150),new Vector3(0,0,10),"Overview")}){
    player.view.transform.position=shot.Item1;player.view.transform.LookAt(shot.Item2);yield return new WaitForSeconds(.3f);ScreenCapture.CaptureScreenshot(Folder+shot.Item3+".png");yield return new WaitForSeconds(.3f);}
   inventory.SetOpen(true);yield return new WaitForSecondsRealtime(.4f);ScreenCapture.CaptureScreenshot(Folder+"Inventory.png");yield return new WaitForSecondsRealtime(.3f);inventory.SetOpen(false);
   Destroy(fixture);

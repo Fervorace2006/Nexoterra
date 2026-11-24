@@ -52,6 +52,10 @@ Shader "Nexoterra/Cavern Water"
                 float ripples=pow(saturate(sin(i.world.x*.34+i.world.z*.8+t*.4)),24)*.06;
                 half3 color=lerp(_DeepColor.rgb,_ShallowColor.rgb,.35+shore*.65);
                 color+=_FoamColor.rgb*(caustic+ripples);
+                // Flowing glints: thin bright streaks drifting along the water, plus a soft sky sheen.
+                float flow=sin(i.world.x*.9+i.world.z*.35-t*1.6+sin(i.world.z*.21+t*.3)*2.5);
+                color+=_FoamColor.rgb*pow(saturate(flow),28)*.35;
+                color=lerp(color,color*1.18+half3(.02,.06,.08),.35*(1-shore));
                 color=lerp(color,_FoamColor.rgb,foam*.75);
                 float3 n=normalize(float3(-.045*cos(i.world.x*.7+t),1,.04*sin(i.world.z*.6+t)));
                 float3 v=GetWorldSpaceNormalizeViewDir(i.world);

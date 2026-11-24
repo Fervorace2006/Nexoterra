@@ -54,7 +54,7 @@ Shader "Nexoterra/Cavern Ground"
     }
     float GroundHeight(float2 p)
     {
-        float path = PathMask(p);
+        float path = 0;
         float tufts = Fbm(p * 2.2) * .6 + Fbm(p * 7.0) * .4;
         return lerp(tufts * .45, .05 + Fbm(p * 3.5) * .15, path);
     }
@@ -88,8 +88,8 @@ Shader "Nexoterra/Cavern Ground"
             #pragma multi_compile_instancing
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
 
-            struct Attributes { float4 positionOS:POSITION; float3 normalOS:NORMAL; UNITY_VERTEX_INPUT_INSTANCE_ID };
-            struct Varyings { float4 positionCS:SV_POSITION; float3 positionWS:TEXCOORD0; float3 normalWS:TEXCOORD1; float fog:TEXCOORD2; };
+            struct Attributes { float4 positionOS:POSITION; float3 normalOS:NORMAL; float4 color:COLOR; UNITY_VERTEX_INPUT_INSTANCE_ID };
+            struct Varyings { float4 positionCS:SV_POSITION; float3 positionWS:TEXCOORD0; float3 normalWS:TEXCOORD1; float fog:TEXCOORD2; float route:TEXCOORD3; };
 
             Varyings Vert(Attributes i)
             {
@@ -99,6 +99,7 @@ Shader "Nexoterra/Cavern Ground"
                 o.normalWS = TransformObjectToWorldNormal(i.normalOS);
                 o.positionCS = TransformWorldToHClip(o.positionWS);
                 o.fog = ComputeFogFactor(o.positionCS.z);
+                o.route = i.color.g < .5 ? i.color.r : 0;   // traced routes (R) only when the mesh carries route data (G=0)
                 return o;
             }
 
@@ -110,7 +111,8 @@ Shader "Nexoterra/Cavern Ground"
                 float3 grass = _BaseColor.rgb * lerp(.6, 1.3, Fbm(p * .06)) * lerp(.78, 1.15, Fbm(p * 2.4)) * lerp(.85, 1.08, Fbm(p * 9.0));
                 grass = lerp(grass, grass * float3(.55, .7, .5), Speckle(p * 5.0, .35, .3) * .5);   // darker blades
                 grass = lerp(grass, grass * float3(1.12, 1.08, .78), saturate(Fbm(p * .03 + 4) * 1.4 - .4));   // sun-dried patches
-                float path = PathMask(p);
+                // Paths follow the level's traced routes; edges get a little organic wobble.
+                float path = smoothstep(.38, .62, i.route + (Fbm(p * .35) - .5) * .35) * saturate(_Paths * 1.6);
                 float3 dirt = _PathColor.rgb * lerp(.8, 1.15, Fbm(p * 1.3));
                 float edge = path * (1 - path) * 4;                                                          // darker worn border
                 float3 albedo = lerp(grass, dirt, path) * (1 - edge * .25);

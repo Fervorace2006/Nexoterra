@@ -49,14 +49,14 @@ namespace Nexoterra.World
     float x=panel.x+40,w=panel.width-80,y=panel.y+28;
     NexoUi.Title(new Rect(x,y,w,70),"MULTIJUGADOR","Duelo de lanzadores · hasta 4 jugadores");y+=86;
     GUI.enabled=!room.Busy&&!room.Connected;
-    int mode=NexoUi.Segmented(new Rect(x,y,w,44),new[]{"INTERNET · CÓDIGO","CONEXIÓN POR IP"},direct?1:0);direct=mode==1;y+=62;
+    int mode=NexoUi.Segmented(new Rect(x,y,w,44),new[]{"INTERNET · CÓDIGO","LOCAL · IP"},direct?1:0);direct=mode==1;y+=62;
     float half=(w-16)/2;
     if(direct){
      NexoUi.Write(new Rect(x,y,w-176,18),"DIRECCIÓN DEL ANFITRIÓN",12,NexoUi.Teal,TextAnchor.MiddleLeft,true);NexoUi.Write(new Rect(x+w-160,y,160,18),"PUERTO UDP",12,NexoUi.Teal,TextAnchor.MiddleLeft,true);y+=24;
      ip=NexoHud.Field(new Rect(x,y,w-176,46),ip,45);port=NexoHud.Field(new Rect(x+w-160,y,160,46),port,5);y+=64;
      if(NexoHud.PrimaryButton(new Rect(x,y,half,52),"CREAR POR IP"))room.Direct(true,ip,port);
      if(NexoHud.Button(new Rect(x+half+16,y,half,52),"CONECTAR"))room.Direct(false,ip,port);y+=68;
-     NexoUi.Write(new Rect(x,y,w,60),"En la misma red usa la IP local. Desde Internet: IP pública y puerto UDP abierto en el router del anfitrión. Si no puedes abrir puertos, usa INTERNET · CÓDIGO.",13,NexoUi.Muted,TextAnchor.UpperLeft);
+     NexoUi.Write(new Rect(x,y,w,60),"Modo local: conecta equipos en la misma red con la IP del anfitrión. Para jugar desde redes distintas, selecciona INTERNET · CÓDIGO.",13,NexoUi.Muted,TextAnchor.UpperLeft);
     }else{
      NexoUi.Write(new Rect(x,y,w,18),"CÓDIGO DE INVITACIÓN",12,NexoUi.Teal,TextAnchor.MiddleLeft,true);y+=24;
      joinCode=NexoHud.Field(new Rect(x,y,w,46),joinCode,12).ToUpperInvariant();y+=64;

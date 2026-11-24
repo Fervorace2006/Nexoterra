@@ -84,7 +84,7 @@ namespace Nexoterra.World {
    if(!SlugHop.Plan(transform.position,owner.transform.position,stride,.3f,0,out var end,owner.transform))end=Ground(transform.position+flat.normalized*Mathf.Min(stride,distance));
    hopStart=transform.position;hopEnd=end;hopProgress=0;hopping=true;
   }
-  Vector3 Ground(Vector3 p){return Physics.Raycast(p+Vector3.up*1.5f,Vector3.down,out var hit,6,SlugHop.WorldMask,QueryTriggerInteraction.Ignore)?hit.point:p;}
+  Vector3 Ground(Vector3 p){return Physics.Raycast(p+Vector3.up*12f,Vector3.down,out var hit,30,SlugHop.WorldMask,QueryTriggerInteraction.Ignore)?hit.point:p;}
   void Land(Vector3 p){transform.position=Ground(p);}
  }
 }

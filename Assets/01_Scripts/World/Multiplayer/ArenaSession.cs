@@ -11,14 +11,14 @@ namespace Nexoterra.World
  {
   [Serializable] public sealed class Packet {
    public string kind,species; public ulong id,other;public Vector3 position,direction;public Quaternion rotation;
-   public bool female,transformed,evading;public float health,time0,time1,upper;public int state0,state1; public string[] collection;
+   public bool female,transformed,evading;public float health,time0,time1,upper,eventTime;public int state0,state1; public string[] collection;
   }
   sealed class Peer {
    public string[] collection;public GameObject proxy;public Vector3 position;public Quaternion rotation;
    public float health=100,lastShot=-10,deadUntil,burnUntil,burnRate,lastMove;
    public bool female,visualFemale,evading;public Animator animator;
    // Remote view smoothing: last received pose, estimated velocity and animation states.
-   public Vector3 viewTarget,viewVelocity;public Quaternion viewRotation=Quaternion.identity;public float lastView=-1;public int shown0,shown1;
+   public Vector3 viewTarget;public Quaternion viewRotation=Quaternion.identity;public float lastView=-1;public int shown0,shown1;
    public readonly Dictionary<string,float> busyUntil=new Dictionary<string,float>();
   }
   public static ArenaSession Current {get;private set;}
@@ -60,7 +60,7 @@ namespace Nexoterra.World
   void Send(ulong to,Packet packet,NetworkDelivery delivery=NetworkDelivery.ReliableSequenced){
    if(!network||!network.IsListening)return;
    string json=JsonUtility.ToJson(packet);
-   using(var writer=new FastBufferWriter(16384,Allocator.Temp)){writer.WriteValueSafe(json);network.CustomMessagingManager.SendNamedMessage("arena",to,writer,delivery);}
+   using(var writer=new FastBufferWriter(4096,Allocator.Temp)){writer.WriteValueSafe(json);network.CustomMessagingManager.SendNamedMessage("arena",to,writer,delivery);}
   }
   void SendToServer(Packet packet,NetworkDelivery delivery=NetworkDelivery.ReliableSequenced){if(IsServer)HandleServer(network.LocalClientId,packet);else Send(NetworkManager.ServerClientId,packet,delivery);}
   void Broadcast(Packet packet,NetworkDelivery delivery=NetworkDelivery.ReliableSequenced){foreach(var id in network.ConnectedClientsIds){if(id==network.LocalClientId)HandleClient(packet);else Send(id,packet,delivery);}}
@@ -83,7 +83,8 @@ namespace Nexoterra.World
     float elapsed=Mathf.Clamp(Time.unscaledTime-peer.lastMove,.01f,.5f);peer.lastMove=Time.unscaledTime;
     if(peer.health<=0)return;
     Vector3 clamped=packet.position;clamped.x=Mathf.Clamp(clamped.x,-122,122);clamped.z=Mathf.Clamp(clamped.z,-122,122);clamped.y=Mathf.Clamp(clamped.y,-5,25);
-    peer.position=Vector3.MoveTowards(peer.position,clamped,elapsed*14f+.25f);peer.rotation=packet.rotation;peer.female=packet.female;peer.evading=packet.evading;
+    float allowedStep=elapsed*22f+.5f;
+    peer.position=Vector3.Distance(peer.position,clamped)>allowedStep?Vector3.MoveTowards(peer.position,clamped,allowedStep):clamped;peer.rotation=packet.rotation;peer.female=packet.female;peer.evading=packet.evading;
     packet.id=sender;packet.position=peer.position;packet.health=peer.health;Broadcast(packet,NetworkDelivery.UnreliableSequenced);return;
    }
    if(packet.kind=="shot"){
@@ -91,21 +92,23 @@ namespace Nexoterra.World
     if(peer.busyUntil.TryGetValue(packet.species,out float available)&&Time.unscaledTime<available)return;
     var definition=inventory.catalog.Find(packet.species);if(definition==null)return;
     peer.lastShot=Time.unscaledTime;peer.busyUntil[packet.species]=Time.unscaledTime+1.4f;
-    packet.id=sender;packet.direction.Normalize();
+    packet.id=sender;packet.direction.Normalize();packet.eventTime=Mathf.Clamp(packet.eventTime,(float)network.ServerTime.TimeAsFloat-1f,(float)network.ServerTime.TimeAsFloat);
     if(!Finite(packet.position)||Vector3.Distance(packet.position,peer.position)>3)packet.position=peer.position+Vector3.up*1.3f;
     if(definition.id=="Gon_Doc"||definition.id=="Elemental_Energia")peer.health=Mathf.Min(100,peer.health+(definition.id=="Gon_Doc"?25:32));
     if(definition.id.StartsWith("Malvada_"))peer.health=Mathf.Max(1,peer.health-5);
-    if(sender==network.LocalClientId&&predictedHostShot)predictedHostShot.arenaAuthority=true;else Launch(packet,true);Broadcast(packet);return;
+    if(sender==network.LocalClientId&&predictedHostShot)predictedHostShot.arenaAuthority=true;else Launch(packet,true);Broadcast(packet,NetworkDelivery.Reliable);return;
    }
   }
   static bool Finite(Vector3 p)=>float.IsFinite(p.x)&&float.IsFinite(p.y)&&float.IsFinite(p.z);
-  // Every frame: glide each remote player toward its last pose, slightly extrapolated by its velocity.
+  // Every frame: interpolate remote players toward their newest server-authoritative pose.
   void SmoothRemotePlayers(){
-   float now=Time.unscaledTime,k=1-Mathf.Exp(-16f*Time.unscaledDeltaTime);
+   float k=1-Mathf.Exp(-28f*Time.unscaledDeltaTime);
    foreach(var pair in peers){
     var peer=pair.Value;if(pair.Key==network.LocalClientId||!peer.proxy||peer.lastView<0)continue;
-    var t=peer.proxy.transform;var predicted=peer.viewTarget+peer.viewVelocity*Mathf.Min(now-peer.lastView,.12f);
-    t.position=(t.position-predicted).sqrMagnitude>16?predicted:Vector3.Lerp(t.position,predicted,k);
+    var t=peer.proxy.transform;
+    // Never extrapolate a dodge past the newest authoritative pose: that made the
+    // proxy lurch ahead and then visibly correct backwards when the roll ended.
+    t.position=(t.position-peer.viewTarget).sqrMagnitude>100?peer.viewTarget:Vector3.Lerp(t.position,peer.viewTarget,k);
     t.rotation=Quaternion.Slerp(t.rotation,peer.viewRotation,k);
    }
   }
@@ -118,9 +121,8 @@ namespace Nexoterra.World
     if(!peer.proxy)CreateProxy(packet.id,peer);
     // Don't move the proxy here (packets arrive ~30/s); SmoothRemotePlayers interpolates every frame.
     float now=Time.unscaledTime;
-    if(peer.lastView>0){float dt=Mathf.Max(.016f,now-peer.lastView);peer.viewVelocity=Vector3.ClampMagnitude((packet.position-peer.viewTarget)/dt,12f);}
-    else{peer.proxy.transform.position=packet.position;peer.proxy.transform.rotation=packet.rotation;}
-    if(packet.kind=="join"){peer.viewVelocity=Vector3.zero;peer.proxy.transform.position=packet.position;}
+    if(peer.lastView<=0){peer.proxy.transform.position=packet.position;peer.proxy.transform.rotation=packet.rotation;}
+    if(packet.kind=="join")peer.proxy.transform.position=packet.position;
     peer.viewTarget=packet.position;peer.viewRotation=packet.rotation;peer.lastView=now;
     if(packet.kind=="pose"&&peer.animator){
      if(peer.visualFemale!=packet.female){Destroy(peer.proxy);peer.proxy=null;peer.female=packet.female;peer.evading=packet.evading;CreateProxy(packet.id,peer);}
@@ -138,7 +140,7 @@ namespace Nexoterra.World
     }return;
    }
    if(packet.kind=="respawn"){
-    if(peers.TryGetValue(packet.id,out var peer)){peer.health=100;peer.position=packet.position;}
+    if(peers.TryGetValue(packet.id,out var peer)){peer.health=100;peer.position=peer.viewTarget=packet.position;peer.lastView=Time.unscaledTime;if(peer.proxy){peer.proxy.transform.position=packet.position;peer.proxy.transform.rotation=packet.rotation;}}
     if(packet.id==network.LocalClientId){health.Restore(health.maxHealth);var effects=player.GetComponent<EnemyControlEffects>();if(effects)effects.ResetEffects();player.Teleport(packet.position);}
    }
   }
@@ -158,11 +160,13 @@ namespace Nexoterra.World
    var go=new GameObject("Babosa de arena");go.layer=2;go.transform.position=packet.position;
    var shot=go.AddComponent<SlugProjectile>();shot.speed=inventory.projectileSpeed;shot.transformDistance=inventory.transformationDistance;
    shot.arenaShot=true;shot.arenaAuthority=authority;shot.arenaOwner=packet.id;shot.Launch(definition,packet.direction);
+   float age=Mathf.Clamp((float)network.ServerTime.TimeAsFloat-packet.eventTime,0,2.5f);
+   if(age>.01f)shot.Advance(age);
   }
   public void SubmitShot(SlugDefinition definition,Vector3 origin,Vector3 direction,SlugProjectile localShot){
    localShot.arenaShot=true;localShot.arenaAuthority=false;localShot.arenaOwner=network.LocalClientId;
    predictedHostShot=localShot;
-   SendToServer(new Packet{kind="shot",species=definition.id,position=origin,direction=direction});
+   SendToServer(new Packet{kind="shot",species=definition.id,position=origin,direction=direction,eventTime=(float)network.ServerTime.TimeAsFloat},NetworkDelivery.Reliable);
    predictedHostShot=null;
   }
   public void Hit(ulong id,SlugDefinition definition,bool transformed,Vector3 direction){
@@ -177,7 +181,7 @@ namespace Nexoterra.World
    SmoothRemotePlayers();
    if(!peers.ContainsKey(network.LocalClientId)&&Time.unscaledTime>=helloAt){helloAt=Time.unscaledTime+1;SendToServer(new Packet{kind="hello",collection=inventory.owned.Distinct().ToArray()});}
    if(Time.unscaledTime>=sendAt){
-    sendAt=Time.unscaledTime+1f/30f;
+    sendAt=Time.unscaledTime+1f/50f;
     var a=(player.female.activeSelf?player.female:player.male).GetComponentInChildren<Animator>();var baseState=a.GetCurrentAnimatorStateInfo(0);var upper=a.layerCount>1?a.GetCurrentAnimatorStateInfo(1):default;
     SendToServer(new Packet{kind="pose",evading=player.GetComponent<PlayerAbilities>()&&player.GetComponent<PlayerAbilities>().Evading,position=player.transform.position,rotation=player.visuals.rotation,female=player.female.activeSelf,state0=baseState.fullPathHash,time0=baseState.normalizedTime,state1=upper.fullPathHash,time1=upper.normalizedTime,upper=a.layerCount>1?a.GetLayerWeight(1):0},NetworkDelivery.UnreliableSequenced);
    }
