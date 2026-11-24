@@ -49,12 +49,14 @@ namespace Nexoterra.World
   }
 
   // ---- Surfaces ----
+  // Dark metal console panel with orange corner brackets (menu container look).
   public static void Panel(Rect r)
   {
-   NexoHud.Fill(new Rect(r.x+3,r.y+5,r.width,r.height),new Color(0,0,0,.45f));
-   NexoHud.Gradient(r,new Color(.03f,.07f,.09f,.97f),Background);
-   Border(r,Edge);
-   NexoHud.Fill(new Rect(r.x,r.y,r.width*.32f,2),Teal);NexoHud.Fill(new Rect(r.x+r.width*.32f,r.y,22,2),Amber);
+   NexoHud.Fill(new Rect(r.x+3,r.y+5,r.width,r.height),new Color(0,0,0,.5f));
+   Chamfer(r,ChamferFill,new Color(.11f,.14f,.16f),14);
+   Chamfer(new Rect(r.x+4,r.y+4,r.width-8,r.height-8),ChamferFill,new Color(.035f,.07f,.085f),11);
+   Chamfer(r,ChamferRing,new Color(.3f,.38f,.42f),14);
+   NexoHud.Brackets(new Rect(r.x-3,r.y-3,r.width+6,r.height+6),new Color(1f,.58f,.12f),18,4);
   }
   public static void Card(Rect r,Color accent,bool selected=false)
   {
@@ -118,36 +120,70 @@ namespace Nexoterra.World
   }
 
   // ---- Controls ----
-  // Main action button. primary = the recommended action on a screen (amber accent).
+  // ---- Chamfered (cut-corner) shapes, 9-sliced so corners keep their size ----
+  static Texture2D fillTex,ringTex;static GUIStyle slice;
+  static Texture2D Bake(bool ring)
+  {
+   const int S=64,C=12;var t=new Texture2D(S,S,TextureFormat.RGBA32,false){wrapMode=TextureWrapMode.Clamp,filterMode=FilterMode.Bilinear};
+   for(int y=0;y<S;y++)for(int x=0;x<S;x++)
+   {
+    float dx=Mathf.Min(x,S-1-x),dy=Mathf.Min(y,S-1-y),edge=Mathf.Min(Mathf.Min(dx,dy),(dx+dy-C)*.7071f);
+    float a=Mathf.Clamp01(edge+.5f);if(ring)a*=1-Mathf.Clamp01(edge-1.5f);
+    float shade=ring?1:Mathf.Lerp(.72f,1f,y/(float)(S-1));       // lighter at the top (texture y up)
+    t.SetPixel(x,y,new Color(shade,shade,shade,a));
+   }
+   t.Apply();return t;
+  }
+  static Texture2D ChamferFill=>fillTex?fillTex:(fillTex=Bake(false));
+  static Texture2D ChamferRing=>ringTex?ringTex:(ringTex=Bake(true));
+  static void Chamfer(Rect r,Texture2D tex,Color c,int corner=12)
+  {
+   if(Event.current.type!=EventType.Repaint)return;
+   if(slice==null)slice=new GUIStyle();slice.normal.background=tex;slice.border=new RectOffset(corner+2,corner+2,corner+2,corner+2);
+   var old=GUI.color;GUI.color=c;slice.Draw(r,false,false,false,false);GUI.color=old;
+  }
+  static void Chevrons(Rect r,Color c)
+  {
+   for(float x=r.x+r.width*.12f;x<r.xMax-r.height*.6f;x+=r.height*.9f)
+    for(int k=0;k<3;k++){float y=r.center.y+(k-1)*r.height*.18f;NexoHud.Fill(new Rect(x+(1-Mathf.Abs(k-1))*r.height*.18f,y-1,r.height*.3f,2),c);}
+  }
+  static readonly Color Green=new Color(.12f,.78f,.22f),GreenHot=new Color(.25f,.95f,.35f),GreenEdge=new Color(.5f,1f,.55f),Olive=new Color(.32f,.36f,.24f),Cyan=new Color(.12f,.72f,.88f);
+  // Main action button: green chamfered plate with light top band and faint chevrons.
+  // primary = slightly brighter. States: hover (brighter), pressed (darker, text down), disabled (olive), focused (cyan ring).
   public static bool Action(Rect r,string label,bool primary=false)
   {
    bool clicked=Interact(r,out bool hover,out bool pressed,out bool focused);bool enabled=GUI.enabled;bool lit=hover||focused;
    if(Event.current.type==EventType.Repaint)
    {
-    if(focused)Border(new Rect(r.x-3,r.y-3,r.width+6,r.height+6),Teal,2);
-    NexoHud.Fill(new Rect(r.x+1,r.y+3,r.width,r.height),new Color(0,0,0,.35f));
-    Color fill=!enabled?new Color(.04f,.07f,.085f):pressed?Pressed:lit?RaisedHover:Raised;
-    NexoHud.Gradient(r,fill*1.12f,fill);
-    Border(r,!enabled?Edge*.6f:lit?Teal:primary?Amber*.85f:Edge);
-    if(enabled)NexoHud.Fill(new Rect(r.x,r.y,4,r.height),primary?Amber:lit?Teal:Edge);
-    if(lit)NexoHud.Fill(new Rect(r.x+4,r.yMax-2,r.width-5,1),Teal*new Color(1,1,1,.6f));
-    var text=new Rect(r.x+16,r.y+(pressed?1:0),r.width-32,r.height);
-    Write(text,label,r.height<44?14:16,!enabled?Muted*new Color(1,1,1,.6f):primary&&!lit?Amber:Text,TextAnchor.MiddleCenter,true);
-    if(lit&&enabled)Write(new Rect(r.xMax-26,r.y,16,r.height),"›",20,Teal,TextAnchor.MiddleCenter,true);
+    NexoHud.Fill(new Rect(r.x+2,r.y+4,r.width,r.height),new Color(0,0,0,.4f));
+    if(focused)Chamfer(new Rect(r.x-4,r.y-4,r.width+8,r.height+8),ChamferRing,Teal,14);
+    Color body=!enabled?Olive:pressed?Green*.7f:lit?GreenHot:primary?Green*1.08f:Green;body.a=1;
+    Chamfer(r,ChamferFill,new Color(.05f,.12f,.07f),12);                                   // dark rim
+    var face=new Rect(r.x+3,r.y+3,r.width-6,r.height-6);
+    Chamfer(face,ChamferFill,body,10);
+    if(enabled)Chamfer(face,ChamferRing,lit?Color.white*.95f:GreenEdge,10);
+    NexoHud.Fill(new Rect(face.x+10,face.y+3,face.width-20,Mathf.Max(2,face.height*.12f)),new Color(1,1,1,enabled?.18f:.06f));
+    Chevrons(face,new Color(1,1,1,enabled?.07f:.04f));
+    var text=new Rect(r.x+14,r.y+(pressed?2:0),r.width-28,r.height);
+    int size=r.height<44?15:18;
+    Write(new Rect(text.x+1,text.y+2,text.width,text.height),label,size,new Color(0,.12f,0,.75f),TextAnchor.MiddleCenter,true);
+    Write(text,label,size,enabled?Color.white:new Color(.75f,.78f,.62f),TextAnchor.MiddleCenter,true);
    }
    return clicked;
   }
-  // Tab / segmented option. active = currently selected value.
+  // Tab / segmented option: dark teal plate; the active one is bright cyan (selected view).
   public static bool Button(Rect r,string label,bool active=false)
   {
    bool clicked=Interact(r,out bool hover,out bool pressed,out bool focused);bool enabled=GUI.enabled;bool lit=hover||focused;
    if(Event.current.type==EventType.Repaint)
    {
-    if(focused)Border(new Rect(r.x-2,r.y-2,r.width+4,r.height+4),Teal,2);
-    NexoHud.Fill(r,pressed?Pressed:active?new Color(.09f,.16f,.17f):lit?RaisedHover:Surface);
-    Border(r,!enabled?Edge*.6f:active?Amber*.9f:lit?Teal:Edge);
-    if(active)NexoHud.Fill(new Rect(r.x,r.yMax-3,r.width,3),Amber);
-    Write(new Rect(r.x+6,r.y+(pressed?1:0),r.width-12,r.height),label,r.height<36?12:13,!enabled?Muted*new Color(1,1,1,.6f):active?Amber:Text,TextAnchor.MiddleCenter,true);
+    if(focused)Chamfer(new Rect(r.x-3,r.y-3,r.width+6,r.height+6),ChamferRing,Teal,10);
+    Chamfer(r,ChamferFill,new Color(.03f,.08f,.1f),9);
+    var face=new Rect(r.x+2,r.y+2,r.width-4,r.height-4);
+    Color body=active?(pressed?Cyan*.75f:Cyan):pressed?new Color(.05f,.14f,.17f):lit?new Color(.1f,.24f,.28f):new Color(.07f,.17f,.2f);body.a=1;
+    Chamfer(face,ChamferFill,body,8);Chamfer(face,ChamferRing,active?new Color(.6f,.95f,1f):lit?Teal:new Color(.25f,.42f,.47f),8);
+    NexoHud.Fill(new Rect(face.x+8,face.y+2,face.width-16,2),new Color(1,1,1,active?.25f:.08f));
+    Write(new Rect(r.x+6,r.y+(pressed?1:0),r.width-12,r.height),label,r.height<36?12:14,!enabled?Muted*new Color(1,1,1,.6f):active?Color.white:new Color(.8f,.9f,.93f),TextAnchor.MiddleCenter,true);
    }
    return clicked;
   }
