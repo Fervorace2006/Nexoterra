@@ -119,7 +119,7 @@ namespace Nexoterra.World
    NexoUi.Section(new Rect(left.x+32,left.y+222,left.width-64,22),"CONTROLES");
    {float l=left.x+32,r=left.x+262,y0=left.y+256,step=36;
     NexoHud.ControlRow(l,y0,"caminar","W","A","S","D");NexoHud.ControlRow(l,y0+step,"correr","Mayús");
-    NexoHud.ControlRow(l,y0+step*2,"voltereta","Ctrl","W/A/D");NexoHud.ControlRow(l,y0+step*3,"recoger","E");NexoHud.ControlRow(l,y0+step*4,"alimentar","F");NexoHud.ControlRow(l,y0+step*5,"gestos","B");
+    NexoHud.ControlRow(l,y0+step*2,"voltereta","Ctrl","+","A","/","D");NexoHud.ControlRow(l,y0+step*3,"recoger","E");NexoHud.ControlRow(l,y0+step*4,"alimentar","F");NexoHud.ControlRow(l,y0+step*5,"gestos","B");
     NexoHud.ControlRow(r,y0,"apuntar","Clic der");NexoHud.ControlRow(r,y0+step,"lanzar","Clic izq");NexoHud.ControlRow(r,y0+step*2,"recargar","R");
     NexoHud.ControlRow(r,y0+step*3,"mochila","Alt");NexoHud.ControlRow(r,y0+step*4,"mapa","M");NexoHud.ControlRow(r,y0+step*5,"menú","Esc");}
    // Right: actions, or one of its sub-pages.

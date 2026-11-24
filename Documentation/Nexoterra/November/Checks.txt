@@ -1,4 +1,4 @@
-PASS Babosas salvajes del mismo tamaño (0.30-0.35 m)
+PASS Babosas salvajes del mismo tamaño (0.32-0.35 m)
 PASS Babosa soltada con G
 PASS Babosa sigue dentro del radio (14.0 m)
 PASS Babosa vuelve al inventario con G
@@ -7,7 +7,7 @@ PASS Impulso de viento Tornado
 PASS Impulso de viento Malvada_Tornado
 PASS Impulso de viento Elemental_Aire
 PASS Impulso de viento Malvada_Elemental_Aire
-INFO voltereta longitudinal habilitada=True
+INFO voltereta longitudinal habilitada=False
 PASS Red 3 s permite disparar: Arana
 PASS Red termina: Arana
 PASS Red 3 s permite disparar: Malvada_Arana
@@ -27,12 +27,12 @@ PASS Nuevo tornado VFX conectado
 PASS Tornado blanco/gris
 PASS Menú de pausa abre y libera cursor
 PASS Anfitrión IP abre arena, ciclo 0
-INFO Misma red: 10.254.2.134:17877. Para Internet abre el puerto UDP 17877 en el router o usa INTERNET · CÓDIGO. (El router no respondió a UPnP.)
+INFO Misma red: 192.168.1.15:17877. Para Internet abre el puerto UDP 17877 en el router o usa INTERNET · CÓDIGO. (El router no respondió a UPnP.)
 PASS La arena tiene menú de sesión
 PASS Pausa online sin detener red
 PASS Salir al menú limpia la sala, ciclo 0
 PASS Anfitrión IP abre arena, ciclo 1
-INFO Misma red: 10.254.2.134:17878. Para Internet abre el puerto UDP 17878 en el router o usa INTERNET · CÓDIGO. (El router no respondió a UPnP.)
+INFO Misma red: 192.168.1.15:17878. Para Internet abre el puerto UDP 17878 en el router o usa INTERNET · CÓDIGO. (El router no respondió a UPnP.)
 PASS La arena tiene menú de sesión
 PASS Pausa online sin detener red
 PASS Salir al menú limpia la sala, ciclo 1

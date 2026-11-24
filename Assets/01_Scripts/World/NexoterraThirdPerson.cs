@@ -62,7 +62,6 @@ namespace Nexoterra.World
                     bool ctrl=k.leftCtrlKey.wasPressedThisFrame||k.rightCtrlKey.wasPressedThisFrame;
                     if(k.aKey.wasPressedThisFrame||(ctrl&&k.aKey.isPressed))abilities.TryDodge(-1,Quaternion.Euler(0,yaw,0)*Vector3.right);
                     else if(k.dKey.wasPressedThisFrame||(ctrl&&k.dKey.isPressed))abilities.TryDodge(1,Quaternion.Euler(0,yaw,0)*Vector3.right);
-                    else if(k.wKey.wasPressedThisFrame||(ctrl&&k.wKey.isPressed))abilities.TryDodge(1,Quaternion.Euler(0,yaw,0)*Vector3.forward,true);
                 }
                 if(k.eKey.wasPressedThisFrame)Collect();
                 if(k.fKey.wasPressedThisFrame)Feed();

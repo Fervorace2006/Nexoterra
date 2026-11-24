@@ -18,7 +18,7 @@ public static class NovemberUpgrade
  static void Poll(){
   if(EditorApplication.isCompiling||EditorApplication.isUpdating||EditorApplication.isPlayingOrWillChangePlaymode||!File.Exists("Library/NovemberUpgrade.request"))return;
   string mode=File.ReadAllText("Library/NovemberUpgrade.request").Trim();File.Delete("Library/NovemberUpgrade.request");
-  try{if(mode=="install")Install();else if(mode=="audit")Audit();else if(mode=="scenes")SceneWeapons();else if(mode=="water")WaterProbe();else if(mode=="jumplayer")JumpLayer();else if(mode=="gunshot")GunShot();else if(mode=="trimjump")TrimJump();else if(mode=="customjump")CustomJump();else if(mode=="rockwalls")RockWalls();else if(mode=="cavecorners")CaveCorners();else if(mode=="uikit")UiKit();else AssetDatabase.Refresh();File.WriteAllText("Library/NovemberUpgrade.result","PASS "+mode);}
+  try{if(mode=="install")Install();else if(mode=="audit")Audit();else if(mode=="scenes")SceneWeapons();else if(mode=="water")WaterProbe();else if(mode=="jumplayer")JumpLayer();else if(mode=="gunshot")GunShot();else if(mode=="trimjump")TrimJump();else if(mode=="customjump")CustomJump();else if(mode=="rockwalls")RockWalls();else if(mode=="cavecorners")CaveCorners();else if(mode=="uikit")UiKit();else if(mode=="openlevels")OpenLevels();else AssetDatabase.Refresh();File.WriteAllText("Library/NovemberUpgrade.result","PASS "+mode);}
   catch(Exception e){File.WriteAllText("Library/NovemberUpgrade.result",e.ToString());Debug.LogException(e);}
  }
  const string Gameplay="Assets/02_Prefabs/Gameplay";
@@ -413,6 +413,64 @@ public static class NovemberUpgrade
   else report.AppendLine("icono no encontrado");
   PlayerSettings.productName="Nexoterra";
   AssetDatabase.SaveAssets();File.WriteAllText("Library/NovemberKit.txt",report.ToString());
+ }
+ // Open the campaign levels: no box. Roof, wall visuals, roof fillets and ceiling spikes go away (wall colliders stay as an
+ // invisible boundary), an irregular rock rim surrounds the play area with a cave mouth at the exit tunnel, and a dark
+ // cavern sky replaces the roof. Nexoterra_Tierra keeps its roof with falling stone spikes.
+ static Mesh RimSide(Vector3 origin,Vector3 along,Vector3 outward,float length,int seed,float gapFrom,float gapTo){
+  var verts=new List<Vector3>();var tris=new List<int>();
+  var profile=new[]{(-5.5f,-.6f),(-3.5f,.35f),(-1.5f,.8f),(0f,1f),(4f,.95f),(14f,.55f)};int m=profile.Length;
+  int n=Mathf.CeilToInt(length/2f);
+  for(int i=0;i<=n;i++){
+   float t=-length/2+length*i/n;float H=5+5*Mathf.PerlinNoise(seed+t*.06f,seed*.3f)+2.5f*Mathf.PerlinNoise(seed*2+t*.25f,1.7f);
+   float push=(t>gapFrom&&t<gapTo)?6.5f:0;float jitter=(Mathf.PerlinNoise(seed+t*.2f,4.2f)-.5f)*3f;
+   for(int j=0;j<m;j++){var (d,h)=profile[j];float dd=d+push+(j<3?jitter*(1-j/3f):0);
+    verts.Add(origin+along*t+outward*dd+Vector3.up*(h*H+(j>0&&j<5?(Mathf.PerlinNoise(t*.4f+j,seed)-.5f)*1.4f:0)));}
+  }
+  for(int i=0;i<n;i++)for(int j=0;j<m-1;j++){int k=i*m+j;tris.AddRange(new[]{k,k+m,k+1,k+1,k+m,k+m+1});}
+  var mesh=new Mesh{indexFormat=UnityEngine.Rendering.IndexFormat.UInt32};mesh.SetVertices(verts);mesh.SetTriangles(tris,0);mesh.RecalculateNormals();
+  var nrm=mesh.normals;if(Vector3.Dot(nrm[1],-outward+Vector3.up)<0){tris.Reverse();mesh.SetTriangles(tris,0);mesh.RecalculateNormals();}
+  mesh.RecalculateBounds();return mesh;
+ }
+ static void OpenLevels(){
+  var report=new StringBuilder();string active=SceneManager.GetActiveScene().path;
+  var rock=AssetDatabase.LoadAssetAtPath<Material>("Assets/NexoterraWorld/MapRepair/Techo_cafe_claro.mat");
+  const string folder="Assets/NexoterraWorld/Campaign/OpenRim";Directory.CreateDirectory(folder);
+  var sky=AssetDatabase.LoadAssetAtPath<Material>(folder+"/CavernSky.mat");
+  if(!sky){sky=new Material(Shader.Find("Skybox/Procedural"));AssetDatabase.CreateAsset(sky,folder+"/CavernSky.mat");}
+  sky.SetFloat("_SunSize",0);sky.SetFloat("_AtmosphereThickness",.55f);sky.SetColor("_SkyTint",new Color(.32f,.22f,.45f));sky.SetColor("_GroundColor",new Color(.08f,.06f,.12f));sky.SetFloat("_Exposure",.55f);EditorUtility.SetDirty(sky);
+  foreach(var file in Directory.GetFiles("Assets/00_Scenes/Campaign","*.unity")){
+   string path=file.Replace((char)92,'/');string name=Path.GetFileNameWithoutExtension(path);
+   if(name.Contains("Tierra")||name.Contains("Arena")){report.AppendLine(name+" se conserva");continue;}
+   var scene=SceneManager.GetSceneByPath(path);bool opened=!scene.isLoaded;if(opened)scene=EditorSceneManager.OpenScene(path,OpenSceneMode.Additive);
+   try{
+    if(scene.isDirty){report.AppendLine(name+" OMITIDA (sin guardar)");continue;}
+    foreach(var root in scene.GetRootGameObjects())foreach(var t in root.GetComponentsInChildren<Transform>(true)){
+     string n=t.name;
+     if(n=="Techo"||n=="Arco sobre túnel"){foreach(var c in t.GetComponents<Collider>())c.enabled=false;var r=t.GetComponent<Renderer>();if(r)r.enabled=false;}
+     else if(n.StartsWith("Pared ")){var r=t.GetComponent<Renderer>();if(r)r.enabled=false;}
+     else if(n=="Esquinas de caverna"||n.StartsWith("CeilingRock"))t.gameObject.SetActive(false);
+    }
+    var old=FindIn(scene,"Borde rocoso");if(old)Object.DestroyImmediate(old);
+    var rim=new GameObject("Borde rocoso");SceneManager.MoveGameObjectToScene(rim,scene);
+    var exit=FindIn(scene,"Salida al próximo bioma");float exitX=exit?exit.transform.position.x:80;
+    var sides=new (string id,Vector3 o,Vector3 along,Vector3 outv,float gf,float gt)[]{
+     ("norte",new Vector3(0,0,125),Vector3.right,Vector3.forward,exitX-11,exitX+11),("sur",new Vector3(0,0,-125),Vector3.right,Vector3.back,1,-1),
+     ("este",new Vector3(125,0,0),Vector3.forward,Vector3.right,1,-1),("oeste",new Vector3(-125,0,0),Vector3.forward,Vector3.left,1,-1)};
+    int seed=name.GetHashCode()&511;
+    foreach(var s in sides){
+     var mesh=RimSide(s.o,s.along,s.outv,282,seed+=13,s.gf,s.gt);string ap=folder+"/"+name+"_"+s.id+".asset";var ex=AssetDatabase.LoadAssetAtPath<Mesh>(ap);
+     if(ex){EditorUtility.CopySerialized(mesh,ex);Object.DestroyImmediate(mesh);mesh=ex;EditorUtility.SetDirty(ex);}else AssetDatabase.CreateAsset(mesh,ap);
+     var go=new GameObject("Roca borde "+s.id);go.transform.SetParent(rim.transform,false);go.isStatic=true;
+     go.AddComponent<MeshFilter>().sharedMesh=mesh;go.AddComponent<MeshRenderer>().sharedMaterial=rock;go.AddComponent<MeshCollider>().sharedMesh=mesh;
+    }
+    SceneManager.SetActiveScene(scene);RenderSettings.skybox=sky;RenderSettings.ambientMode=UnityEngine.Rendering.AmbientMode.Trilight;
+    RenderSettings.fogColor=new Color(.13f,.1f,.18f);
+    EditorSceneManager.MarkSceneDirty(scene);EditorSceneManager.SaveScene(scene);report.AppendLine(name+" abierta");
+   }finally{if(opened&&scene.path!=active)EditorSceneManager.CloseScene(scene,true);}
+  }
+  var a=SceneManager.GetSceneByPath(active);if(a.IsValid())SceneManager.SetActiveScene(a);
+  AssetDatabase.SaveAssets();File.WriteAllText("Library/NovemberOpen.txt",report.ToString());
  }
  public static void Audit(){
   var report=new StringBuilder();
