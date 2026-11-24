@@ -1,4 +1,4 @@
-PASS Babosas salvajes del mismo tamaño (0.30-0.35 m)
+PASS Babosas salvajes del mismo tamaño (0.31-0.35 m)
 PASS Babosa soltada con G
 PASS Babosa sigue dentro del radio (14.0 m)
 PASS Babosa vuelve al inventario con G

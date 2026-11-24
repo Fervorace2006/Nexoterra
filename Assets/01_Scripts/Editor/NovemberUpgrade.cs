@@ -18,7 +18,7 @@ public static class NovemberUpgrade
  static void Poll(){
   if(EditorApplication.isCompiling||EditorApplication.isUpdating||EditorApplication.isPlayingOrWillChangePlaymode||!File.Exists("Library/NovemberUpgrade.request"))return;
   string mode=File.ReadAllText("Library/NovemberUpgrade.request").Trim();File.Delete("Library/NovemberUpgrade.request");
-  try{if(mode=="install")Install();else if(mode=="audit")Audit();else if(mode=="scenes")SceneWeapons();else if(mode=="water")WaterProbe();else if(mode=="jumplayer")JumpLayer();else if(mode=="gunshot")GunShot();else if(mode=="trimjump")TrimJump();else if(mode=="customjump")CustomJump();else if(mode=="rockwalls")RockWalls();else if(mode=="cavecorners")CaveCorners();else if(mode=="uikit")UiKit();else if(mode=="openlevels")OpenLevels();else AssetDatabase.Refresh();File.WriteAllText("Library/NovemberUpgrade.result","PASS "+mode);}
+  try{if(mode=="install")Install();else if(mode=="audit")Audit();else if(mode=="scenes")SceneWeapons();else if(mode=="water")WaterProbe();else if(mode=="jumplayer")JumpLayer();else if(mode=="gunshot")GunShot();else if(mode=="trimjump")TrimJump();else if(mode=="customjump")CustomJump();else if(mode=="rockwalls")RockWalls();else if(mode=="cavecorners")CaveCorners();else if(mode=="uikit")UiKit();else if(mode=="openlevels")OpenLevels();else if(mode=="groundmats")GroundMats();else AssetDatabase.Refresh();File.WriteAllText("Library/NovemberUpgrade.result","PASS "+mode);}
   catch(Exception e){File.WriteAllText("Library/NovemberUpgrade.result",e.ToString());Debug.LogException(e);}
  }
  const string Gameplay="Assets/02_Prefabs/Gameplay";
@@ -471,6 +471,24 @@ public static class NovemberUpgrade
   }
   var a=SceneManager.GetSceneByPath(active);if(a.IsValid())SceneManager.SetActiveScene(a);
   AssetDatabase.SaveAssets();File.WriteAllText("Library/NovemberOpen.txt",report.ToString());
+ }
+ // Biome floors (Superficie_0..5) use the procedural ground shader, keeping each biome's color.
+ static void GroundMats(){
+  var shader=AssetDatabase.LoadAssetAtPath<Shader>("Assets/NexoterraWorld/Shaders/CavernGround.shader");
+  var report=new StringBuilder("errors="+ShaderUtil.ShaderHasError(shader));report.AppendLine();
+  foreach(var m in ShaderUtil.GetShaderMessages(shader))report.AppendLine(m.severity+" "+m.message+" line "+m.line);
+  if(!ShaderUtil.ShaderHasError(shader)){
+   var paths=new[]{new Color(.5f,.34f,.2f),new Color(.6f,.65f,.7f),new Color(.42f,.34f,.22f),new Color(.62f,.44f,.26f),new Color(.26f,.21f,.19f),new Color(.36f,.16f,.17f)};
+   var flowers=new[]{.6f,0f,.4f,.3f,.1f,.25f};
+   for(int i=0;i<6;i++){
+    var mat=AssetDatabase.LoadAssetAtPath<Material>("Assets/NexoterraWorld/Habitats/Materials/Superficie_"+i+".mat");if(!mat)continue;
+    var c=mat.HasProperty("_BaseColor")?mat.GetColor("_BaseColor"):Color.green;
+    mat.shader=shader;mat.SetColor("_BaseColor",c);mat.SetColor("_PathColor",paths[i]);mat.SetFloat("_Flowers",flowers[i]);mat.SetFloat("_Paths",.6f);mat.SetFloat("_Scale",1);mat.SetFloat("_Relief",1);mat.SetFloat("_Smoothness",i==1?.3f:.1f);
+    EditorUtility.SetDirty(mat);report.AppendLine("Superficie_"+i+" ok");
+   }
+   AssetDatabase.SaveAssets();
+  }
+  File.WriteAllText("Library/NovemberGround.txt",report.ToString());
  }
  public static void Audit(){
   var report=new StringBuilder();
