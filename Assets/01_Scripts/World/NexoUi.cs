@@ -117,8 +117,8 @@ namespace Nexoterra.World
    focused=index>=0&&index==focus&&keyboardMode&&enabled;
    if(index>=0&&index==activate){activate=-1;if(enabled)clicked=true;}
    // Sounds: hover when the pointer/focus enters a control, click when it activates.
-   if(e.type==EventType.Repaint){bool over=hover||focused;if(over&&hoverId!=id){hoverId=id;NexoAudio.Play("ui_hover",.35f);}else if(!over&&hoverId==id)hoverId=0;}
-   if(clicked)NexoAudio.Play("ui_click",.7f);
+   if(e.type==EventType.Repaint){bool over=hover||focused;if(over&&hoverId!=id){hoverId=id;NexoAudio.Play("ui_hover",.22f);}else if(!over&&hoverId==id)hoverId=0;}
+   if(clicked)NexoAudio.Play("ui_click",.5f);
    return clicked;
   }
 
@@ -160,17 +160,23 @@ namespace Nexoterra.World
    {
     NexoHud.Fill(new Rect(r.x+2,r.y+4,r.width,r.height),new Color(0,0,0,.4f));
     if(focused)Chamfer(new Rect(r.x-4,r.y-4,r.width+8,r.height+8),ChamferRing,Teal,14);
-    Color body=!enabled?Olive:pressed?Green*.7f:lit?GreenHot:primary?Green*1.08f:Green;body.a=1;
-    Chamfer(r,ChamferFill,new Color(.05f,.12f,.07f),12);                                   // dark rim
+    // Green hologram plate: translucent glowing body, scanlines, soft outer glow; silver metallic label.
+    float pulse=.5f+.5f*Mathf.Sin(Time.unscaledTime*2.2f);
+    Color body=!enabled?new Color(.28f,.32f,.22f,.75f):pressed?new Color(.03f,.4f,.1f,.8f):lit?new Color(.08f,.62f,.2f,.72f):new Color(.04f,.48f,.14f,.62f);
+    if(enabled)Chamfer(new Rect(r.x-3,r.y-3,r.width+6,r.height+6),ChamferRing,new Color(.25f,1f,.4f,lit?.55f:.22f+.08f*pulse),14);   // glow halo
+    Chamfer(r,ChamferFill,new Color(.02f,.08f,.04f,.85f),12);
     var face=new Rect(r.x+3,r.y+3,r.width-6,r.height-6);
     Chamfer(face,ChamferFill,body,10);
-    if(enabled)Chamfer(face,ChamferRing,lit?Color.white*.95f:GreenEdge,10);
-    NexoHud.Fill(new Rect(face.x+10,face.y+3,face.width-20,Mathf.Max(2,face.height*.12f)),new Color(1,1,1,enabled?.18f:.06f));
-    Chevrons(face,new Color(1,1,1,enabled?.07f:.04f));
+    if(enabled)Chamfer(face,ChamferRing,lit?new Color(.7f,1f,.75f):new Color(.35f,1f,.45f,.9f),10);
+    for(float y=face.y+4;y<face.yMax-3;y+=3)NexoHud.Fill(new Rect(face.x+6,y,face.width-12,1),new Color(.6f,1f,.65f,enabled?.07f:.03f));   // scanlines
+    NexoHud.Fill(new Rect(face.x+10,face.y+3,face.width-20,Mathf.Max(2,face.height*.1f)),new Color(.8f,1f,.85f,enabled?.16f:.05f));
+    Chevrons(face,new Color(.7f,1f,.75f,enabled?.06f:.03f));
     var text=new Rect(r.x+14,r.y+(pressed?2:0),r.width-28,r.height);
     int size=r.height<44?15:r.height<58?19:22;
-    Write(new Rect(text.x+1,text.y+2,text.width,text.height),label,size,new Color(0,.1f,0,.8f),TextAnchor.MiddleCenter,true);
-    Write(text,label,size,!enabled?new Color(.72f,.76f,.58f):lit?new Color(.88f,1f,.8f):new Color(.62f,1f,.48f),TextAnchor.MiddleCenter,true);
+    // Silver: dark drop shadow, darker steel lower edge, bright silver face.
+    Write(new Rect(text.x+1,text.y+2,text.width,text.height),label,size,new Color(0,.06f,.02f,.85f),TextAnchor.MiddleCenter,true);
+    Write(new Rect(text.x,text.y+1,text.width,text.height),label,size,!enabled?new Color(.45f,.47f,.45f):new Color(.55f,.6f,.64f),TextAnchor.MiddleCenter,true);
+    Write(text,label,size,!enabled?new Color(.7f,.72f,.7f):lit?new Color(.98f,.99f,1f):new Color(.86f,.89f,.92f),TextAnchor.MiddleCenter,true);
    }
    return clicked;
   }
