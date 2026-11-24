@@ -148,8 +148,7 @@ namespace Nexoterra.World
    Color life=critical?new Color(1,.25f,.2f):new Color(.3f,.95f,.35f);
    if(critical&&Mathf.Repeat(Time.unscaledTime,.8f)<.4f)life=Color.Lerp(life,Color.white,.35f);
    Ticks(new Rect(plate.x+4,plate.y+4,plate.width-8,plate.height-8),shown,trail,life,new Color(1,.55f,.15f));
-   Shadowed(new Rect(122,72,200,20),player.female.activeSelf?"COMANDO":"LANZADOR",15,Color.white);
-   Shadowed(new Rect(122,92,312,16),health.IsDead?"DERROTADO":Mathf.CeilToInt(health.Health)+" / "+health.maxHealth+" PV"+(critical?"  ·  VIDA CRÍTICA":""),11,critical?new Color(1,.5f,.45f):new Color(.7f,.95f,.9f));
+   Shadowed(new Rect(122,72,312,16),health.IsDead?"DERROTADO":Mathf.CeilToInt(health.Health)+" / "+health.maxHealth+" PV"+(critical?"  ·  VIDA CRÍTICA":""),11,critical?new Color(1,.5f,.45f):new Color(.7f,.95f,.9f));
    DrawOpponents();
    if(boss&&boss.CampaignComplete){NexoUi.Card(new Rect(350,115,580,85),Gold);Label(new Rect(365,130,550,60),"HISTORIA COMPLETADA\nEsc · guardar partida",22,Cyan,TextAnchor.MiddleCenter);}
    GUI.matrix=old;

@@ -75,7 +75,6 @@ namespace Nexoterra.World
    {
     NexoHud.Backdrop(null);NexoHud.Scale();NexoUi.BeginNav();
     if(logo)GUI.DrawTexture(new Rect(400,36,480,180),logo,ScaleMode.ScaleToFit);
-    NexoUi.Write(new Rect(400,222,480,20),"EL SUBSUELO TE ESPERA, LANZADOR",13,NexoUi.Teal,TextAnchor.MiddleCenter,true);
     float x=460,w=360,h=52,gap=12,y=268;
     if(NexoHud.PrimaryButton(new Rect(x,y,w,h),"INICIAR HISTORIA"))GameSession.BeginNew();y+=h+gap;
     GUI.enabled=GameSession.SavedGameExists;if(NexoHud.Button(new Rect(x,y,w,h),"CONTINUAR PARTIDA")){if(!GameSession.BeginSaved(out error))Debug.LogWarning(error);}GUI.enabled=true;y+=h+gap;
@@ -88,8 +87,7 @@ namespace Nexoterra.World
      Application.Quit();
 #endif
     }
-    NexoUi.Write(new Rect(340,y+h+20,600,22),error??"↑ ↓ o ratón para elegir · Enter para confirmar",13,error!=null?NexoUi.Danger:NexoUi.Muted,TextAnchor.MiddleCenter);
-    NexoUi.Write(new Rect(24,686,400,22),"NEXOTERRA · DARK WATERS",12,new Color(.4f,.55f,.6f));
+    NexoUi.Write(new Rect(340,y+h+20,600,22),error??"",13,error!=null?NexoUi.Danger:NexoUi.Muted,TextAnchor.MiddleCenter);
     NexoUi.EndNav();
    }
    GUI.matrix=old;

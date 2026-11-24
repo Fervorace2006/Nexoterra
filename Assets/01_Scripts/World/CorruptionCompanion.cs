@@ -55,23 +55,36 @@ namespace Nexoterra.World {
  public sealed class LooseSlug:MonoBehaviour {
   bool following;bool recalling;bool hopping;Vector3 hopStart,hopEnd;float hopProgress;public bool IsRecalling=>recalling;public void Recall(){recalling=true;}
   SlugInventory owner;int index;public int InventoryIndex=>index;GameObject model;public bool changing;public string Species=>owner&&index<owner.owned.Count?owner.owned[index]:"";
-  public void Initialize(SlugInventory inventory,int slot){owner=inventory;index=slot;var c=gameObject.AddComponent<SphereCollider>();c.radius=.3f;c.center=Vector3.up*.25f;Show();}
-  void Show(){if(model)Destroy(model);var d=owner.catalog.Find(Species);if(d==null)return;model=Instantiate(d.normal,transform);foreach(var c in model.GetComponentsInChildren<Collider>())Destroy(c);var rs=model.GetComponentsInChildren<Renderer>();if(rs.Length==0)return;var b=rs[0].bounds;foreach(var r in rs)b.Encapsulate(r.bounds);float scale=.35f/Mathf.Max(.01f,b.size.y);var center=b.center-transform.position;model.transform.localScale*=scale;model.transform.localPosition=-center*scale+Vector3.up*.175f;}
+  public void Initialize(SlugInventory inventory,int slot){owner=inventory;index=slot;gameObject.layer=2;var c=gameObject.AddComponent<SphereCollider>();c.radius=.3f;c.center=Vector3.up*.2f;Show();}
+  void Show(){if(model)Destroy(model);var d=owner.catalog.Find(Species);if(d==null)return;model=Instantiate(d.normal,transform);foreach(var c in model.GetComponentsInChildren<Collider>())Destroy(c);WildSlug.Fit(transform,model.transform);}
   public void Purify(){if(Species.StartsWith("Malvada_")&&!changing&&owner.catalog.Find(SlugCatalog.BaseSpecies(Species))!=null){changing=true;SlugPurification.Begin(gameObject,()=>{owner.owned[index]=SlugCatalog.BaseSpecies(Species);Show();},()=>changing=false);}}
   public void Change(string id){if(changing||!owner||owner.catalog.Find(id)==null)return;StartCoroutine(Transition(id));}
   IEnumerator Transition(string id){changing=true;var fx=new GameObject("Conversión roja");fx.transform.SetParent(transform,false);fx.AddComponent<CorruptionConversionVfx>();yield return new WaitForSeconds(.7f);owner.owned[index]=id;Show();yield return new WaitForSeconds(.7f);Destroy(fx);changing=false;}
-  void Update(){if(!owner||index>=owner.owned.Count){Destroy(gameObject);return;}if(changing||GameSession.Blocked)return;var delta=owner.transform.position-transform.position;var settings=owner.GetComponent<CorruptionCompanion>();float outer=settings?settings.followRadius:18;float inner=settings?Mathf.Min(settings.stopRadius,outer-1):14;if(recalling){
-   if(delta.magnitude<=1.1f){if(settings)settings.CompleteRecall(this);else Destroy(gameObject);return;}
-   if(!hopping&&SlugHop.Plan(transform.position,owner.transform.position,.7f,.3f,0,out var destination)){
-    hopStart=transform.position;hopEnd=destination;hopProgress=0;hopping=true;
-   }
-   if(hopping){
-    hopProgress=Mathf.Min(1,hopProgress+Time.deltaTime*5);
+  // Hops back inside the follow ring when the player leaves it, and all the way back on G (recall).
+  // The slug's own collider is on Ignore Raycast so path checks don't hit it; if no clear hop is found
+  // it hops straight towards the player, and it catches up instantly if left far behind.
+  void Update(){
+   if(!owner||index>=owner.owned.Count){Destroy(gameObject);return;}
+   if(changing||GameSession.Blocked)return;
+   var settings=owner.GetComponent<CorruptionCompanion>();float outer=settings?settings.followRadius:18;float inner=settings?Mathf.Min(settings.stopRadius,outer-1):14;
+   var flat=owner.transform.position-transform.position;flat.y=0;float distance=flat.magnitude;
+   if(recalling&&distance<=1.4f){if(settings)settings.CompleteRecall(this);else Destroy(gameObject);return;}
+   if(!recalling){if(distance>=outer)following=true;else if(distance<=inner)following=false;}
+   if(distance>outer*3){Land(owner.transform.position-flat.normalized*(recalling?1:inner*.8f));hopping=false;return;}
+   if(hopping)
+   {
+    hopProgress=Mathf.Min(1,hopProgress+Time.deltaTime*(recalling?6f:4.5f));
     transform.position=SlugHop.Sample(hopStart,hopEnd,hopProgress,.3f);
+    if(flat.sqrMagnitude>.01f)transform.rotation=Quaternion.Slerp(transform.rotation,Quaternion.LookRotation(flat),Time.deltaTime*10);
     if(hopProgress>=1)hopping=false;
+    return;
    }
-   return;
+   if(!recalling&&!following)return;
+   float stride=recalling?1.2f:distance>outer+4?1.4f:.9f;
+   if(!SlugHop.Plan(transform.position,owner.transform.position,stride,.3f,0,out var end,owner.transform))end=Ground(transform.position+flat.normalized*Mathf.Min(stride,distance));
+   hopStart=transform.position;hopEnd=end;hopProgress=0;hopping=true;
   }
-  delta.y=0;if(delta.magnitude>=outer)following=true;if(delta.magnitude<=inner)following=false;if(following&&SlugHop.Plan(transform.position,owner.transform.position,.6f,.3f,0,out var end))transform.position=Vector3.MoveTowards(transform.position,end,Time.deltaTime*2);if(model)model.transform.localPosition+=Vector3.up*(Mathf.Sin(Time.time*9)*.0015f);}
+  Vector3 Ground(Vector3 p){return Physics.Raycast(p+Vector3.up*1.5f,Vector3.down,out var hit,6,SlugHop.WorldMask,QueryTriggerInteraction.Ignore)?hit.point:p;}
+  void Land(Vector3 p){transform.position=Ground(p);}
  }
 }

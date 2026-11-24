@@ -52,6 +52,7 @@ namespace Nexoterra.World
         NexoterraThirdPerson player;
         Vector2 scroll;bool onlyElementals;int previewIndex=-1;
         GUIStyle text,small,heading,center;
+        Texture2D mushroomIcon,backpackIcon;
         static readonly Color Ink=new Color(.025f,.065f,.085f,.97f),Teal=new Color(.02f,.35f,.40f),Gold=new Color(1,.62f,.13f);
         [Serializable] sealed class SaveData { public int version=1; public List<string> owned; public int[] equipped; public int selected; }
         string SavePath=>Path.Combine(Application.persistentDataPath,"nexoterra-slugs-v1.json");
@@ -174,7 +175,7 @@ namespace Nexoterra.World
         }
         void OnGUI()
         {
-            if(GameSession.Blocked)return;Styles();Matrix4x4 before=GUI.matrix;NexoHud.Scale();
+            if(GameSession.Blocked)return;Styles();if(!mushroomIcon)mushroomIcon=Resources.Load<Texture2D>("Nexoterra/UI/Icons/Icono_Hongos_HD");if(!backpackIcon)backpackIcon=Resources.Load<Texture2D>("Nexoterra/UI/Icons/Icono_Mochila_HD");Matrix4x4 before=GUI.matrix;NexoHud.Scale();
             if(IsOpen)DrawBackpack();
             if(!IsOpen)DrawTray();
             GUI.matrix=before;
@@ -207,17 +208,18 @@ namespace Nexoterra.World
             var gauge=new Rect(inner.xMax-38,inner.y+4,34,inner.height-8);NexoHud.Fill(gauge,new Color(.01f,.02f,.03f));
             float charge=anim==null?1:anim.IsLoaded?1:anim.IsReloading?.5f+.5f*Mathf.PingPong(Time.time*2,1):0;
             int cells=10;for(int c=0;c<cells;c++){var cell=new Rect(gauge.x+5,gauge.yMax-5-(c+1)*(gauge.height-10)/cells,gauge.width-10,(gauge.height-10)/cells-2);NexoHud.Fill(cell,(c+.5f)/cells<=charge?new Color(.2f,.85f,1):new Color(.05f,.1f,.12f));}
-            string state=definition==null?"ESPACIO "+(selected+1)+" VACÍO":current?(current.IsReturning?"REGRESANDO":"EN VUELO"):definition.displayName.ToUpperInvariant()+(anim!=null&&!anim.IsLoaded?" · R RECARGAR":" · LISTA");
+            string state=definition==null?"":current?(current.IsReturning?"REGRESANDO":"EN VUELO"):definition.displayName.ToUpperInvariant();bool needsReload=definition!=null&&!current&&anim!=null&&!anim.IsLoaded&&!anim.IsReloading;
             var caption=NexoHud.Plate(new Rect(790,562,474,28),false,new Color(.7f,.35f,.08f));
             NexoHud.Label(caption,state,12,current?Gold:Color.white,TextAnchor.MiddleCenter);
-            // Info tiles (bottom-left).
-            Tile(new Rect(16,616,84,90),(player?player.food:0).ToString(),"HONGOS",new Color(.85f,.55f,1f),false);
-            if(Tile(new Rect(106,616,84,90),owned.Count.ToString(),"MOCHILA [ALT]",Gold,IsOpen))SetOpen(!IsOpen);
-            var abilities=GetComponent<PlayerAbilities>();float cd=abilities?abilities.DodgeCooldown:0;
-            Tile(new Rect(196,616,84,90),cd>0?cd.ToString("0.0"):"OK","ESQUIVA",new Color(.3f,.85f,1f),false);
-            if(abilities&&abilities.BoostRemaining>0)Tile(new Rect(286,616,84,90),Mathf.CeilToInt(abilities.BoostRemaining).ToString(),"VIENTO",new Color(.85f,.9f,.95f),true);
+            if(needsReload)NexoHud.KeyCap(caption.xMax-34,caption.y+1,"R",20);
+            // Compact bottom-left resources with clear item symbols.
+            DrawResource(new Rect(16,624,74,82),(player?player.food:0).ToString(),null,mushroomIcon,new Color(.85f,.65f,1f));
+            if(DrawResource(new Rect(96,624,74,82),owned.Count.ToString(),null,backpackIcon,Gold,IsOpen))SetOpen(!IsOpen);
+            var abilities=GetComponent<PlayerAbilities>();
+            float cooldown=abilities?abilities.DodgeCooldown:0,total=abilities?abilities.dodgeDuration+abilities.dodgeCooldown:1;
+            DrawDodgeRecharge(new Rect(470,700,300,5),1-Mathf.Clamp01(cooldown/Mathf.Max(.01f,total)),cooldown<=0);
+            if(abilities&&abilities.BoostRemaining>0)DrawResource(new Rect(176,624,74,82),Mathf.CeilToInt(abilities.BoostRemaining)+"s","VIENTO",null,new Color(.85f,.9f,.95f),true);
             if(owned.Count==0)NexoHud.Shadowed(new Rect(790,536,474,22),"Alimenta babosas con F para formar tu equipo",12,NexoUi.Muted,TextAnchor.MiddleCenter);
-            else NexoHud.Shadowed(new Rect(790,536,474,22),"1–6 / RUEDA  seleccionar     CLIC  lanzar",11,new Color(.75f,.85f,.88f),TextAnchor.MiddleCenter);
         }
         bool Tile(Rect r,string value,string caption,Color accent,bool active)
         {
@@ -226,6 +228,22 @@ namespace Nexoterra.World
             NexoHud.Fill(new Rect(inner.x+8,inner.y+44,inner.width-16,1),accent*new Color(1,1,1,.5f));
             NexoHud.Label(new Rect(inner.x,inner.y+48,inner.width,26),caption,10,NexoUi.Text,TextAnchor.MiddleCenter);
             return GUI.Button(r,GUIContent.none,GUIStyle.none)&&Cursor.lockState!=CursorLockMode.Locked;
+        }
+        bool DrawResource(Rect r,string value,string caption,Texture2D icon,Color accent,bool active=false)
+        {
+            var inner=NexoHud.Plate(r,true,active?NexoHud.Orange:new Color(.75f,.4f,.08f));
+            if(icon)GUI.DrawTexture(new Rect(inner.center.x-21,inner.y+4,42,42),icon,ScaleMode.ScaleToFit,true);
+            else if(caption!=null)NexoHud.Label(new Rect(inner.x,inner.y+10,inner.width,20),caption,10,NexoUi.Text,TextAnchor.MiddleCenter);
+            NexoHud.Shadowed(new Rect(inner.x,inner.y+46,inner.width,24),value,18,accent,TextAnchor.MiddleCenter);
+            return GUI.Button(r,GUIContent.none,GUIStyle.none)&&Cursor.lockState!=CursorLockMode.Locked;
+        }
+        // Thin dodge recharge line: fills while recharging, glows when ready.
+        static void DrawDodgeRecharge(Rect r,float fraction,bool ready)
+        {
+            NexoHud.Fill(new Rect(r.x-1,r.y-1,r.width+2,r.height+2),new Color(0,0,0,.55f));
+            NexoHud.Fill(r,new Color(.06f,.12f,.14f,.9f));
+            NexoHud.Fill(new Rect(r.x,r.y,r.width*Mathf.Clamp01(fraction),r.height),ready?NexoUi.Teal:new Color(.18f,.55f,.62f));
+            if(ready)NexoHud.Fill(new Rect(r.x,r.y,r.width,1),new Color(.7f,1,1,.6f));
         }
         void DrawBackpack()
         {

@@ -41,6 +41,15 @@ public sealed class NovemberReview : MonoBehaviour
   yield return new WaitForSeconds(1);
   var player=GameSession.Current.GetComponent<NexoterraThirdPerson>();var health=player.GetComponent<PlayerHealth>();var ability=player.GetComponent<PlayerAbilities>();var inventory=player.GetComponent<SlugInventory>();
   foreach(var ai in FindObjectsByType<EnemyShooter>(FindObjectsSortMode.None))ai.enabled=false;
+  {// Companion: released with G follows inside the ring and comes back on G. Wild slugs share one size.
+   var heights=WildSlug.Active.Where(w=>w&&w.transform.childCount>0).Select(w=>{Bounds bb=default;bool any=false;foreach(var r in w.transform.GetChild(0).GetComponentsInChildren<Renderer>()){if(!r.enabled||r is ParticleSystemRenderer)continue;if(!any){bb=r.bounds;any=true;}else bb.Encapsulate(r.bounds);}return any?bb.size.y:WildSlug.Height;}).ToArray();
+   if(heights.Length>0)Check(heights.Max()-heights.Min()<.08f,"Babosas salvajes del mismo tamaño ("+heights.Min().ToString("0.00")+"-"+heights.Max().ToString("0.00")+" m)");
+   var player0=GameSession.Current.GetComponent<NexoterraThirdPerson>();var inv0=player0.GetComponent<SlugInventory>();var cc=player0.GetComponent<CorruptionCompanion>();
+   inv0.selected=System.Array.FindIndex(inv0.equipped,e=>e>=0);cc.Release();yield return new WaitForSeconds(.3f);var loose=cc.companion;Check(loose,"Babosa soltada con G");
+   var start=player0.transform.position;player0.Teleport(start+new Vector3(24,0,0));yield return new WaitForSeconds(7);
+   Vector3 gap=player0.transform.position-loose.transform.position;gap.y=0;Check(gap.magnitude<cc.followRadius+.5f,"Babosa sigue dentro del radio ("+gap.magnitude.ToString("0.0")+" m)");
+   cc.Recall();float until=Time.time+10;while(cc.companion&&Time.time<until)yield return null;Check(!cc.companion,"Babosa vuelve al inventario con G");
+   player0.Teleport(start);yield return new WaitForSeconds(.3f);}
 
   health.Restore(100);health.CorruptionCost();Check(Mathf.Approximately(health.Health,95),"Disparo malvado cuesta exactamente 5 PV");
   foreach(string id in new[]{"Tornado","Malvada_Tornado","Elemental_Aire","Malvada_Elemental_Aire"}){ability.OnSlugLaunched(id);Check(ability.MovementMultiplier>1,"Impulso de viento "+id);}

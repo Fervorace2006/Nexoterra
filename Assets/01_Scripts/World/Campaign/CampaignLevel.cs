@@ -64,15 +64,30 @@ namespace Nexoterra.World
    else GameSession.Current.Travel(Scenes[index+1]);
   }
   public bool IsReward(WildSlug slug)=>slug&&slug==reward;
+  // Mission checklist (top-center): one line per objective, checked when done; the first open one is highlighted.
+  readonly List<(string text,bool done)> checklist=new List<(string,bool)>();
+  void BuildChecklist(){
+   checklist.Clear();
+   var patrol=enemies.Where(e=>e&&e!=guardian&&e!=ambushBoss).ToArray();int down=patrol.Count(e=>e.gameObject.activeInHierarchy&&e.IsDead);
+   if(patrol.Length>0)checklist.Add(("Derrota a la patrulla  "+down+"/"+patrol.Length,down==patrol.Length));
+   if(guardian)checklist.Add(("Derrota a "+guardian.displayName,GuardianDefeated));
+   if(ambushBoss&&ambushBoss.gameObject.activeInHierarchy)checklist.Add(("Derrota a "+ambushBoss.displayName,ambushBoss.IsDead));
+   if(!string.IsNullOrEmpty(Rewards[index]))checklist.Add((index==0?"Alimenta a Energía con F":"Cura la elemental y aliméntala con F",inventory&&inventory.owned.Contains(Rewards[index])));
+   checklist.Add((index==Scenes.Length-1?"Regresa por el túnel":"Cruza el túnel al siguiente bioma",false));
+  }
   void OnGUI(){
    if(!player||GameSession.Blocked||(inventory&&inventory.IsOpen))return;var before=GUI.matrix;NexoHud.Scale();
-   bool intro=Time.unscaledTime<introUntil;
-   var inner=NexoHud.Plate(new Rect(446,14,388,intro?172:78));
-   NexoHud.Label(new Rect(inner.x+10,inner.y+2,inner.width-20,24),Titles[index].ToUpperInvariant(),16,Color.white,TextAnchor.MiddleCenter);
-   NexoHud.Label(new Rect(inner.x+10,inner.y+24,inner.width-20,16),Remaining>0?Remaining+" ENEMIGOS RESTANTES":"ZONA DESPEJADA",11,NexoHud.Orange,TextAnchor.MiddleCenter);
-   string objective=Cleared?(index==Scenes.Length-1?"Victoria. Regresa por el túnel.":"Túnel abierto · sigue la flecha amarilla"):Remaining>0?(index==4&&ambushBoss&&ambushBoss.gameObject.activeSelf?"¡Trampa! Sir Black tiene la elemental de fuego.":index==5?"Derrota a Enemy2, al secuaz y a Sir Black 2.":"Derrota a la patrulla y al secuaz."):index==0?"Alimenta a Energía con F para obtenerla.":"Cura la elemental con Doc/Energía y aliméntala con F.";
-   NexoHud.Label(new Rect(inner.x+10,inner.y+40,inner.width-20,24),objective,13,new Color(.55f,1,.95f),TextAnchor.MiddleCenter);
-   if(intro)NexoHud.Label(new Rect(inner.x+12,inner.y+68,inner.width-24,92),introduction,13,Color.white,TextAnchor.UpperCenter);GUI.matrix=before;
+   if(Event.current.type==EventType.Layout)BuildChecklist();
+   const float row=22;var inner=NexoHud.Plate(new Rect(470,14,340,40+checklist.Count*row));
+   NexoUi.Write(new Rect(inner.x+12,inner.y+4,inner.width-24,20),Titles[index].ToUpperInvariant(),13,Color.white,TextAnchor.MiddleLeft,true);
+   int current=checklist.FindIndex(c=>!c.done);float y=inner.y+28;
+   for(int i=0;i<checklist.Count;i++,y+=row){
+    var (text,done)=checklist[i];bool active=i==current;var box=new Rect(inner.x+12,y+4,14,14);
+    NexoHud.Fill(box,done?NexoUi.Teal:active?NexoUi.Amber:NexoUi.Edge);NexoHud.Fill(new Rect(box.x+2,box.y+2,box.width-4,box.height-4),done?NexoUi.Teal:new Color(.02f,.05f,.06f));
+    if(done)NexoUi.Write(box,"✓",12,new Color(.02f,.1f,.1f),TextAnchor.MiddleCenter,true);
+    NexoUi.Write(new Rect(box.xMax+10,y,inner.width-50,row),text,13,done?NexoUi.Muted:active?Color.white:NexoUi.Muted,TextAnchor.MiddleLeft,active);
+   }
+   GUI.matrix=before;
   }
   public void DrawMap(GUIStyle label,GUIStyle title){
    float x=Screen.width*.5f-240,y=Screen.height*.5f-240;GUI.Box(new Rect(x-16,y-45,512,545),GUIContent.none);

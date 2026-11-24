@@ -20,8 +20,24 @@ namespace Nexoterra.World
         {
             var stats=GetComponentInChildren<SlugPrefabStats>();if(stats){hopHeight=stats.hopHeight;hopDuration=stats.hopDuration;hopDistance=stats.hopDistance;}
             home=transform.position;target=home;animator=GetComponentInChildren<Animator>();
-            if(transform.childCount>0){visual=transform.GetChild(0);visual.localScale*=.7f;visual.localPosition*=.7f;visualScale=visual.localScale;}
+            if(transform.childCount>0){visual=transform.GetChild(0);Fit(transform,visual);visualScale=visual.localScale;}
             pause=Random.Range(.1f,1.2f);
+        }
+        // Every slug in the world uses the same size as the ones released from the inventory.
+        public const float Height=.35f;
+        public static void Fit(Transform root,Transform visual)
+        {
+            Bounds b=default;bool any=false;
+            foreach(var r in visual.GetComponentsInChildren<Renderer>())
+            {
+                if(!r.enabled||r is ParticleSystemRenderer||r is TrailRenderer||r is LineRenderer)continue;
+                if(!any){b=r.bounds;any=true;}else b.Encapsulate(r.bounds);
+            }
+            if(!any||b.size.y<.001f)return;
+            // Scale about the visual's pivot, then move it so the bottom-center sits on the root.
+            float k=Height/b.size.y;Vector3 pivot=visual.position,bottom=new Vector3(b.center.x,b.min.y,b.center.z);
+            visual.localScale*=k;
+            visual.position+=root.position-(pivot+(bottom-pivot)*k);
         }
         void OnEnable(){Active.Add(this);}
         void OnDisable(){Active.Remove(this);}
