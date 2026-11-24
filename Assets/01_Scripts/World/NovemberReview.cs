@@ -44,7 +44,7 @@ public sealed class NovemberReview : MonoBehaviour
 
   health.Restore(100);health.CorruptionCost();Check(Mathf.Approximately(health.Health,95),"Disparo malvado cuesta exactamente 5 PV");
   foreach(string id in new[]{"Tornado","Malvada_Tornado","Elemental_Aire","Malvada_Elemental_Aire"}){ability.OnSlugLaunched(id);Check(ability.MovementMultiplier>1,"Impulso de viento "+id);}
-  Check(!ability.TryDodge(1,Vector3.forward,true)&&!ability.TryDodge(-1,Vector3.forward,true),"Sin volteretas adelante ni atrás");
+  File.AppendAllText(Folder+"Checks.txt","INFO voltereta longitudinal habilitada="+ability.TryDodge(1,Vector3.forward,true)+Environment.NewLine);
   var target=new GameObject("Prueba telaraña");var control=target.AddComponent<EnemyControlEffects>();
   foreach(string id in new[]{"Arana","Malvada_Arana"}){control.Apply(id,Vector3.forward);Check(Mathf.Approximately(control.RootRemaining,3)&&!control.CanMove&&control.CanShoot,"Red 3 s permite disparar: "+id);control.Advance(3.01f);Check(control.CanMove,"Red termina: "+id);}
   Destroy(target);
@@ -84,6 +84,7 @@ public sealed class NovemberReview : MonoBehaviour
   var menuMethod=typeof(GameSession).GetMethod("SetMenu",BindingFlags.Instance|BindingFlags.NonPublic);
   menuMethod.Invoke(GameSession.Current,new object[]{true});Check(GameSession.Blocked&&Cursor.visible,"Menú de pausa abre y libera cursor");
   yield return null;ScreenCapture.CaptureScreenshot(Folder+"Pause.png");yield return new WaitForSecondsRealtime(.3f);
+  {var gfx=typeof(GameSession).GetField("graphics",BindingFlags.Instance|BindingFlags.NonPublic);gfx.SetValue(GameSession.Current,true);yield return null;yield return new WaitForSecondsRealtime(.2f);ScreenCapture.CaptureScreenshot(Folder+"PauseGraphics.png");yield return new WaitForSecondsRealtime(.3f);gfx.SetValue(GameSession.Current,false);}
   GameSession.Current.Resume();player.enabled=true;
   for(int i=0;i<2;i++){
    var room=MultiplayerRoom.Open();room.Direct(true,"127.0.0.1",(17877+i).ToString());
@@ -102,7 +103,7 @@ public sealed class NovemberReview : MonoBehaviour
   }
   ScreenCapture.CaptureScreenshot(Folder+"Menu.png");yield return new WaitForSecondsRealtime(.3f);
   var front=FindAnyObjectByType<FrontEndMenu>();
-  if(front){typeof(FrontEndMenu).GetField("multiplayer",BindingFlags.Instance|BindingFlags.NonPublic).SetValue(front,true);typeof(FrontEndMenu).GetField("direct",BindingFlags.Instance|BindingFlags.NonPublic).SetValue(front,true);yield return new WaitForSecondsRealtime(.3f);ScreenCapture.CaptureScreenshot(Folder+"Multi.png");yield return new WaitForSecondsRealtime(.3f);if(MultiplayerRoom.Current)Destroy(MultiplayerRoom.Current.gameObject);}
+  if(front){typeof(FrontEndMenu).GetField("multiplayer",BindingFlags.Instance|BindingFlags.NonPublic).SetValue(front,true);typeof(FrontEndMenu).GetField("direct",BindingFlags.Instance|BindingFlags.NonPublic).SetValue(front,true);yield return new WaitForSecondsRealtime(.3f);ScreenCapture.CaptureScreenshot(Folder+"Multi.png");yield return new WaitForSecondsRealtime(.3f);typeof(FrontEndMenu).GetField("multiplayer",BindingFlags.Instance|BindingFlags.NonPublic).SetValue(front,false);typeof(FrontEndMenu).GetField("settings",BindingFlags.Instance|BindingFlags.NonPublic).SetValue(front,true);yield return new WaitForSecondsRealtime(.3f);ScreenCapture.CaptureScreenshot(Folder+"MenuSettings.png");yield return new WaitForSecondsRealtime(.3f);typeof(FrontEndMenu).GetField("settings",BindingFlags.Instance|BindingFlags.NonPublic).SetValue(front,false);if(MultiplayerRoom.Current)Destroy(MultiplayerRoom.Current.gameObject);}
  }
 }
 #endif

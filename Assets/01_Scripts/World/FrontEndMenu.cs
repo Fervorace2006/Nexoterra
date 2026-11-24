@@ -37,61 +37,60 @@ namespace Nexoterra.World
    }
    else if(settings)
    {
-    NexoHud.Backdrop(artwork);NexoHud.Scale();NexoHud.Panel(new Rect(350,145,580,420));
-    NexoHud.Label(new Rect(390,175,500,45),"CONFIGURACIÓN",28,Color.white,TextAnchor.MiddleCenter);
-    GameplayOptions.DrawAutoReload(new Rect(390,245,500,58));
-    NexoHud.Label(new Rect(395,325,490,100),"Carga automáticamente la babosa seleccionada cuando esté disponible. Respeta la animación de recarga y espera a las que estén regresando.\n\nDesactivada: recarga manual con R.",17,NexoUi.Muted);
-    if(NexoHud.Button(new Rect(450,465,380,56),"VOLVER"))settings=false;
+    NexoHud.Backdrop(null);NexoHud.Scale();NexoUi.BeginNav();
+    var panel=new Rect(344,48,592,624);NexoUi.Panel(panel);
+    if(GameplayOptions.DrawSettingsPage(new Rect(panel.x+40,panel.y+28,panel.width-80,panel.height-56))){settings=false;NexoUi.ResetFocus();}
+    NexoUi.EndNav();
    }
    else if(multiplayer)
    {
-    NexoHud.Backdrop(artwork);NexoHud.Scale();var room=MultiplayerRoom.Open();
-    NexoHud.Panel(new Rect(300,60,680,600));
-    NexoHud.Label(new Rect(340,84,600,44),"MULTIJUGADOR",30,Color.white,TextAnchor.MiddleCenter);
-    NexoHud.Label(new Rect(340,124,600,22),"DUELO DE LANZADORES · HASTA 4 JUGADORES",13,NexoHud.Gold,TextAnchor.MiddleCenter);
+    NexoHud.Backdrop(null);NexoHud.Scale();NexoUi.BeginNav();var room=MultiplayerRoom.Open();
+    var panel=new Rect(312,48,656,624);NexoUi.Panel(panel);
+    float x=panel.x+40,w=panel.width-80,y=panel.y+28;
+    NexoUi.Title(new Rect(x,y,w,70),"MULTIJUGADOR","Duelo de lanzadores · hasta 4 jugadores");y+=86;
     GUI.enabled=!room.Busy&&!room.Connected;
-    if(NexoUi.Button(new Rect(345,162,285,44),"INTERNET · CÓDIGO",!direct))direct=false;
-    if(NexoUi.Button(new Rect(650,162,285,44),"CONEXIÓN POR IP",direct))direct=true;
+    int mode=NexoUi.Segmented(new Rect(x,y,w,44),new[]{"INTERNET · CÓDIGO","CONEXIÓN POR IP"},direct?1:0);direct=mode==1;y+=62;
+    float half=(w-16)/2;
     if(direct){
-     NexoHud.Label(new Rect(345,224,400,24),"DIRECCIÓN DEL ANFITRIÓN",14,NexoHud.Cyan);
-     NexoHud.Label(new Rect(765,224,170,24),"PUERTO UDP",14,NexoHud.Cyan);
-     ip=NexoHud.Field(new Rect(345,252,395,44),ip,45);
-     port=NexoHud.Field(new Rect(765,252,170,44),port,5);
-     if(NexoHud.Button(new Rect(345,320,285,58),"CREAR POR IP"))room.Direct(true,ip,port);
-     if(NexoHud.Button(new Rect(650,320,285,58),"CONECTAR"))room.Direct(false,ip,port);
-     NexoHud.Label(new Rect(345,398,590,88),"En la misma red: usa la IP local. Desde Internet: IP pública y puerto UDP abierto en el router del anfitrión. Si no puedes abrir puertos, utiliza INTERNET · CÓDIGO.",16,NexoUi.Muted);
+     NexoUi.Write(new Rect(x,y,w-176,18),"DIRECCIÓN DEL ANFITRIÓN",12,NexoUi.Teal,TextAnchor.MiddleLeft,true);NexoUi.Write(new Rect(x+w-160,y,160,18),"PUERTO UDP",12,NexoUi.Teal,TextAnchor.MiddleLeft,true);y+=24;
+     ip=NexoHud.Field(new Rect(x,y,w-176,46),ip,45);port=NexoHud.Field(new Rect(x+w-160,y,160,46),port,5);y+=64;
+     if(NexoHud.PrimaryButton(new Rect(x,y,half,52),"CREAR POR IP"))room.Direct(true,ip,port);
+     if(NexoHud.Button(new Rect(x+half+16,y,half,52),"CONECTAR"))room.Direct(false,ip,port);y+=68;
+     NexoUi.Write(new Rect(x,y,w,60),"En la misma red usa la IP local. Desde Internet: IP pública y puerto UDP abierto en el router del anfitrión. Si no puedes abrir puertos, usa INTERNET · CÓDIGO.",13,NexoUi.Muted,TextAnchor.UpperLeft);
     }else{
-     NexoHud.Label(new Rect(345,224,590,24),"CÓDIGO DE INVITACIÓN",14,NexoHud.Cyan);
-     joinCode=NexoHud.Field(new Rect(345,252,590,44),joinCode,12).ToUpperInvariant();
-     if(NexoHud.Button(new Rect(345,320,285,58),"CREAR SALA"))room.Host();
-     if(NexoHud.Button(new Rect(650,320,285,58),"UNIRME"))room.Join(joinCode);
-     NexoHud.Label(new Rect(345,398,590,65),"Juega desde redes diferentes compartiendo el código de sala. Hasta cuatro jugadores.",17,NexoUi.Muted);
+     NexoUi.Write(new Rect(x,y,w,18),"CÓDIGO DE INVITACIÓN",12,NexoUi.Teal,TextAnchor.MiddleLeft,true);y+=24;
+     joinCode=NexoHud.Field(new Rect(x,y,w,46),joinCode,12).ToUpperInvariant();y+=64;
+     if(NexoHud.PrimaryButton(new Rect(x,y,half,52),"CREAR SALA"))room.Host();
+     if(NexoHud.Button(new Rect(x+half+16,y,half,52),"UNIRME"))room.Join(joinCode);y+=68;
+     NexoUi.Write(new Rect(x,y,w,60),"Juega desde redes diferentes compartiendo el código de sala.",13,NexoUi.Muted,TextAnchor.UpperLeft);
     }
     GUI.enabled=true;
-    NexoHud.Fill(new Rect(345,488,590,62),new Color(.02f,.09f,.11f,.9f));NexoHud.Fill(new Rect(345,488,3,62),room.Busy?NexoHud.Gold:NexoHud.Cyan);
-    NexoHud.Label(new Rect(360,488,570,62),(room.Busy?"● ":"")+room.Status,16,room.Busy?NexoHud.Gold:NexoHud.Cyan,TextAnchor.MiddleLeft);
-    if(NexoHud.Button(new Rect(430,570,420,54),room.Busy?"CANCELAR CONEXIÓN":"VOLVER")){room.Cancel();multiplayer=false;}
-
+    var status=new Rect(x,panel.yMax-28-50-16-56,w,56);var tone=room.Busy?NexoUi.Amber:NexoUi.Teal;
+    NexoHud.Fill(status,NexoUi.Surface);NexoHud.Fill(new Rect(status.x,status.y,3,status.height),tone);
+    NexoUi.Write(new Rect(status.x+16,status.y,status.width-24,status.height),(room.Busy?"● ":"")+room.Status,14,tone);
+    if(NexoHud.Button(new Rect(x,panel.yMax-28-50,w,50),room.Busy?"CANCELAR CONEXIÓN":"VOLVER")||(NexoUi.BackPressed&&!room.Busy)){room.Cancel();multiplayer=false;NexoUi.ResetFocus();}
+    NexoUi.EndNav();
    }
    else
    {
-    NexoHud.Backdrop(artwork);NexoHud.Scale();
-    if(logo)GUI.DrawTexture(new Rect(330,22,620,236),logo,ScaleMode.ScaleToFit);
-    NexoHud.Fill(new Rect(400,270,480,1),NexoHud.Gold*new Color(1,1,1,.6f));
-    NexoHud.Label(new Rect(400,274,480,24),"EL SUBSUELO TE ESPERA, LANZADOR",13,NexoHud.Cyan,TextAnchor.MiddleCenter);
-    if(NexoHud.Button(new Rect(430,310,420,50),"INICIAR HISTORIA"))GameSession.BeginNew();
-    GUI.enabled=GameSession.SavedGameExists;if(NexoHud.Button(new Rect(430,372,420,50),"CONTINUAR PARTIDA")){if(!GameSession.BeginSaved(out error))Debug.LogWarning(error);}GUI.enabled=true;
-    if(NexoHud.Button(new Rect(430,434,420,50),"MULTIJUGADOR"))multiplayer=true;
-    if(NexoHud.Button(new Rect(430,496,420,50),"CONFIGURACIÓN"))settings=true;
-    if(NexoHud.Button(new Rect(430,558,420,50),"SALIR")){
+    NexoHud.Backdrop(null);NexoHud.Scale();NexoUi.BeginNav();
+    if(logo)GUI.DrawTexture(new Rect(400,36,480,180),logo,ScaleMode.ScaleToFit);
+    NexoUi.Write(new Rect(400,222,480,20),"EL SUBSUELO TE ESPERA, LANZADOR",13,NexoUi.Teal,TextAnchor.MiddleCenter,true);
+    float x=460,w=360,h=52,gap=12,y=268;
+    if(NexoHud.PrimaryButton(new Rect(x,y,w,h),"INICIAR HISTORIA"))GameSession.BeginNew();y+=h+gap;
+    GUI.enabled=GameSession.SavedGameExists;if(NexoHud.Button(new Rect(x,y,w,h),"CONTINUAR PARTIDA")){if(!GameSession.BeginSaved(out error))Debug.LogWarning(error);}GUI.enabled=true;y+=h+gap;
+    if(NexoHud.Button(new Rect(x,y,w,h),"MULTIJUGADOR")){multiplayer=true;NexoUi.ResetFocus();}y+=h+gap;
+    if(NexoHud.Button(new Rect(x,y,w,h),"CALIDAD GRÁFICA")){settings=true;NexoUi.ResetFocus();}y+=h+gap;
+    if(NexoHud.Button(new Rect(x,y,w,h),"SALIR")){
 #if UNITY_EDITOR
      UnityEditor.EditorApplication.isPlaying=false;
 #else
      Application.Quit();
 #endif
     }
-    NexoHud.Label(new Rect(350,626,580,40),error??"El progreso se guarda desde el menú de pausa.",15,NexoUi.Muted,TextAnchor.MiddleCenter);
-    NexoHud.Label(new Rect(24,686,400,22),"NEXOTERRA · DARK WATERS",12,new Color(.4f,.55f,.6f));
+    NexoUi.Write(new Rect(340,y+h+20,600,22),error??"↑ ↓ o ratón para elegir · Enter para confirmar",13,error!=null?NexoUi.Danger:NexoUi.Muted,TextAnchor.MiddleCenter);
+    NexoUi.Write(new Rect(24,686,400,22),"NEXOTERRA · DARK WATERS",12,new Color(.4f,.55f,.6f));
+    NexoUi.EndNav();
    }
    GUI.matrix=old;
   }

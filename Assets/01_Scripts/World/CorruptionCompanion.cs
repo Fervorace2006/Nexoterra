@@ -41,7 +41,7 @@ namespace Nexoterra.World {
   // Dark-water panel shown beside the backpack, with key caps for K / G / J.
   void OnGUI(){
    if(GameSession.Blocked||!inventory.IsOpen)return;var before=GUI.matrix;NexoHud.Scale();
-   var inner=NexoHud.Plate(new Rect(8,34,156,262));
+   var panel=new Rect(8,34,156,262);NexoUi.Panel(panel);var inner=new Rect(panel.x+6,panel.y+6,panel.width-12,panel.height-12);
    NexoHud.Label(new Rect(inner.x,inner.y+6,inner.width,16),"AGUA OSCURA",11,NexoHud.Cyan,TextAnchor.MiddleCenter);
    NexoHud.Shadowed(new Rect(inner.x,inner.y+22,inner.width,34),inventory.darkWater.ToString(),26,Color.white,TextAnchor.MiddleCenter);
    float x=NexoHud.KeyCap(inner.x+8,inner.y+66,"K");NexoHud.Label(new Rect(x+6,inner.y+62,inner.width-(x-inner.x)-8,34),"recolectar cerca del lago",11,NexoUi.Muted);

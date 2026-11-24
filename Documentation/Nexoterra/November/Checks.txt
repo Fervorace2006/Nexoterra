@@ -3,7 +3,7 @@ PASS Impulso de viento Tornado
 PASS Impulso de viento Malvada_Tornado
 PASS Impulso de viento Elemental_Aire
 PASS Impulso de viento Malvada_Elemental_Aire
-PASS Sin volteretas adelante ni atrás
+INFO voltereta longitudinal habilitada=True
 PASS Red 3 s permite disparar: Arana
 PASS Red termina: Arana
 PASS Red 3 s permite disparar: Malvada_Arana

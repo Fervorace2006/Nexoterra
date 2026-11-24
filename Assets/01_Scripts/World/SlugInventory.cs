@@ -234,7 +234,7 @@ namespace Nexoterra.World
             NexoUi.Card(new Rect(170,34,940,510),Teal);
             NexoHud.Label(new Rect(194,53,640,38),"COLECCIÓN DE BABOSAS",27,NexoUi.Text);
             NexoHud.Label(new Rect(194,92,690,22),owned.Count+" en tu mochila  /  6 espacios de equipo",14,NexoUi.Muted);
-            if(NexoUi.Button(new Rect(1014,54,72,40),"CERRAR"))SetOpen(false);
+            if(NexoUi.Button(new Rect(990,54,96,40),"CERRAR"))SetOpen(false);
             if(NexoUi.Button(new Rect(194,128,108,34),"TODAS",!onlyElementals)){onlyElementals=false;scroll=Vector2.zero;}
             if(NexoUi.Button(new Rect(312,128,148,34),"ELEMENTALES",onlyElementals)){onlyElementals=true;scroll=Vector2.zero;}
             var visible=new List<int>();for(int i=0;i<owned.Count;i++)if(!onlyElementals||(catalog.Find(owned[i])?.IsElemental??false))visible.Add(i);
@@ -267,8 +267,8 @@ namespace Nexoterra.World
         Rect EquipSlot(int s)=>new Rect(334+s*104,580,96,118);
         void DrawEquipBar()
         {
-            NexoHud.Plate(new Rect(320,552,640,156),false);
-            NexoHud.Label(new Rect(330,556,620,20),dragging?"SUELTA EN UN ESPACIO PARA EQUIPARLA":"EQUIPO · arrastra para ordenar",11,dragging?Gold:NexoUi.Text,TextAnchor.MiddleCenter);
+            NexoUi.Panel(new Rect(320,552,640,156));
+            NexoUi.Write(new Rect(330,557,620,20),dragging?"SUELTA EN UN ESPACIO PARA EQUIPARLA":"EQUIPO · arrastra para ordenar",12,dragging?NexoUi.Amber:NexoUi.Teal,TextAnchor.MiddleCenter,true);
             var e=Event.current;
             for(int s=0;s<6;s++)
             {
