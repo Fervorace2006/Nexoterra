@@ -72,7 +72,7 @@ namespace Nexoterra.World
             if(health&&!health.CanMove)input=Vector2.zero;
             Vector3 movement=Quaternion.Euler(0,yaw,0)*new Vector3(input.x,0,input.y).normalized;
             if(motor.isGrounded&&vertical<0)vertical=-2;
-            if(!emoteMenu&&!(abilities&&abilities.IsDodging)&&motor.isGrounded&&k.spaceKey.wasPressedThisFrame&&Cursor.lockState==CursorLockMode.Locked&&(!health||health.CanMove))vertical=6.6f;
+            // Jumping is disabled in Nexoterra (Space does nothing).
             // Snappy arc: lighter going up, heavier coming down (no floaty hang time).
             vertical+=Physics.gravity.y*(vertical>0?2.2f:2.9f)*Time.deltaTime;
             float moveSpeed=(k.leftShiftKey.isPressed?sprintSpeed:walkSpeed)*(abilities?abilities.MovementMultiplier:1);
@@ -150,7 +150,7 @@ namespace Nexoterra.World
             {
                 GUI.Box(new Rect(18,18,560,112),GUIContent.none);
                 GUI.Label(new Rect(32,25,540,28),"NEXOTERRA / "+BiomeAt(transform.position),title);
-                GUI.Label(new Rect(32,54,540,24),"WASD · mover   Mayús · correr   Espacio · saltar   Ratón · cámara",label);
+                GUI.Label(new Rect(32,54,540,24),"WASD · mover   Mayús · correr   Ratón · cámara",label);
                 GUI.Label(new Rect(32,78,540,24),"Clic der. · apuntar   Clic izq. · lanzar babosa   V · personaje",label);
                 GUI.Label(new Rect(32,101,540,24),"E · recoger   F · alimentar   Alt · mochila   B · gestos   M · mapa   T · visitar zona",label);
             }

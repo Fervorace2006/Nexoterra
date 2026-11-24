@@ -56,6 +56,15 @@ namespace Nexoterra.World
    Fill(new Rect(r.x-1,r.y-1,r.width+2,r.height+2),new Color(.35f,.42f,.46f));
    Ticks(r,Mathf.Clamp01(fraction),Mathf.Clamp01(trail),color,new Color(1,.55f,.15f));
   }
+  // Holographic vertical cells (painted sprites) filling a gauge: lit = life, orange = recent damage, dim = empty.
+  public static void Cells(Rect r,float fraction,float trail,string lit)
+  {
+   if(Event.current.type!=EventType.Repaint)return;
+   float cw=r.height*.36f,gap=Mathf.Max(1,r.height*.06f);int n=Mathf.Max(1,Mathf.FloorToInt((r.width+gap)/(cw+gap)));
+   float x=r.x+(r.width-(n*cw+(n-1)*gap))*.5f;fraction=Mathf.Clamp01(fraction);trail=Mathf.Clamp01(trail);
+   for(int i=0;i<n;i++,x+=cw+gap){float p=(i+.5f)/n;var cell=new Rect(x,r.y,cw,r.height);
+    if(p<=fraction)NexoUi.DrawKit(cell,lit);else if(p<=trail)NexoUi.DrawKit(cell,"Cell_Orange",.9f);else NexoUi.DrawKit(cell,"Cell_Grey",.28f);}
+  }
   public static void PortraitFrame(Rect r,Texture2D portrait,Color accent)
   {
    NexoUi.DrawKit(r,"Frame_Orange");   // frame first: its center is opaque
@@ -65,7 +74,7 @@ namespace Nexoterra.World
   public static void FramedLifeBar(Rect r,float fraction,float trail,Color color)
   {
    NexoUi.DrawKit(r,"Bar_Long");
-   Ticks(new Rect(r.x+r.width*.035f,r.y+r.height*.3f,r.width*.9f,r.height*.4f),Mathf.Clamp01(fraction),Mathf.Clamp01(trail),color,new Color(1,.55f,.15f));
+   Cells(new Rect(r.x+r.width*.065f,r.y+r.height*.34f,r.width*.855f,r.height*.32f),fraction,trail,color.g>color.r?"Cell_Green":"Cell_Red");
   }
   public static void Shadowed(Rect r,string text,int size,Color color,TextAnchor anchor=TextAnchor.MiddleLeft)
   {

@@ -42,7 +42,7 @@ namespace Nexoterra.World
                 (keyboard.wKey.isPressed?1:0)-(keyboard.sKey.isPressed?1:0));
             input=Vector2.ClampMagnitude(input,1);
             if(controller.isGrounded && verticalSpeed<0) verticalSpeed=-2;
-            if(controller.isGrounded && keyboard.spaceKey.wasPressedThisFrame) verticalSpeed=5.5f;
+            // Jumping is disabled in Nexoterra.
             verticalSpeed+=Physics.gravity.y*Time.deltaTime*1.8f;
             Vector3 motion=(transform.right*input.x+transform.forward*input.y)*(keyboard.leftShiftKey.isPressed?sprintSpeed:walkSpeed);
             controller.Move((motion+Vector3.up*verticalSpeed)*Time.deltaTime);
@@ -58,7 +58,7 @@ namespace Nexoterra.World
             GUI.color=new Color(1,1,1,.9f);
             GUI.Box(new Rect(18,18,435,76),GUIContent.none);
             GUI.Label(new Rect(32,25,410,24),"NEXOTERRA  /  Cuenca del Nexo");
-            GUI.Label(new Rect(32,47,410,22),"Clic: explorar   WASD: moverse   Mayús: correr   Espacio: saltar");
+            GUI.Label(new Rect(32,47,410,22),"Clic: explorar   WASD: moverse   Mayús: correr");
             GUI.Label(new Rect(32,67,410,22),"Esc: liberar ratón   R: volver al inicio   H: ocultar ayuda");
         }
     }
