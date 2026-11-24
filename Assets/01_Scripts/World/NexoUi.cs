@@ -179,24 +179,25 @@ namespace Nexoterra.World
 
   // ---- Slug canister (blaster chamber): rounded metal tube, teal glass, amber cap, round number socket ----
   static void Round(Rect r,Color c,float radius,float border=0){if(Event.current.type==EventType.Repaint)GUI.DrawTexture(r,Texture2D.whiteTexture,ScaleMode.StretchToFill,true,0,c,border,radius);}
+  // Painted UI kit sprites (Resources/Nexoterra/UI/Kit), cached.
+  static readonly System.Collections.Generic.Dictionary<string,Texture2D> kit=new System.Collections.Generic.Dictionary<string,Texture2D>();
+  public static Texture2D Kit(string name){if(!kit.TryGetValue(name,out var t)||!t){t=Resources.Load<Texture2D>("Nexoterra/UI/Kit/"+name);kit[name]=t;}return t;}
+  public static void DrawKit(Rect r,string name,float alpha=1){var t=Kit(name);if(!t||Event.current.type!=EventType.Repaint)return;var old=GUI.color;GUI.color=new Color(1,1,1,alpha);GUI.DrawTexture(r,t,ScaleMode.StretchToFill,true);GUI.color=old;}
+  // Slug slot: painted canister (teal = occupied, steel = empty) with a round number socket below.
   public static void SlugCanister(Rect r,SlugDefinition d,bool selected,int number,float alpha=1,string label=null)
   {
-   float labelH=label!=null?20:0;var tube=new Rect(r.x,r.y,r.width,r.height-labelH);var accent=Accent(d);
-   float rad=Mathf.Min(16,tube.width*.3f);
-   Round(new Rect(tube.x+2,tube.y+4,tube.width,tube.height),new Color(0,0,0,.45f),rad);
-   Round(tube,selected?Amber:new Color(.2f,.3f,.34f),rad);                                  // metal shell
-   var shell=new Rect(tube.x+2,tube.y+2,tube.width-4,tube.height-4);Round(shell,new Color(.08f,.13f,.15f),rad-2);
-   var glass=new Rect(shell.x+4,shell.y+10,shell.width-8,shell.height-36);
-   Round(glass,new Color(.02f,.16f,.19f),rad-4);
-   Round(new Rect(glass.x+2,glass.y+2,glass.width-4,glass.height*.45f),new Color(.2f,.75f,.8f,.18f),rad-5); // glass sheen
-   Round(new Rect(glass.x+4,glass.y+4,3,glass.height-8),new Color(.7f,1,1,.18f),2);
-   Round(new Rect(shell.x+6,shell.y+3,shell.width-12,5),selected?Amber:new Color(.75f,.45f,.15f),3);          // cap rim
-   if(d!=null)Portrait(new Rect(glass.x+2,glass.y+2,glass.width-4,glass.height-4),d.portrait,accent,alpha);
-   else Write(glass,"+",22,new Color(.35f,.55f,.6f),TextAnchor.MiddleCenter,true);
-   if(d!=null&&d.IsElemental)Write(new Rect(glass.xMax-16,glass.y+2,14,14),"E",10,accent,TextAnchor.MiddleCenter,true);
-   var socket=new Rect(tube.center.x-11,tube.yMax-25,22,22);
-   Round(socket,selected?Amber:new Color(.25f,.35f,.4f),11);Round(new Rect(socket.x+3,socket.y+3,16,16),selected?new Color(1,.8f,.4f):new Color(.04f,.09f,.11f),8);
-   if(number>0)Write(socket,number.ToString(),11,selected?new Color(.1f,.06f,0):Text,TextAnchor.MiddleCenter,true);
+   float labelH=label!=null?18:0,socket=Mathf.Min(28,r.width*.42f);
+   float h=Mathf.Min(r.height-labelH-socket*.55f,r.width*1.15f),w=h/1.15f;
+   var tube=new Rect(r.center.x-w/2,r.y,w,h);
+   if(selected)Round(new Rect(tube.x-3,tube.y-3,tube.width+6,tube.height+6),new Color(1,.65f,.2f,.35f),10);
+   DrawKit(tube,d!=null||selected?"Canister_Full":"Canister_Empty");
+   var glass=new Rect(tube.x+tube.width*.14f,tube.y+tube.height*.2f,tube.width*.72f,tube.height*.6f);
+   if(d!=null)Portrait(glass,d.portrait,Accent(d),alpha);
+   else Write(glass,"+",20,new Color(.6f,.75f,.8f,.7f),TextAnchor.MiddleCenter,true);
+   if(d!=null&&d.IsElemental)Write(new Rect(glass.xMax-14,glass.y,14,14),"E",10,Accent(d),TextAnchor.MiddleCenter,true);
+   var sock=new Rect(r.center.x-socket/2,tube.yMax-socket*.45f,socket,socket);
+   DrawKit(sock,selected?"Socket_Orange":"Socket_Grey");
+   if(number>0)Write(sock,number.ToString(),Mathf.RoundToInt(socket*.42f),selected?new Color(.15f,.07f,0):Text,TextAnchor.MiddleCenter,true);
    if(label!=null)Write(new Rect(r.x-4,r.yMax-labelH,r.width+8,labelH),label,11,d!=null?Text:Muted,TextAnchor.MiddleCenter);
   }
   // ---- Content helpers ----

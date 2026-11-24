@@ -18,7 +18,7 @@ public static class NovemberUpgrade
  static void Poll(){
   if(EditorApplication.isCompiling||EditorApplication.isUpdating||EditorApplication.isPlayingOrWillChangePlaymode||!File.Exists("Library/NovemberUpgrade.request"))return;
   string mode=File.ReadAllText("Library/NovemberUpgrade.request").Trim();File.Delete("Library/NovemberUpgrade.request");
-  try{if(mode=="install")Install();else if(mode=="audit")Audit();else if(mode=="scenes")SceneWeapons();else if(mode=="water")WaterProbe();else if(mode=="jumplayer")JumpLayer();else if(mode=="gunshot")GunShot();else if(mode=="trimjump")TrimJump();else if(mode=="customjump")CustomJump();else if(mode=="rockwalls")RockWalls();else if(mode=="cavecorners")CaveCorners();else AssetDatabase.Refresh();File.WriteAllText("Library/NovemberUpgrade.result","PASS "+mode);}
+  try{if(mode=="install")Install();else if(mode=="audit")Audit();else if(mode=="scenes")SceneWeapons();else if(mode=="water")WaterProbe();else if(mode=="jumplayer")JumpLayer();else if(mode=="gunshot")GunShot();else if(mode=="trimjump")TrimJump();else if(mode=="customjump")CustomJump();else if(mode=="rockwalls")RockWalls();else if(mode=="cavecorners")CaveCorners();else if(mode=="uikit")UiKit();else AssetDatabase.Refresh();File.WriteAllText("Library/NovemberUpgrade.result","PASS "+mode);}
   catch(Exception e){File.WriteAllText("Library/NovemberUpgrade.result",e.ToString());Debug.LogException(e);}
  }
  const string Gameplay="Assets/02_Prefabs/Gameplay";
@@ -396,6 +396,23 @@ public static class NovemberUpgrade
    }finally{if(opened&&scene.path!=active)EditorSceneManager.CloseScene(scene,true);}
   }
   AssetDatabase.SaveAssets();File.WriteAllText("Library/NovemberCorners.txt",report.ToString());
+ }
+ // UI kit sprites: crisp import. Game icon (.exe): Branding/Nexoterra_Icono_Protagonista_1024.png as default icon.
+ static void UiKit(){
+  var report=new StringBuilder();
+  foreach(var file in Directory.GetFiles("Assets/Resources/Nexoterra/UI/Kit","*.png")){
+   var path=file.Replace((char)92,'/');var ti=(TextureImporter)AssetImporter.GetAtPath(path);
+   ti.textureType=TextureImporterType.Default;ti.alphaIsTransparency=true;ti.mipmapEnabled=false;ti.textureCompression=TextureImporterCompression.Uncompressed;ti.wrapMode=TextureWrapMode.Clamp;ti.npotScale=TextureImporterNPOTScale.None;ti.SaveAndReimport();
+  }
+  const string iconPath="Assets/Branding/Nexoterra_Icono_Protagonista_1024.png";
+  var ii=(TextureImporter)AssetImporter.GetAtPath(iconPath);
+  if(ii){ii.textureType=TextureImporterType.Default;ii.alphaIsTransparency=true;ii.maxTextureSize=1024;ii.textureCompression=TextureImporterCompression.Uncompressed;ii.SaveAndReimport();
+   var icon=AssetDatabase.LoadAssetAtPath<Texture2D>(iconPath);
+   PlayerSettings.SetIcons(UnityEditor.Build.NamedBuildTarget.Unknown,new[]{icon},IconKind.Any);
+   report.AppendLine("icon="+icon.name+" "+icon.width);}
+  else report.AppendLine("icono no encontrado");
+  PlayerSettings.productName="Nexoterra";
+  AssetDatabase.SaveAssets();File.WriteAllText("Library/NovemberKit.txt",report.ToString());
  }
  public static void Audit(){
   var report=new StringBuilder();

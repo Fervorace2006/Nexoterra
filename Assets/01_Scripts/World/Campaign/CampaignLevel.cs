@@ -84,7 +84,7 @@ namespace Nexoterra.World
    for(int i=0;i<checklist.Count;i++,y+=row){
     var (text,done)=checklist[i];bool active=i==current;var box=new Rect(inner.x+12,y+4,14,14);
     NexoHud.Fill(box,done?NexoUi.Teal:active?NexoUi.Amber:NexoUi.Edge);NexoHud.Fill(new Rect(box.x+2,box.y+2,box.width-4,box.height-4),done?NexoUi.Teal:new Color(.02f,.05f,.06f));
-    if(done)NexoUi.Write(box,"✓",12,new Color(.02f,.1f,.1f),TextAnchor.MiddleCenter,true);
+    if(done)NexoUi.DrawKit(new Rect(box.x-1,box.y-2,17,13),"Icon_Check");
     NexoUi.Write(new Rect(box.xMax+10,y,inner.width-50,row),text,13,done?NexoUi.Muted:active?Color.white:NexoUi.Muted,TextAnchor.MiddleLeft,active);
    }
    GUI.matrix=before;

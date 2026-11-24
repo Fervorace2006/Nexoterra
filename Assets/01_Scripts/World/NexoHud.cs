@@ -58,8 +58,14 @@ namespace Nexoterra.World
   }
   public static void PortraitFrame(Rect r,Texture2D portrait,Color accent)
   {
-   var inner=Plate(r,true,Orange);NexoUi.Portrait(inner,portrait,accent);
-   Fill(new Rect(inner.x,inner.yMax-3,inner.width,3),accent*new Color(1,1,1,.8f));
+   NexoUi.DrawKit(r,"Frame_Orange");   // frame first: its center is opaque
+   NexoUi.Portrait(new Rect(r.x+r.width*.13f,r.y+r.height*.13f,r.width*.74f,r.height*.74f),portrait,accent);
+  }
+  // Painted metal bar frame with the segmented gauge inside (player / enemy bars).
+  public static void FramedLifeBar(Rect r,float fraction,float trail,Color color)
+  {
+   NexoUi.DrawKit(r,"Bar_Long");
+   Ticks(new Rect(r.x+r.width*.035f,r.y+r.height*.3f,r.width*.9f,r.height*.4f),Mathf.Clamp01(fraction),Mathf.Clamp01(trail),color,new Color(1,.55f,.15f));
   }
   public static void Shadowed(Rect r,string text,int size,Color color,TextAnchor anchor=TextAnchor.MiddleLeft)
   {
@@ -136,7 +142,7 @@ namespace Nexoterra.World
     if(i==0){
      // Main target mirrors the player block: bar on the left, portrait on the right.
      PortraitFrame(new Rect(1166,14,98,98),e.portrait,red);
-     var plate=Plate(new Rect(846,24,316,44),false);LifeBar(new Rect(plate.x+4,plate.y+4,plate.width-8,plate.height-8),fraction,fraction,red);
+     var plate=new Rect(826,20,340,52);FramedLifeBar(plate,fraction,fraction,red);
      Shadowed(new Rect(846,72,316,20),e.displayName.ToUpperInvariant(),15,Color.white,TextAnchor.MiddleRight);
      Shadowed(new Rect(846,92,316,16),Mathf.CeilToInt(e.Health)+" / "+e.maxHealth+" PV",11,new Color(1,.75f,.7f),TextAnchor.MiddleRight);
     }else{
@@ -152,11 +158,11 @@ namespace Nexoterra.World
    // Player block (top-left): framed portrait + segmented life gauge.
    bool critical=shown<.25f;
    PortraitFrame(new Rect(16,14,98,98),player.female.activeSelf?femalePortrait:malePortrait,Cyan);
-   var plate=Plate(new Rect(118,24,316,44),false);
+   var plate=new Rect(114,20,340,52);
    Color life=critical?new Color(1,.25f,.2f):PlayerLife;
    if(critical&&Mathf.Repeat(Time.unscaledTime,.8f)<.4f)life=Color.Lerp(life,Color.white,.35f);
-   LifeBar(new Rect(plate.x+4,plate.y+4,plate.width-8,plate.height-8),shown,trail,life);
-   Shadowed(new Rect(122,72,312,16),health.IsDead?"DERROTADO":Mathf.CeilToInt(health.Health)+" / "+health.maxHealth+" PV"+(critical?"  ·  VIDA CRÍTICA":""),11,critical?new Color(1,.5f,.45f):new Color(.7f,.95f,.9f));
+   FramedLifeBar(plate,shown,trail,life);
+   NexoUi.DrawKit(new Rect(122,74,16,14),"Icon_Heart");Shadowed(new Rect(142,72,292,16),health.IsDead?"DERROTADO":Mathf.CeilToInt(health.Health)+" / "+health.maxHealth+" PV"+(critical?"  ·  VIDA CRÍTICA":""),11,critical?new Color(1,.5f,.45f):new Color(.7f,.95f,.9f));
    DrawOpponents();
    if(boss&&boss.CampaignComplete){NexoUi.Card(new Rect(350,115,580,85),Gold);Label(new Rect(365,130,550,60),"HISTORIA COMPLETADA\nEsc · guardar partida",22,Cyan,TextAnchor.MiddleCenter);}
    GUI.matrix=old;

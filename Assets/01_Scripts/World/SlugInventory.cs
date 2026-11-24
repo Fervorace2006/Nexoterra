@@ -227,6 +227,7 @@ namespace Nexoterra.World
         // Thin dodge recharge line: fills while recharging, glows when ready.
         static void DrawDodgeRecharge(Rect r,float fraction,bool ready)
         {
+            NexoUi.DrawKit(new Rect(r.x-24,r.y-8,20,19),"Icon_Boot",ready?1:.5f);
             NexoHud.Fill(new Rect(r.x-1,r.y-1,r.width+2,r.height+2),new Color(0,0,0,.55f));
             NexoHud.Fill(r,new Color(.06f,.12f,.14f,.9f));
             NexoHud.Fill(new Rect(r.x,r.y,r.width*Mathf.Clamp01(fraction),r.height),ready?NexoUi.Teal:new Color(.18f,.55f,.62f));
