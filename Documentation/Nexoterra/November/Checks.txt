@@ -27,10 +27,12 @@ PASS Nuevo tornado VFX conectado
 PASS Tornado blanco/gris
 PASS Menú de pausa abre y libera cursor
 PASS Anfitrión IP abre arena, ciclo 0
+INFO Misma red: 10.254.2.134:17877. Para Internet abre el puerto UDP 17877 en el router o usa INTERNET · CÓDIGO. (El router no respondió a UPnP.)
 PASS La arena tiene menú de sesión
 PASS Pausa online sin detener red
 PASS Salir al menú limpia la sala, ciclo 0
 PASS Anfitrión IP abre arena, ciclo 1
+INFO Misma red: 10.254.2.134:17878. Para Internet abre el puerto UDP 17878 en el router o usa INTERNET · CÓDIGO. (El router no respondió a UPnP.)
 PASS La arena tiene menú de sesión
 PASS Pausa online sin detener red
 PASS Salir al menú limpia la sala, ciclo 1

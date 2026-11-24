@@ -17,6 +17,8 @@ namespace Nexoterra.World
    public string[] collection;public GameObject proxy;public Vector3 position;public Quaternion rotation;
    public float health=100,lastShot=-10,deadUntil,burnUntil,burnRate,lastMove;
    public bool female,visualFemale,evading;public Animator animator;
+   // Remote view smoothing: last received pose, estimated velocity and animation states.
+   public Vector3 viewTarget,viewVelocity;public Quaternion viewRotation=Quaternion.identity;public float lastView=-1;public int shown0,shown1;
    public readonly Dictionary<string,float> busyUntil=new Dictionary<string,float>();
   }
   public static ArenaSession Current {get;private set;}
@@ -60,8 +62,8 @@ namespace Nexoterra.World
    string json=JsonUtility.ToJson(packet);
    using(var writer=new FastBufferWriter(16384,Allocator.Temp)){writer.WriteValueSafe(json);network.CustomMessagingManager.SendNamedMessage("arena",to,writer,delivery);}
   }
-  void SendToServer(Packet packet){if(IsServer)HandleServer(network.LocalClientId,packet);else Send(NetworkManager.ServerClientId,packet);}
-  void Broadcast(Packet packet){foreach(var id in network.ConnectedClientsIds){if(id==network.LocalClientId)HandleClient(packet);else Send(id,packet);}}
+  void SendToServer(Packet packet,NetworkDelivery delivery=NetworkDelivery.ReliableSequenced){if(IsServer)HandleServer(network.LocalClientId,packet);else Send(NetworkManager.ServerClientId,packet,delivery);}
+  void Broadcast(Packet packet,NetworkDelivery delivery=NetworkDelivery.ReliableSequenced){foreach(var id in network.ConnectedClientsIds){if(id==network.LocalClientId)HandleClient(packet);else Send(id,packet,delivery);}}
   void Receive(ulong sender,FastBufferReader reader){
    try{reader.ReadValueSafe(out string json);if(json.Length>12000)return;var packet=JsonUtility.FromJson<Packet>(json);if(packet==null)return;
     if(IsServer)HandleServer(sender,packet);else if(sender==NetworkManager.ServerClientId)HandleClient(packet);
@@ -82,7 +84,7 @@ namespace Nexoterra.World
     if(peer.health<=0)return;
     Vector3 clamped=packet.position;clamped.x=Mathf.Clamp(clamped.x,-122,122);clamped.z=Mathf.Clamp(clamped.z,-122,122);clamped.y=Mathf.Clamp(clamped.y,-5,25);
     peer.position=Vector3.MoveTowards(peer.position,clamped,elapsed*14f+.25f);peer.rotation=packet.rotation;peer.female=packet.female;peer.evading=packet.evading;
-    packet.id=sender;packet.position=peer.position;packet.health=peer.health;Broadcast(packet);return;
+    packet.id=sender;packet.position=peer.position;packet.health=peer.health;Broadcast(packet,NetworkDelivery.UnreliableSequenced);return;
    }
    if(packet.kind=="shot"){
     if(peer.health<=0||Time.unscaledTime-peer.lastShot<.7f||!peer.collection.Contains(packet.species)||!Finite(packet.direction)||packet.direction.sqrMagnitude<.5f)return;
@@ -97,6 +99,16 @@ namespace Nexoterra.World
    }
   }
   static bool Finite(Vector3 p)=>float.IsFinite(p.x)&&float.IsFinite(p.y)&&float.IsFinite(p.z);
+  // Every frame: glide each remote player toward its last pose, slightly extrapolated by its velocity.
+  void SmoothRemotePlayers(){
+   float now=Time.unscaledTime,k=1-Mathf.Exp(-16f*Time.unscaledDeltaTime);
+   foreach(var pair in peers){
+    var peer=pair.Value;if(pair.Key==network.LocalClientId||!peer.proxy||peer.lastView<0)continue;
+    var t=peer.proxy.transform;var predicted=peer.viewTarget+peer.viewVelocity*Mathf.Min(now-peer.lastView,.12f);
+    t.position=(t.position-predicted).sqrMagnitude>16?predicted:Vector3.Lerp(t.position,predicted,k);
+    t.rotation=Quaternion.Slerp(t.rotation,peer.viewRotation,k);
+   }
+  }
   void HandleClient(Packet packet){
    if(packet.kind=="leave"){if(peers.TryGetValue(packet.id,out var old)&&old.proxy)Destroy(old.proxy);if(!IsServer)peers.Remove(packet.id);return;}
    if(packet.kind=="join"||packet.kind=="pose"){
@@ -104,13 +116,17 @@ namespace Nexoterra.World
     peer.position=packet.position;peer.rotation=packet.rotation;peer.health=packet.health;
     if(packet.id==network.LocalClientId){health.ApplyArenaHealth(packet.health);return;}
     if(!peer.proxy)CreateProxy(packet.id,peer);
-    peer.proxy.transform.position=Vector3.Lerp(peer.proxy.transform.position,packet.position,.65f);
-    peer.proxy.transform.rotation=packet.rotation;
+    // Don't move the proxy here (packets arrive ~30/s); SmoothRemotePlayers interpolates every frame.
+    float now=Time.unscaledTime;
+    if(peer.lastView>0){float dt=Mathf.Max(.016f,now-peer.lastView);peer.viewVelocity=Vector3.ClampMagnitude((packet.position-peer.viewTarget)/dt,12f);}
+    else{peer.proxy.transform.position=packet.position;peer.proxy.transform.rotation=packet.rotation;}
+    if(packet.kind=="join"){peer.viewVelocity=Vector3.zero;peer.proxy.transform.position=packet.position;}
+    peer.viewTarget=packet.position;peer.viewRotation=packet.rotation;peer.lastView=now;
     if(packet.kind=="pose"&&peer.animator){
      if(peer.visualFemale!=packet.female){Destroy(peer.proxy);peer.proxy=null;peer.female=packet.female;peer.evading=packet.evading;CreateProxy(packet.id,peer);}
-     if(peer.animator.HasState(0,packet.state0))peer.animator.Play(packet.state0,0,packet.time0);
-     if(peer.animator.layerCount>1){peer.animator.SetLayerWeight(1,packet.upper);if(peer.animator.HasState(1,packet.state1))peer.animator.Play(packet.state1,1,packet.time1);}
-     peer.animator.Update(.001f);
+     // Change animation only when the remote state changes; otherwise let it play smoothly.
+     if(packet.state0!=peer.shown0&&peer.animator.HasState(0,packet.state0)){peer.animator.CrossFade(packet.state0,.12f,0,packet.time0);peer.shown0=packet.state0;}
+     if(peer.animator.layerCount>1){peer.animator.SetLayerWeight(1,packet.upper);if(packet.state1!=peer.shown1&&peer.animator.HasState(1,packet.state1)){peer.animator.CrossFade(packet.state1,.1f,1,packet.time1);peer.shown1=packet.state1;}}
     }return;
    }
    if(packet.kind=="shot"){if(!IsServer&&packet.id!=network.LocalClientId)Launch(packet,false);return;}
@@ -158,11 +174,12 @@ namespace Nexoterra.World
   }
   void Update(){
    if(!registered||!network||!network.IsListening)return;
+   SmoothRemotePlayers();
    if(!peers.ContainsKey(network.LocalClientId)&&Time.unscaledTime>=helloAt){helloAt=Time.unscaledTime+1;SendToServer(new Packet{kind="hello",collection=inventory.owned.Distinct().ToArray()});}
    if(Time.unscaledTime>=sendAt){
-    sendAt=Time.unscaledTime+.05f;
+    sendAt=Time.unscaledTime+1f/30f;
     var a=(player.female.activeSelf?player.female:player.male).GetComponentInChildren<Animator>();var baseState=a.GetCurrentAnimatorStateInfo(0);var upper=a.layerCount>1?a.GetCurrentAnimatorStateInfo(1):default;
-    SendToServer(new Packet{kind="pose",evading=player.GetComponent<PlayerAbilities>()&&player.GetComponent<PlayerAbilities>().Evading,position=player.transform.position,rotation=player.visuals.rotation,female=player.female.activeSelf,state0=baseState.fullPathHash,time0=baseState.normalizedTime,state1=upper.fullPathHash,time1=upper.normalizedTime,upper=a.layerCount>1?a.GetLayerWeight(1):0});
+    SendToServer(new Packet{kind="pose",evading=player.GetComponent<PlayerAbilities>()&&player.GetComponent<PlayerAbilities>().Evading,position=player.transform.position,rotation=player.visuals.rotation,female=player.female.activeSelf,state0=baseState.fullPathHash,time0=baseState.normalizedTime,state1=upper.fullPathHash,time1=upper.normalizedTime,upper=a.layerCount>1?a.GetLayerWeight(1):0},NetworkDelivery.UnreliableSequenced);
    }
    if(IsServer)foreach(var pair in peers.ToArray()){
     var peer=pair.Value;
@@ -171,8 +188,10 @@ namespace Nexoterra.World
    }
   }
   void OnGUI(){
-   if(GameSession.Blocked||!network)return;GUI.Label(new Rect(20,20,450,30),"SALA "+MultiplayerRoom.Current.Code+" · "+peers.Count+"/4 jugadores");
-   if(GUI.Button(new Rect(20,55,160,32),"SALIR DE LA SALA"))MultiplayerRoom.Current.Leave();
+   // Room address (to share) under the life bar; leaving is in the Esc menu.
+   if(GameSession.Blocked||!network||!MultiplayerRoom.Current)return;var before=GUI.matrix;NexoHud.Scale();
+   NexoHud.Shadowed(new Rect(122,92,520,18),"SALA "+MultiplayerRoom.Current.Code+"  ·  "+peers.Count+"/4 jugadores",12,NexoUi.Teal);
+   GUI.matrix=before;
   }
  }
 }

@@ -99,7 +99,7 @@ public sealed class NovemberReview : MonoBehaviour
    var room=MultiplayerRoom.Open();room.Direct(true,"127.0.0.1",(17877+i).ToString());
    float deadline=Time.realtimeSinceStartup+30;
    while(!ArenaSession.Current&&Time.realtimeSinceStartup<deadline)yield return null;
-   Check(ArenaSession.Current&&room.Manager&&room.Manager.IsHost,"Anfitrión IP abre arena, ciclo "+i);
+   Check(ArenaSession.Current&&room.Manager&&room.Manager.IsHost,"Anfitrión IP abre arena, ciclo "+i);{float wait=Time.realtimeSinceStartup+6;while(room.Status.Contains("abriendo")&&Time.realtimeSinceStartup<wait)yield return null;File.AppendAllText(Folder+"Checks.txt","INFO "+room.Status+Environment.NewLine);}
    yield return new WaitForSecondsRealtime(2);
    Check(GameSession.Current,"La arena tiene menú de sesión");
    menuMethod.Invoke(GameSession.Current,new object[]{true});

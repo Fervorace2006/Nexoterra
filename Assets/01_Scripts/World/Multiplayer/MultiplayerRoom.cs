@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using Unity.Netcode;
@@ -63,17 +64,38 @@ namespace Nexoterra.World
     connectDeadline=Time.unscaledTime+20;
    }catch(Exception e){if(!Stale(id)){Status="No se pudo entrar: "+e.Message;CleanupNetwork();Busy=false;}}
   }
+  int mappedPort;
+  // Direct IP. Host: listens on all interfaces and asks the router (UPnP) to forward the UDP port,
+  // then shows the public address to share. Client: accepts "ip", "ip:port" or a host name.
   public void Direct(bool host,string address,string portText){
    if(Busy||Connected)return;
+   address=(address??"").Trim();
+   int colon=address.LastIndexOf(':');if(!host&&colon>0&&address.IndexOf(':')==colon){portText=address.Substring(colon+1);address=address.Substring(0,colon);}
    if(!ushort.TryParse(portText,out var port)||port==0){Status="Puerto inválido (1 a 65535).";return;}
-   if(!host&&(!IPAddress.TryParse(address.Trim(),out var ip)||ip.AddressFamily!=System.Net.Sockets.AddressFamily.InterNetwork)){Status="Introduce una dirección IPv4 válida.";return;}
+   string target=address;
+   if(!host)
+   {
+    if(!IPAddress.TryParse(address,out var ip)||ip.AddressFamily!=System.Net.Sockets.AddressFamily.InterNetwork)
+    {
+     try{ip=Dns.GetHostAddresses(address).FirstOrDefault(a=>a.AddressFamily==System.Net.Sockets.AddressFamily.InterNetwork);}catch{ip=null;}
+     if(ip==null){Status="No se encontró la dirección. Usa la IP pública del anfitrión (ej. 181.115.20.4).";return;}
+    }
+    target=ip.ToString();
+   }
    try{
-    leaving=false;operation++;PrepareNetwork();Code=host?"IP · "+port:address.Trim()+":"+port;
-    Manager.GetComponent<UnityTransport>().SetConnectionData(host?"127.0.0.1":address.Trim(),port,host?"0.0.0.0":null);
+    leaving=false;int id=++operation;PrepareNetwork();Code=host?"Puerto "+port:target+":"+port;
+    Manager.GetComponent<UnityTransport>().SetConnectionData(host?"127.0.0.1":target,port,host?"0.0.0.0":null);
     Busy=true;Status=host?"Abriendo servidor...":"Conectando a "+Code;
-    if(!(host?Manager.StartHost():Manager.StartClient()))throw new Exception("No se pudo abrir la conexión.");
-    if(host)Busy=false;else connectDeadline=Time.unscaledTime+20;
+    if(!(host?Manager.StartHost():Manager.StartClient()))throw new Exception("No se pudo abrir la conexión. ¿El puerto "+port+" ya está en uso?");
+    if(host){Busy=false;Share(port,id);}else connectDeadline=Time.unscaledTime+20;
    }catch(Exception e){Status=e.Message;CleanupNetwork();Busy=false;}
+  }
+  async void Share(int port,int id){
+   string local=PortMapper.LocalIPv4();Code=local+":"+port;Status="Misma red: "+Code+" · abriendo el puerto en el router…";
+   var (ok,publicIp,error)=await PortMapper.MapUdp(port);
+   if(Stale(id))return;
+   if(ok){mappedPort=port;Code=(publicIp??local)+":"+port;Status="Comparte esta dirección: "+Code+"  ·  misma red: "+local+":"+port;}
+   else Status="Misma red: "+local+":"+port+". Para Internet abre el puerto UDP "+port+" en el router o usa INTERNET · CÓDIGO. ("+error+")";
   }
   void Update(){if(Busy&&Manager&&connectDeadline>0&&Time.unscaledTime>connectDeadline){Cancel();Status="Tiempo de conexión agotado. Revisa IP, puerto y disponibilidad del anfitrión.";}}
   void ConnectedClient(ulong id){
@@ -87,7 +109,7 @@ namespace Nexoterra.World
    if(inArena)FrontEndMenu.Load(FrontEndMenu.MenuScene);
   }
   void CleanupNetwork(){
-   connectDeadline=0;if(!Manager)return;
+   connectDeadline=0;if(mappedPort>0){_=PortMapper.Unmap(mappedPort);mappedPort=0;}if(!Manager)return;
    var old=Manager;Manager=null;
    old.OnClientConnectedCallback-=ConnectedClient;old.OnClientDisconnectCallback-=DisconnectedClient;
    old.Shutdown();Destroy(old.gameObject);
