@@ -149,14 +149,10 @@ namespace Nexoterra.World
         }
         void Slot(Rect r,SlugDefinition definition,bool active,string badge,string name)
         {
-            var accent=NexoUi.Accent(definition);NexoUi.Card(r,active?Gold:accent,active);bool busy=definition!=null&&IsBusy(definition.id);
-            var picture=new Rect(r.x+5,r.y+9,r.width-10,r.height-37);NexoUi.Portrait(picture,definition?.portrait,accent,busy?.45f:1);
-            if(definition==null)NexoHud.Label(picture,"+",24,NexoUi.Muted,TextAnchor.MiddleCenter);
-            NexoHud.Fill(new Rect(r.x+5,r.y+5,19,18),active?Gold:new Color(.06f,.13f,.17f));NexoHud.Label(new Rect(r.x+5,r.y+4,19,19),badge,12,active?Ink:NexoUi.Text,TextAnchor.MiddleCenter);
-            if(definition!=null&&definition.IsElemental)NexoHud.Label(new Rect(r.xMax-25,r.y+4,20,20),"E",12,accent,TextAnchor.MiddleCenter);
+            bool busy=definition!=null&&IsBusy(definition.id);int.TryParse(badge,out int number);
+            var w=Mathf.Min(r.width,(r.height-20)*.62f);var canister=new Rect(r.center.x-w/2,r.y,w,r.height);
+            NexoUi.SlugCanister(canister,definition,active,number,busy?.45f:1,name);
             if(busy)DrawReturnRing(r,definition.id);
-            NexoHud.Fill(new Rect(r.x+4,r.yMax-27,r.width-8,23),new Color(.02f,.04f,.055f,.9f));NexoHud.Label(new Rect(r.x+4,r.yMax-27,r.width-8,23),name,12,definition!=null?NexoUi.Text:NexoUi.Muted,TextAnchor.MiddleCenter);
-            if(active)NexoHud.Fill(new Rect(r.center.x-12,r.yMax-2,24,2),Gold);
         }
         void DrawReturnRing(Rect r,string species)
         {
@@ -189,18 +185,9 @@ namespace Nexoterra.World
             {
                 int index=equipped[i];var def=index>=0&&index<owned.Count?catalog.Find(owned[index]):null;
                 var r=new Rect(inner.x+4+i*70,inner.y+4,64,inner.height-8);
-                bool active=i==selected;var accent=NexoUi.Accent(def);bool busy=def!=null&&IsBusy(def.id);
-                NexoHud.Fill(r,active?NexoHud.Orange:new Color(.02f,.04f,.05f));
-                NexoHud.Gradient(new Rect(r.x+2,r.y+2,r.width-4,r.height-4),new Color(.07f,.42f,.48f),new Color(.01f,.11f,.14f));
-                for(float y=r.y+8;y<r.yMax-6;y+=6)NexoHud.Fill(new Rect(r.x+4,y,r.width-8,1),new Color(.5f,1,1,.05f));
-                if(def!=null)NexoUi.Portrait(new Rect(r.x+4,r.y+8,r.width-8,r.height-30),def.portrait,accent,busy?.4f:1);
-                else NexoHud.Label(new Rect(r.x,r.y,r.width,r.height-20),"+",22,new Color(.4f,.6f,.65f),TextAnchor.MiddleCenter);
+                bool active=i==selected;bool busy=def!=null&&IsBusy(def.id);
+                NexoUi.SlugCanister(r,def,active,i+1,busy?.4f:1);
                 if(busy)DrawReturnRing(r,def.id);
-                // Number badge as a round socket at the bottom, like a chamber.
-                var badge=new Rect(r.center.x-10,r.yMax-22,20,18);NexoHud.Fill(badge,active?NexoHud.Orange:new Color(.1f,.16f,.19f));NexoHud.Fill(new Rect(badge.x+2,badge.y+2,badge.width-4,badge.height-4),active?new Color(1,.75f,.3f):new Color(.04f,.08f,.1f));
-                NexoHud.Label(badge,(i+1).ToString(),11,active?Ink:NexoUi.Text,TextAnchor.MiddleCenter);
-                if(def!=null&&def.IsElemental)NexoHud.Label(new Rect(r.xMax-16,r.y+3,14,14),"E",10,accent,TextAnchor.MiddleCenter);
-                if(active)NexoHud.Brackets(r,NexoHud.Orange,10,2);
                 if(Cursor.lockState!=CursorLockMode.Locked&&GUI.Button(r,GUIContent.none,GUIStyle.none))selected=i;
             }
             // Charge gauge: full when the selected slug is loaded, fills during reload.

@@ -177,6 +177,28 @@ namespace Nexoterra.World
    return clicked?!value:value;
   }
 
+  // ---- Slug canister (blaster chamber): rounded metal tube, teal glass, amber cap, round number socket ----
+  static void Round(Rect r,Color c,float radius,float border=0){if(Event.current.type==EventType.Repaint)GUI.DrawTexture(r,Texture2D.whiteTexture,ScaleMode.StretchToFill,true,0,c,border,radius);}
+  public static void SlugCanister(Rect r,SlugDefinition d,bool selected,int number,float alpha=1,string label=null)
+  {
+   float labelH=label!=null?20:0;var tube=new Rect(r.x,r.y,r.width,r.height-labelH);var accent=Accent(d);
+   float rad=Mathf.Min(16,tube.width*.3f);
+   Round(new Rect(tube.x+2,tube.y+4,tube.width,tube.height),new Color(0,0,0,.45f),rad);
+   Round(tube,selected?Amber:new Color(.2f,.3f,.34f),rad);                                  // metal shell
+   var shell=new Rect(tube.x+2,tube.y+2,tube.width-4,tube.height-4);Round(shell,new Color(.08f,.13f,.15f),rad-2);
+   var glass=new Rect(shell.x+4,shell.y+10,shell.width-8,shell.height-36);
+   Round(glass,new Color(.02f,.16f,.19f),rad-4);
+   Round(new Rect(glass.x+2,glass.y+2,glass.width-4,glass.height*.45f),new Color(.2f,.75f,.8f,.18f),rad-5); // glass sheen
+   Round(new Rect(glass.x+4,glass.y+4,3,glass.height-8),new Color(.7f,1,1,.18f),2);
+   Round(new Rect(shell.x+6,shell.y+3,shell.width-12,5),selected?Amber:new Color(.75f,.45f,.15f),3);          // cap rim
+   if(d!=null)Portrait(new Rect(glass.x+2,glass.y+2,glass.width-4,glass.height-4),d.portrait,accent,alpha);
+   else Write(glass,"+",22,new Color(.35f,.55f,.6f),TextAnchor.MiddleCenter,true);
+   if(d!=null&&d.IsElemental)Write(new Rect(glass.xMax-16,glass.y+2,14,14),"E",10,accent,TextAnchor.MiddleCenter,true);
+   var socket=new Rect(tube.center.x-11,tube.yMax-25,22,22);
+   Round(socket,selected?Amber:new Color(.25f,.35f,.4f),11);Round(new Rect(socket.x+3,socket.y+3,16,16),selected?new Color(1,.8f,.4f):new Color(.04f,.09f,.11f),8);
+   if(number>0)Write(socket,number.ToString(),11,selected?new Color(.1f,.06f,0):Text,TextAnchor.MiddleCenter,true);
+   if(label!=null)Write(new Rect(r.x-4,r.yMax-labelH,r.width+8,labelH),label,11,d!=null?Text:Muted,TextAnchor.MiddleCenter);
+  }
   // ---- Content helpers ----
   static Texture2D glow;
   public static Color Accent(SlugDefinition d)

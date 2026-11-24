@@ -103,12 +103,8 @@ namespace Nexoterra.World
    else if(healthBody) anchor=new Vector3(healthBody.bounds.center.x,healthBody.bounds.max.y+.1f,healthBody.bounds.center.z);
    var p=cam.WorldToScreenPoint(anchor);if(p.z<=0)return;
    if(label==null)label=new GUIStyle(GUI.skin.label){alignment=TextAnchor.MiddleCenter,fontSize=12};
-   float width=Mathf.Clamp(520f/p.z,28f,66f);
-   float x=p.x-width*.5f,y=Screen.height-p.y-5;var previous=GUI.color;
-   GUI.color=Color.black;GUI.DrawTexture(new Rect(x,y,width,5),Texture2D.whiteTexture);
-   GUI.color=IsBurning?new Color(1,.4f,.1f):new Color(.3f,.9f,.5f);GUI.DrawTexture(new Rect(x+1,y+1,(width-2)*Health/maxHealth,3),Texture2D.whiteTexture);
-   GUI.color=Color.white;string state=IsDead?"Derrotado":IsKnockedDown?"Derribado":IsStunned?"Aturdido":IsBurning?"Quemadura":SpeedMultiplier<1?"Ralentizado":"";
-   GUI.Label(new Rect(p.x-80,y-19,160,18),displayName+" · "+Mathf.CeilToInt(Health),label);GUI.Label(new Rect(p.x-80,y-36,160,18),state,label);GUI.color=previous;
+   float width=Mathf.Clamp(620f/p.z,36f,80f);float height=width>56?7:5;
+   NexoHud.LifeBar(new Rect(p.x-width*.5f,Screen.height-p.y-height,width,height),Health/maxHealth,Health/maxHealth,IsBurning?new Color(1,.45f,.1f):NexoHud.EnemyLife);
   }
   void OnDisable(){if(status)status.Stop(true,ParticleSystemStopBehavior.StopEmittingAndClear);}
  }

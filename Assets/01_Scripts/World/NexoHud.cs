@@ -48,6 +48,14 @@ namespace Nexoterra.World
    for(int i=0;i<count;i++){float p=(i+.5f)/count;var cell=new Rect(r.x+1+i*w+1,r.y+2,w-2,r.height-4);
     Color c=p<=fraction?on:p<=trail?lost:new Color(.08f,.12f,.13f);Fill(cell,c);if(p<=fraction)Fill(new Rect(cell.x,cell.y,cell.width,2),Color.Lerp(on,Color.white,.55f));}
   }
+  // One life bar for everyone (player, enemies, overhead): dark frame + segmented ticks.
+  public static readonly Color PlayerLife=new Color(.3f,.95f,.35f),EnemyLife=new Color(.95f,.18f,.16f);
+  public static void LifeBar(Rect r,float fraction,float trail,Color color)
+  {
+   Fill(new Rect(r.x-2,r.y-2,r.width+4,r.height+4),new Color(0,0,0,.6f));
+   Fill(new Rect(r.x-1,r.y-1,r.width+2,r.height+2),new Color(.35f,.42f,.46f));
+   Ticks(r,Mathf.Clamp01(fraction),Mathf.Clamp01(trail),color,new Color(1,.55f,.15f));
+  }
   public static void PortraitFrame(Rect r,Texture2D portrait,Color accent)
   {
    var inner=Plate(r,true,Orange);NexoUi.Portrait(inner,portrait,accent);
@@ -122,19 +130,19 @@ namespace Nexoterra.World
     foreach(var enemy in combatants.Keys.ToArray())if(!enemy||enemy.IsDead||Time.time-combatants[enemy]>8)combatants.Remove(enemy);
    }
    var targets=combatants.Keys.Where(e=>e&&!e.IsDead).OrderBy(e=>(e.transform.position-player.transform.position).sqrMagnitude).Take(4).ToArray();
-   var red=new Color(.92f,.12f,.12f);
+   var red=EnemyLife;
    for(int i=0;i<targets.Length;i++){
     var e=targets[i];float fraction=e.Health/Mathf.Max(1,e.maxHealth);
     if(i==0){
      // Main target mirrors the player block: bar on the left, portrait on the right.
      PortraitFrame(new Rect(1166,14,98,98),e.portrait,red);
-     var plate=Plate(new Rect(846,24,316,44),false);Ticks(new Rect(plate.x+4,plate.y+4,plate.width-8,plate.height-8),fraction,fraction,red,new Color(1,.6f,.3f));
+     var plate=Plate(new Rect(846,24,316,44),false);LifeBar(new Rect(plate.x+4,plate.y+4,plate.width-8,plate.height-8),fraction,fraction,red);
      Shadowed(new Rect(846,72,316,20),e.displayName.ToUpperInvariant(),15,Color.white,TextAnchor.MiddleRight);
      Shadowed(new Rect(846,92,316,16),Mathf.CeilToInt(e.Health)+" / "+e.maxHealth+" PV",11,new Color(1,.75f,.7f),TextAnchor.MiddleRight);
     }else{
      float y=124+(i-1)*42;var plate=Plate(new Rect(1030,y,234,36),false,new Color(.7f,.35f,.1f));
      Label(new Rect(plate.x+4,plate.y,140,plate.height),e.displayName,11,NexoUi.Text,TextAnchor.MiddleLeft);
-     Ticks(new Rect(plate.x+140,plate.y+7,plate.width-146,plate.height-14),fraction,fraction,red,red);
+     LifeBar(new Rect(plate.x+140,plate.y+9,plate.width-150,plate.height-18),fraction,fraction,red);
     }
    }
   }
@@ -145,9 +153,9 @@ namespace Nexoterra.World
    bool critical=shown<.25f;
    PortraitFrame(new Rect(16,14,98,98),player.female.activeSelf?femalePortrait:malePortrait,Cyan);
    var plate=Plate(new Rect(118,24,316,44),false);
-   Color life=critical?new Color(1,.25f,.2f):new Color(.3f,.95f,.35f);
+   Color life=critical?new Color(1,.25f,.2f):PlayerLife;
    if(critical&&Mathf.Repeat(Time.unscaledTime,.8f)<.4f)life=Color.Lerp(life,Color.white,.35f);
-   Ticks(new Rect(plate.x+4,plate.y+4,plate.width-8,plate.height-8),shown,trail,life,new Color(1,.55f,.15f));
+   LifeBar(new Rect(plate.x+4,plate.y+4,plate.width-8,plate.height-8),shown,trail,life);
    Shadowed(new Rect(122,72,312,16),health.IsDead?"DERROTADO":Mathf.CeilToInt(health.Health)+" / "+health.maxHealth+" PV"+(critical?"  ·  VIDA CRÍTICA":""),11,critical?new Color(1,.5f,.45f):new Color(.7f,.95f,.9f));
    DrawOpponents();
    if(boss&&boss.CampaignComplete){NexoUi.Card(new Rect(350,115,580,85),Gold);Label(new Rect(365,130,550,60),"HISTORIA COMPLETADA\nEsc · guardar partida",22,Cyan,TextAnchor.MiddleCenter);}
