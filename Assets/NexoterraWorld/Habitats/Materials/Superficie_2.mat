@@ -41,7 +41,7 @@ Material:
     - _Strata: 0.3
     - _Wind: 0
     m_Colors:
-    - _BaseColor: {r: 0.3799999, g: 0.39999995, b: 0.15999994, a: 1}
-    - _PathColor: {r: 0.42, g: 0.34, b: 0.22, a: 1}
+    - _BaseColor: {r: 0.42, g: 0.33, b: 0.17, a: 1}
+    - _PathColor: {r: 0.6, g: 0.43, b: 0.26, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
