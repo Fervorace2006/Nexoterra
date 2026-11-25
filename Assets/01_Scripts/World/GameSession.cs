@@ -35,7 +35,7 @@ namespace Nexoterra.World
   void OnDestroy(){if(Current==this){Current=null;Time.timeScale=1;}}
   void Update()
   {
-   if(Keyboard.current==null||!Keyboard.current.escapeKey.wasPressedThisFrame)return;
+   if(!NexoInput.Pause&&(Keyboard.current==null||!Keyboard.current.escapeKey.wasPressedThisFrame))return;
    var emotes=GetComponent<PlayerEmotes>();if(emotes&&emotes.IsOpen){emotes.Cancel();return;}
    if(inventory.IsOpen){inventory.SetOpen(false);return;}
    if(menu&&(graphics||confirmNew)){graphics=false;confirmNew=false;return;}

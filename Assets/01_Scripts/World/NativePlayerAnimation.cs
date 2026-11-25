@@ -73,7 +73,7 @@ namespace Nexoterra.World
     jumpWeight=Mathf.MoveTowards(jumpWeight,jump!=null?1:0,Time.deltaTime/(jump!=null?.08f:.12f));
     current.SetLayerWeight(jumpLayer,jumpWeight);
    }
-   bool aim=!dancing&&knockdown==null&&!GameSession.Blocked&&!dead&&!roll&&Mouse.current!=null&&Mouse.current.rightButton.isPressed&&Cursor.lockState==CursorLockMode.Locked&&!(GetComponent<SlugInventory>()&&GetComponent<SlugInventory>().IsOpen);
+   bool aim=!dancing&&knockdown==null&&!GameSession.Blocked&&!dead&&!roll&&(Mouse.current!=null&&Mouse.current.rightButton.isPressed||NexoInput.Aim)&&Cursor.lockState==CursorLockMode.Locked&&!(GetComponent<SlugInventory>()&&GetComponent<SlugInventory>().IsOpen);
    if(reloadRemaining>0 && reloadRemaining<=Time.deltaTime)loaded=true;
    reloadRemaining=Mathf.Max(0,reloadRemaining-Time.deltaTime);shootRemaining=Mathf.Max(0,shootRemaining-Time.deltaTime);
    TryAutoReload(GameplayOptions.AutoReload);

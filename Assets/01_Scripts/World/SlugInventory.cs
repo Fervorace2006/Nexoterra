@@ -66,10 +66,12 @@ namespace Nexoterra.World
         {
             if(GameSession.Blocked)return;
             var k=Keyboard.current;var m=Mouse.current;if(k==null)return;
-            if(k.leftAltKey.wasPressedThisFrame||k.rightAltKey.wasPressedThisFrame)SetOpen(!IsOpen);
+            if(k.leftAltKey.wasPressedThisFrame||k.rightAltKey.wasPressedThisFrame||NexoInput.Backpack)SetOpen(!IsOpen);
             if(!GameSession.Current&&k.escapeKey.wasPressedThisFrame&&IsOpen){SetOpen(false);Cursor.lockState=CursorLockMode.None;Cursor.visible=true;}
             var keys=new[]{k.digit1Key,k.digit2Key,k.digit3Key,k.digit4Key,k.digit5Key,k.digit6Key};
             for(int i=0;i<6;i++)if(keys[i].wasPressedThisFrame)selected=i;
+            if(!IsOpen&&NexoInput.Cycle!=0)selected=(selected+(NexoInput.Cycle>0?1:5))%6;
+            if(!IsOpen&&NexoInput.Slot>=0)selected=NexoInput.Slot;
             if(!IsOpen&&m!=null&&Mathf.Abs(m.scroll.ReadValue().y)>.01f)selected=(selected+(m.scroll.ReadValue().y>0?5:1))%6;
         }
         public bool HasSpecies(string species)=>owned.Exists(id=>SlugCatalog.BaseSpecies(id)==SlugCatalog.BaseSpecies(species));

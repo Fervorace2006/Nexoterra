@@ -18,7 +18,7 @@ namespace Nexoterra.World {
   void OnDestroy(){foreach(var slug in companions.Values)if(slug)Destroy(slug.gameObject);}
   float collectAt;
   void Awake(){inventory=GetComponent<SlugInventory>();player=GetComponent<NexoterraThirdPerson>();}
-  void Update(){if(companions.Count>0){if(!rangeRing)rangeRing=HealingRadiusVisual.Ring(transform,followRadius,new Color(.2f,.8f,1,.45f));HealingRadiusVisual.Resize(rangeRing,followRadius);}else if(rangeRing)Destroy(rangeRing.gameObject);if(GameSession.Blocked)return;var k=Keyboard.current;if(k==null)return;if(k.gKey.wasPressedThisFrame)Release();if(k.kKey.wasPressedThisFrame)CollectWater();if(k.jKey.wasPressedThisFrame)Corrupt();}
+  void Update(){if(companions.Count>0){if(!rangeRing)rangeRing=HealingRadiusVisual.Ring(transform,followRadius,new Color(.2f,.8f,1,.45f));HealingRadiusVisual.Resize(rangeRing,followRadius);}else if(rangeRing)Destroy(rangeRing.gameObject);if(GameSession.Blocked)return;var k=Keyboard.current;if(NexoInput.Companion)Release();if(k==null)return;if(k.gKey.wasPressedThisFrame)Release();if(k.kKey.wasPressedThisFrame)CollectWater();if(k.jKey.wasPressedThisFrame)Corrupt();}
   public void Release(){if(companion&&companion.changing){player.Notify("Espera a que termine la transformación");return;}if(companion){Recall();return;}var d=inventory.SelectedDefinition();if(d==null||inventory.IsBusy(d.id)){player.Notify("Espera a que regrese la babosa");return;}int index=inventory.equipped[inventory.selected];var go=new GameObject("Compañera suelta");Vector3 point=transform.position;
    // Keep the player's horizontal position and place the slug on the ground at their feet.
    if(Physics.Raycast(point+Vector3.up*.25f,Vector3.down,out var ground,2f,SlugHop.WorldMask,QueryTriggerInteraction.Ignore))
