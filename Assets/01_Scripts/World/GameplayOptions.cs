@@ -84,28 +84,38 @@ namespace Nexoterra.World
             "Resolución completa y máximo detalle. Recomendado para PCs potentes."};
 
         // Graphics controls only (preset, frame-rate cap, v-sync). Needs ~300 px of height.
+        // ---- Audio volumes (0..1), saved in PlayerPrefs ----
+        const string MusicKey="Nexoterra.MusicVolume",SfxKey="Nexoterra.SfxVolume";
+        public static float MusicVolume{get=>PlayerPrefs.GetFloat(MusicKey,.7f);set{PlayerPrefs.SetFloat(MusicKey,Mathf.Clamp01(value));}}
+        public static float SfxVolume{get=>PlayerPrefs.GetFloat(SfxKey,.9f);set{PlayerPrefs.SetFloat(SfxKey,Mathf.Clamp01(value));}}
+
+        // Graphics controls (preset, frame-rate cap, v-sync). Uses ~232 px of height.
         public static void DrawGraphics(Rect rect)
         {
             if(!initialized)InitializeGraphics();
             float y=rect.y;
-            NexoUi.Section(new Rect(rect.x,y,rect.width,22),"PRESET DE CALIDAD");y+=32;
+            NexoUi.Section(new Rect(rect.x,y,rect.width,22),"PRESET DE CALIDAD");y+=28;
             int current=Mathf.Clamp(PlayerPrefs.GetInt(QualityPresetKey,1),0,presetNames.Length-1);
-            int chosen=NexoUi.Segmented(new Rect(rect.x,y,rect.width,46),presetNames,current);if(chosen!=current)SetPreset(chosen);y+=52;
-            NexoUi.Write(new Rect(rect.x,y,rect.width,20),presetHints[chosen],13,NexoUi.Muted);y+=36;
-            NexoUi.Section(new Rect(rect.x,y,rect.width,22),"LÍMITE DE IMÁGENES POR SEGUNDO");y+=32;
+            int chosen=NexoUi.Segmented(new Rect(rect.x,y,rect.width,40),presetNames,current);if(chosen!=current)SetPreset(chosen);y+=44;
+            NexoUi.Write(new Rect(rect.x,y,rect.width,18),presetHints[chosen],12,NexoUi.Muted);y+=26;
+            NexoUi.Section(new Rect(rect.x,y,rect.width,22),"LÍMITE DE IMÁGENES POR SEGUNDO");y+=28;
             int fps=Mathf.Clamp(PlayerPrefs.GetInt(FrameRateKey,2),0,frameRates.Length-1);
-            int fpsChosen=NexoUi.Segmented(new Rect(rect.x,y,rect.width,40),frameRateNames,fps);if(fpsChosen!=fps)SetFrameRate(fpsChosen);y+=54;
+            int fpsChosen=NexoUi.Segmented(new Rect(rect.x,y,rect.width,36),frameRateNames,fps);if(fpsChosen!=fps)SetFrameRate(fpsChosen);y+=44;
             bool vsync=PlayerPrefs.GetInt(VSyncKey,0)==1;
-            bool v=NexoUi.Toggle(new Rect(rect.x,y,rect.width,58),"Sincronización vertical","Evita cortes en la imagen. Limita a la frecuencia del monitor.",vsync);if(v!=vsync)SetVSync(v);
+            bool v=NexoUi.Toggle(new Rect(rect.x,y,rect.width,50),"Sincronización vertical","Evita cortes en la imagen.",vsync);if(v!=vsync)SetVSync(v);
         }
-        // Full settings page: title, graphics, gameplay and a back button. Returns true when the player goes back.
+        // Full settings page: title, graphics, audio, gameplay and a back button. Returns true when the player goes back.
         public static bool DrawSettingsPage(Rect rect)
         {
             NexoUi.Title(new Rect(rect.x,rect.y,rect.width,70),"CALIDAD GRÁFICA","Los cambios se aplican y guardan al instante.");
-            DrawGraphics(new Rect(rect.x,rect.y+84,rect.width,300));
-            float y=rect.y+84+300;
-            NexoUi.Section(new Rect(rect.x,y,rect.width,22),"JUEGO");y+=32;
-            bool auto=AutoReload,next=NexoUi.Toggle(new Rect(rect.x,y,rect.width,58),"Recarga automática","Carga la babosa seleccionada cuando esté disponible. Desactivada: recarga con R.",auto);
+            float y=rect.y+76;
+            DrawGraphics(new Rect(rect.x,y,rect.width,232));y+=232;
+            NexoUi.Section(new Rect(rect.x,y,rect.width,22),"AUDIO");y+=30;
+            float half=(rect.width-16)/2;
+            float m=MusicVolume,mn=NexoUi.Slider(new Rect(rect.x,y,half,44),"Música",m);if(!Mathf.Approximately(m,mn)){MusicVolume=mn;PlayerPrefs.Save();}
+            float f=SfxVolume,fn=NexoUi.Slider(new Rect(rect.x+half+16,y,half,44),"Efectos",f);if(!Mathf.Approximately(f,fn)){SfxVolume=fn;PlayerPrefs.Save();}
+            y+=54;
+            bool auto=AutoReload,next=NexoUi.Toggle(new Rect(rect.x,y,rect.width,50),"Recarga automática","Carga la babosa seleccionada cuando esté disponible.",auto);
             if(next!=auto)AutoReload=next;
             bool back=NexoHud.Button(new Rect(rect.x,rect.yMax-50,rect.width,50),"VOLVER");
             return back||NexoUi.BackPressed;

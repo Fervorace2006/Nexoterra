@@ -192,7 +192,8 @@ SlugPurification.Begin(wild.gameObject,()=>ApplyPurifiedWild(wild,clean));}
                 pause-=dt;if(pause>0)return;
                 float stride=Mathf.Min(returnStride,Vector3.Distance(transform.position,waypoint));
                 if(!SlugHop.Plan(transform.position,waypoint,stride,returnHopHeight,.22f,out hopEnd,ReturnTarget)
-                    &&!SlugHop.Plan(transform.position,waypoint,Mathf.Min(.75f,stride),returnHopHeight,.22f,out hopEnd,ReturnTarget)){pause=.08f;return;}
+                    &&!SlugHop.Plan(transform.position,waypoint,Mathf.Min(.75f,stride),returnHopHeight,.22f,out hopEnd,ReturnTarget)
+                    &&!GroundStep(waypoint,stride,out hopEnd)){pause=.08f;return;}
                 hopStart=transform.position;hopTime=0;hopping=true;
                 float strideLength=Vector3.Distance(hopStart,hopEnd);
                 float chaseSpeed=Mathf.Max(returnStride/Mathf.Max(.05f,returnHopDuration),targetSpeed+6);
@@ -203,10 +204,23 @@ SlugPurification.Begin(wild.gameObject,()=>ApplyPurifiedWild(wild,clean));}
             hopTime+=dt;float t=Mathf.Clamp01(hopTime/Mathf.Max(.025f,hopDuration));
             Vector3 next=SlugHop.Sample(hopStart,hopEnd,t,activeHopHeight),delta=next-transform.position;
             if(SlugHop.Blocked(transform.position,delta,.075f,ReturnTarget))
-            {hopping=false;grounded=false;fallSpeed=0;return;}
+            {
+                // Rolling terrain: lift the arc a little instead of dropping out of the hop.
+                if(!SlugHop.Blocked(transform.position+Vector3.up*.18f,delta,.075f,ReturnTarget)){next+=Vector3.up*.18f;hopStart+=Vector3.up*.18f;hopEnd+=Vector3.up*.18f;}
+                else{hopping=false;grounded=false;fallSpeed=0;return;}
+            }
             transform.position=next;
             if(model){float squash=1-.18f*Mathf.Abs(2*t-1);model.transform.localScale=Vector3.Scale(modelScale,new Vector3(1/squash,squash,1/squash));}
             if(t>=1){hopping=false;pause=0;if(model){model.transform.localScale=modelScale;model.transform.localPosition=modelBase;}}
+        }
+        // Fallback hop that simply follows the ground toward the waypoint (gentle hills, no clean arc found).
+        bool GroundStep(Vector3 waypoint,float stride,out Vector3 end)
+        {
+            end=transform.position;Vector3 flat=Vector3.ProjectOnPlane(waypoint-transform.position,Vector3.up);if(flat.sqrMagnitude<.01f)return false;
+            Vector3 p=transform.position+flat.normalized*Mathf.Min(stride,flat.magnitude);
+            if(!Physics.Raycast(p+Vector3.up*2.5f,Vector3.down,out var hit,6,SlugHop.WorldMask,QueryTriggerInteraction.Ignore)||hit.normal.y<.45f)return false;
+            if(Mathf.Abs(hit.point.y+.22f-transform.position.y)>1.6f)return false;
+            end=hit.point+Vector3.up*.22f;return true;
         }
         bool TryRecall(Vector3 goal)
         {

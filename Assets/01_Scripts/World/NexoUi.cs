@@ -180,6 +180,30 @@ namespace Nexoterra.World
    }
    return clicked;
   }
+  // Horizontal volume slider: label + percentage, green hologram track with a draggable knob.
+  public static float Slider(Rect r,string label,float value)
+  {
+   int id=GUIUtility.GetControlID(FocusType.Passive,r);var e=Event.current;
+   var track=new Rect(r.x+10,r.y+30,r.width-20,8);var hit=new Rect(r.x,r.y+18,r.width,r.height-14);
+   switch(e.GetTypeForControl(id))
+   {
+    case EventType.MouseDown:if(GUI.enabled&&hit.Contains(e.mousePosition)&&e.button==0){GUIUtility.hotControl=id;value=Mathf.Clamp01((e.mousePosition.x-track.x)/track.width);GUI.changed=true;e.Use();}break;
+    case EventType.MouseDrag:if(GUIUtility.hotControl==id){value=Mathf.Clamp01((e.mousePosition.x-track.x)/track.width);GUI.changed=true;e.Use();}break;
+    case EventType.MouseUp:if(GUIUtility.hotControl==id){GUIUtility.hotControl=0;NexoAudio.Play("ui_click",.5f);e.Use();}break;
+   }
+   if(e.type==EventType.Repaint)
+   {
+    bool active=GUIUtility.hotControl==id||hit.Contains(e.mousePosition);
+    NexoHud.Fill(r,Surface);Border(r,active?Teal:Edge);
+    Write(new Rect(r.x+10,r.y+4,r.width-70,20),label,14,Text,TextAnchor.MiddleLeft,true);
+    Write(new Rect(r.xMax-60,r.y+4,50,20),Mathf.RoundToInt(value*100)+"%",13,new Color(.62f,1f,.48f),TextAnchor.MiddleRight,true);
+    NexoHud.Fill(track,new Color(.02f,.08f,.05f));
+    NexoHud.Fill(new Rect(track.x,track.y,track.width*value,track.height),new Color(.1f,.75f,.25f));
+    NexoHud.Fill(new Rect(track.x,track.y,track.width*value,2),new Color(.6f,1f,.65f,.7f));
+    var knob=new Rect(track.x+track.width*value-7,track.y-5,14,18);NexoHud.Fill(knob,active?Color.white:new Color(.85f,.88f,.9f));NexoHud.Fill(new Rect(knob.x+2,knob.y+2,knob.width-4,knob.height-4),new Color(.35f,.95f,.45f));
+   }
+   return value;
+  }
   // Square icon button (top-corner style): teal glass face, metal rim, orange corner brackets.
   public static bool IconButton(Rect r,string icon)
   {
