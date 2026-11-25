@@ -10,7 +10,7 @@ namespace Nexoterra.World
   bool backpedalling;
   float strideYaw;
   EnemyShooter ai;EnemyCombatant health;CharacterController motor;string state;float dodge,ready,reloadRemaining;Vector3 direction;
-  public bool IsDodging=>dodge>0;
+  public bool IsDodging=>dodge>0;float nextThreatScan;
   void Start()
   {
    ai=GetComponent<EnemyShooter>();health=GetComponent<EnemyCombatant>();motor=GetComponent<CharacterController>();
@@ -24,10 +24,15 @@ namespace Nexoterra.World
    if(!health.CanMove)dodge=0;
    if(reloadRemaining>0){reloadRemaining=Mathf.Max(0,reloadRemaining-Time.deltaTime);if(reloadRemaining==0){int upper=animator.GetLayerIndex("AimUpperBody");if(upper>=0)animator.CrossFadeInFixedTime("AimPose",.12f,upper);}}
    // Only the boss may evade; regular soldiers never enter a roll state.
-   if(ai.boss&&health.CanMove&&Time.time>=ready&&dodge<=0)
+   if((ai.boss||name.Contains("Secuaz"))&&health.CanMove&&Time.time>=ready&&dodge<=0)
    {
-    var player=FindAnyObjectByType<NexoterraThirdPerson>();
-    if(player&&Vector3.Distance(player.transform.position,transform.position)<22){direction=transform.right*(Random.value>.5f?1:-1);dodge=PlayerAbilities.QuickRollDuration;ready=Time.time+9;}
+    // Bosses and the minion roll away from an incoming player slug (reaction window ~0.25 s).
+    if(Time.time>=nextThreatScan){nextThreatScan=Time.time+.1f;
+     foreach(var shot in FindObjectsByType<SlugProjectile>(FindObjectsSortMode.None)){
+      if(!shot||shot.Hostile||shot.IsReturning)continue;var to=transform.position+Vector3.up-shot.transform.position;
+      if(to.magnitude<7&&Vector3.Dot(shot.Direction,to.normalized)>.82f&&Random.value<.8f){
+       var side=Vector3.Cross(Vector3.up,shot.Direction).normalized*(Random.value>.5f?1:-1);
+       direction=side;dodge=PlayerAbilities.QuickRollDuration;ready=Time.time+3.5f;break;}}}
    }
    if(dodge>0){motor.Move(direction*(3.675f*Mathf.Min(Time.deltaTime,dodge)/PlayerAbilities.QuickRollDuration));dodge=Mathf.Max(0,dodge-Time.deltaTime);}
    bool incapacitated=health.IsKnockedDown||health.IsStunned;

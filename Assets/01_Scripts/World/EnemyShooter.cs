@@ -37,7 +37,7 @@ namespace Nexoterra.World
   int ReadySlot(){for(int i=0;i<slugSlots.Length;i++){int slot=(volley+i)%slugSlots.Length;if(!travelling[slot])return slot;}return -1;}
   int patrolPoint;
   Vector3 home,modelOrigin;float fireAt,vertical,deadTime,recoil;
-  float flankSide,nextFlankChange;
+  float flankSide,nextFlankChange,stuckTime,groundCheckAt;
   public float Recoil=>recoil;
   public bool IsPursuing {get;private set;}
   public bool IsAiming {get;private set;}
@@ -58,7 +58,7 @@ namespace Nexoterra.World
     {
      Vector3 forward=Vector3.ProjectOnPlane(target.transform.position-transform.position,Vector3.up);
      if(forward.sqrMagnitude>.05f)transform.rotation=Quaternion.Slerp(transform.rotation,Quaternion.LookRotation(forward),1-Mathf.Exp(-5*Time.deltaTime));
-     if(!evading&&health.CanMove)move=CombatDirection(forward.normalized,distance)*speed*1.8f*health.SpeedMultiplier;
+     if(!evading&&health.CanMove)move=CombatDirection(forward.normalized,distance)*speed*(tactic==Tactic.Retreat?1.5f:1.8f)*health.SpeedMultiplier;
     }
     else if(!evading&&health.CanMove)move=PatrolVelocity();
     if(!loaded&&reloadUntil==0&&health.CanShoot&&engaged){reloadUntil=Time.time+1.67f;if(native)native.Reload();}
@@ -66,6 +66,8 @@ namespace Nexoterra.World
     if(loaded&&!evading&&health.CanShoot&&engaged&&distance<attackRange&&Time.time>=fireAt)
     {
      Vector3 origin=weapon?weapon.position+weapon.forward*.65f:transform.position+Vector3.up*1.4f+transform.forward*.85f,aim=target.transform.position+Vector3.up;
+     // Lead the target a little (where it will be when the slug arrives).
+     var targetMotor=target.GetComponent<CharacterController>();if(targetMotor)aim+=Vector3.ProjectOnPlane(targetMotor.velocity,Vector3.up)*Mathf.Clamp(distance/24f,0,.9f)*.7f;
      bool blocked=Physics.Linecast(origin,aim,out var obstruction,~0,QueryTriggerInteraction.Ignore)&&!obstruction.transform.IsChildOf(transform)&&obstruction.collider.GetComponentInParent<PlayerHealth>()!=target;
      if(!blocked&&TryLaunch(origin,aim)){loaded=false;fireAt=Time.time+shotCooldown;}
      else fireAt=Time.time+.2f;
@@ -73,6 +75,14 @@ namespace Nexoterra.World
    }
    if(motor.isGrounded&&vertical<0)vertical=-2;vertical+=Physics.gravity.y*Time.deltaTime;Vector3 before=transform.position;
    motor.Move((move+Vector3.up*vertical)*Time.deltaTime);
+   // Unstick: if trying to move but not going anywhere, change tactic; if sunk below the ground, pop back up.
+   float wanted=new Vector2(move.x,move.z).magnitude*Time.deltaTime,got=Vector3.ProjectOnPlane(transform.position-before,Vector3.up).magnitude;
+   stuckTime=wanted>.01f&&got<wanted*.15f?stuckTime+Time.deltaTime:0;
+   if(stuckTime>.6f){stuckTime=0;tacticUntil=0;flankSide=-flankSide;}
+   if(Time.time>=groundCheckAt){groundCheckAt=Time.time+.5f;
+    float feet=transform.position.y+motor.center.y-motor.height*.5f;
+    if(Physics.Raycast(new Vector3(transform.position.x,feet+1.2f,transform.position.z),Vector3.down,out var floor,3,Physics.DefaultRaycastLayers,QueryTriggerInteraction.Ignore)&&!floor.transform.IsChildOf(transform)&&!floor.collider.GetComponentInParent<EnemyCombatant>()&&floor.point.y>feet+.25f)
+    {motor.enabled=false;transform.position=new Vector3(transform.position.x,floor.point.y+motor.skinWidth+.02f-(motor.center.y-motor.height*.5f),transform.position.z);motor.enabled=true;vertical=0;}}
    MotionVelocity=move.sqrMagnitude>0 && Time.deltaTime>0?Vector3.ProjectOnPlane(transform.position-before,Vector3.up)/Time.deltaTime:Vector3.zero;
    recoil=Mathf.MoveTowards(recoil,0,Time.deltaTime*3);if(model&&pose){model.localPosition=modelOrigin+Vector3.up*(Mathf.Sin(Time.time*10)*.035f*Mathf.Clamp01(MotionSpeed))+Vector3.back*(recoil*.12f);}
   }
@@ -88,22 +98,43 @@ namespace Nexoterra.World
    return transform.forward*Mathf.Min(speed*health.SpeedMultiplier,offset.magnitude/Mathf.Max(.001f,Time.deltaTime));
   }
 
+  // Combat tactics: advance to range, strafe, take a new angle, hold still to aim, back off when rushed,
+  // and chase around obstacles when there is no line of sight. Picks a new tactic every 1-2.5 s.
+  enum Tactic{Advance,Strafe,Reposition,Hold,Retreat,Chase}
+  Tactic tactic;float tacticUntil;Vector3 repositionGoal;
+  bool HasLineOfSight()
+  {
+   if(!target)return false;Vector3 from=transform.position+Vector3.up*1.4f,to=target.transform.position+Vector3.up;
+   return !(Physics.Linecast(from,to,out var hit,Physics.DefaultRaycastLayers,QueryTriggerInteraction.Ignore)&&!hit.transform.IsChildOf(transform)&&!hit.collider.GetComponentInParent<PlayerHealth>());
+  }
+  void PickTactic(Vector3 toward,float distance)
+  {
+   float preferred=attackRange*.6f;bool los=HasLineOfSight();float roll=Random.value;
+   if(!los)tactic=Tactic.Chase;
+   else if(distance>attackRange*.95f)tactic=Tactic.Advance;
+   else if(distance<preferred*.5f||health.Health<health.maxHealth*.3f&&roll<.5f)tactic=Tactic.Retreat;
+   else tactic=roll<.4f?Tactic.Strafe:roll<.75f?Tactic.Reposition:Tactic.Hold;
+   flankSide=Random.value<.5f?-1:1;
+   tacticUntil=Time.time+(tactic==Tactic.Hold?Random.Range(.7f,1.3f):Random.Range(1.2f,2.6f));
+   if(tactic==Tactic.Reposition)repositionGoal=target.transform.position+Quaternion.Euler(0,Random.Range(-75f,75f),0)*(-toward)*preferred;
+  }
   Vector3 CombatDirection(Vector3 toward,float distance)
   {
-   // Close quickly, then circle at firing distance or give ground if rushed.
-   if(Time.time>=nextFlankChange)
+   if(Time.time>=tacticUntil)PickTactic(toward,distance);
+   Vector3 lateral=Vector3.Cross(Vector3.up,toward)*flankSide,desired;
+   float preferred=attackRange*.6f;
+   switch(tactic)
    {
-    flankSide=-flankSide;
-    nextFlankChange=Time.time+Random.Range(1.8f,3.2f);
+    case Tactic.Advance:desired=toward+lateral*.3f;break;
+    case Tactic.Chase:desired=toward+lateral*.6f;break;
+    case Tactic.Retreat:desired=-toward+lateral*.6f;break;
+    case Tactic.Strafe:desired=lateral+toward*Mathf.Clamp((distance-preferred)/preferred,-.5f,.5f);break;
+    case Tactic.Reposition:{var to=Vector3.ProjectOnPlane(repositionGoal-transform.position,Vector3.up);if(to.magnitude<1.5f){tacticUntil=0;return Vector3.zero;}desired=to;break;}
+    default:return Vector3.zero;   // Hold: plant feet and aim
    }
-   float advance=Mathf.Clamp((distance-attackRange*.62f)/(attackRange*.25f),-1,1);
-   Vector3 lateral=Vector3.Cross(Vector3.up,toward)*flankSide;
-   float strafe=Mathf.Clamp01(1-Mathf.Abs(advance));
-   Vector3 desired=(toward*advance+lateral*strafe).normalized;
-   if(CanStep(desired))return desired;
-   if(CanStep(lateral))return lateral;
-   if(CanStep(-lateral)){flankSide=-flankSide;return -lateral;}
-   return Vector3.zero;
+   desired=Vector3.ProjectOnPlane(desired,Vector3.up).normalized;
+   foreach(float a in new[]{0f,35f,-35f,70f,-70f,110f,-110f}){var d=Quaternion.Euler(0,a,0)*desired;if(CanStep(d))return d;}
+   tacticUntil=0;flankSide=-flankSide;return Vector3.zero;
   }
 
   bool CanStep(Vector3 direction)

@@ -31,7 +31,7 @@ namespace Nexoterra.World
         Transform ReturnTarget=>owner?owner.transform:enemyOwner&&!enemyOwner.IsDead?enemyOwner.transform:null;
         GameObject model;
         SlugFlightEffects effects;
-        bool hostile;
+        bool hostile;public bool Hostile=>hostile;
         Vector3 modelBase,modelScale,hopStart,hopEnd;
         float flightTime,fallSpeed,hopTime,pause,returnDistance;
         bool grounded,hopping;
@@ -74,8 +74,25 @@ namespace Nexoterra.World
             float remaining=Mathf.Max(0,seconds);
             while(remaining>0){float dt=Mathf.Min(.025f,remaining);remaining-=dt;if(IsReturning)Return(dt);else Fly(dt);if(HasArrived)break;}
         }
+        // Homing: when launched at a targeted enemy the slug bends toward it for 1.5 s, then keeps flying straight.
+        // A roll (dodge) breaks the lock, so evading is a real escape.
+        public Transform HomingTarget;float homingLeft=1.5f;
+        void Steer(float dt)
+        {
+            if(!HomingTarget||homingLeft<=0||hostile)return;
+            homingLeft-=dt;
+            var enemy=HomingTarget.GetComponentInParent<EnemyCombatant>();var anim=HomingTarget.GetComponentInParent<NativeEnemyAnimation>();
+            if((enemy&&enemy.IsDead)||(anim&&anim.IsDodging)){HomingTarget=null;return;}
+            var cc=HomingTarget.GetComponentInParent<CharacterController>();
+            Vector3 aim=cc?cc.bounds.center+Vector3.up*.2f:HomingTarget.position+Vector3.up*1.1f;
+            Vector3 want=(aim-transform.position).normalized;
+            if(Vector3.Dot(want,Direction)<-.1f){HomingTarget=null;return;}          // already passed it
+            Direction=Vector3.RotateTowards(Direction,want,Mathf.Deg2Rad*260f*dt,0).normalized;
+            transform.rotation=Quaternion.LookRotation(Direction);
+        }
         void Fly(float dt)
         {
+            Steer(dt);
             flightTime+=dt;float remaining=Mathf.Min(speed*dt,Mathf.Max(0,maxDistance-Travelled));
             while(remaining>.00001f)
             {

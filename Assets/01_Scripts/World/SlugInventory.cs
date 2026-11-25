@@ -95,6 +95,15 @@ namespace Nexoterra.World
             if(equipped==null||equipped.Length!=6||selected<0||selected>=6)return null;
             int index=equipped[selected];return index>=0&&index<owned.Count?catalog.Find(owned[index]):null;
         }
+        // Enemy under the crosshair (screen center) within 60 m, used to lock the slug's homing.
+        Transform TargetUnderCrosshair()
+        {
+            var cam=Camera.main;if(!cam)return null;
+            var ray=cam.ViewportPointToRay(new Vector3(.5f,.5f));
+            foreach(var hit in Physics.SphereCastAll(ray,.6f,60,Physics.DefaultRaycastLayers,QueryTriggerInteraction.Ignore))
+            {var e=hit.collider.GetComponentInParent<EnemyCombatant>();if(e&&!e.IsDead)return e.transform;}
+            return null;
+        }
         public SlugProjectile Fire(Transform muzzle,Vector3 direction)
         {
             if(GameSession.Blocked||IsOpen||!muzzle)return null;
@@ -105,7 +114,7 @@ namespace Nexoterra.World
             var go=new GameObject("Disparo · "+definition.id);go.layer=2;go.transform.position=muzzle.position;
             var shot=go.AddComponent<SlugProjectile>();shot.speed=projectileSpeed;shot.transformDistance=transformationDistance;shot.docHealingRadius=docHealingRadius;
             if(definition.id.StartsWith("Malvada_")){var health=GetComponent<PlayerHealth>();if(health)health.CorruptionCost();}
-            travelling[definition.id]=shot;shot.Launch(definition,direction,this);NexoAudio.Play(definition.id.StartsWith("Malvada_")?"slug_launch_malvada":"slug_launch",.9f,.04f);if(ArenaSession.Current)ArenaSession.Current.SubmitShot(definition,muzzle.position,direction,shot);var abilities=GetComponent<PlayerAbilities>();if(abilities)abilities.OnSlugLaunched(definition.id);return shot;
+            travelling[definition.id]=shot;shot.Launch(definition,direction,this);shot.HomingTarget=TargetUnderCrosshair();NexoAudio.Play(definition.id.StartsWith("Malvada_")?"slug_launch_malvada":"slug_launch",.9f,.04f);if(ArenaSession.Current)ArenaSession.Current.SubmitShot(definition,muzzle.position,direction,shot);var abilities=GetComponent<PlayerAbilities>();if(abilities)abilities.OnSlugLaunched(definition.id);return shot;
         }
         public void Save()
         {

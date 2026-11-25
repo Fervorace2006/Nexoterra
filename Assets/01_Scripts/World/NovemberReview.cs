@@ -93,6 +93,13 @@ public sealed class NovemberReview : MonoBehaviour
   foreach(var shot in new[]{(new Vector3(98,7,-98),new Vector3(125,19,-125),"Corner"),(new Vector3(0,12,-60),new Vector3(-125,22,-20),"Ceiling"),(new Vector3(0,75,-150),new Vector3(0,0,10),"Overview")}){
    player.view.transform.position=shot.Item1;player.view.transform.LookAt(shot.Item2);yield return new WaitForSeconds(.3f);ScreenCapture.CaptureScreenshot(Folder+shot.Item3+".png");yield return new WaitForSeconds(.3f);}
   inventory.SetOpen(true);yield return new WaitForSecondsRealtime(.4f);ScreenCapture.CaptureScreenshot(Folder+"Inventory.png");yield return new WaitForSecondsRealtime(.3f);inventory.SetOpen(false);
+  {// Homing: a slug launched 18 degrees off target curves into it within 1.5 s.
+   var e=fixture.GetComponent<EnemyCombatant>();var cc=fixture.GetComponent<CharacterController>();cc.enabled=false;fixture.transform.position=player.transform.position+player.transform.forward*12;cc.enabled=true;
+   yield return null;float hp0=e.Health;var origin=player.transform.position+Vector3.up*1.3f;
+   var go=new GameObject("Prueba teledirigida");go.layer=2;go.transform.position=origin;var shot=go.AddComponent<SlugProjectile>();
+   shot.Launch(inventory.catalog.Find("Carnero")??inventory.catalog.Find("Infierno"),Quaternion.Euler(0,18,0)*(fixture.transform.position+Vector3.up-origin).normalized,inventory);shot.HomingTarget=fixture.transform;
+   float until=Time.time+2;while(Time.time<until&&e.Health>=hp0)yield return null;
+   Check(e.Health<hp0,"Babosa teledirigida alcanza al objetivo");if(go)Destroy(go);}
   Destroy(fixture);
   var menuMethod=typeof(GameSession).GetMethod("SetMenu",BindingFlags.Instance|BindingFlags.NonPublic);
   menuMethod.Invoke(GameSession.Current,new object[]{true});Check(GameSession.Blocked&&Cursor.visible,"Menú de pausa abre y libera cursor");
