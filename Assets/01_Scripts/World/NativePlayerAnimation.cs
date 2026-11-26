@@ -88,7 +88,7 @@ namespace Nexoterra.World
    }
    if(dancing||roll)current.applyRootMotion=false;
    if(next!=state){current.CrossFadeInFixedTime(next,next.StartsWith("Roll")?.05f:.18f,0);state=next;}
-   current.speed=GameSession.Blocked?0:IsReloading?1:next=="Run"?Mathf.Clamp(speed/Mathf.Max(.1f,runReferenceSpeed),.35f,1.6f):next=="Walk"?Mathf.Clamp(speed/Mathf.Max(.1f,walkReferenceSpeed),.35f,1.6f):next.StartsWith("Roll")?(abilities.DodgeAxis>0?forwardRollClipDuration:rollClipDuration)/Mathf.Max(.1f,abilities.dodgeDuration):1;
+   current.speed=GameSession.Blocked||(effects&&effects.FreezeRemaining>0)?0:IsReloading?1:next=="Run"?Mathf.Clamp(speed/Mathf.Max(.1f,runReferenceSpeed),.35f,1.6f):next=="Walk"?Mathf.Clamp(speed/Mathf.Max(.1f,walkReferenceSpeed),.35f,1.6f):next.StartsWith("Roll")?(abilities.DodgeAxis>0?forwardRollClipDuration:rollClipDuration)/Mathf.Max(.1f,abilities.dodgeDuration):1;
   }
   void LateUpdate(){PositionWeapon();GroundModel();}
   // The CharacterController hovers by its skin width and the imported models carry a lift,

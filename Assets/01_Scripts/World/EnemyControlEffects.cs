@@ -25,7 +25,8 @@ namespace Nexoterra.World
   public bool CanShoot=>knockdownRemaining<=0&&FreezeRemaining<=0&&ShockRemaining<=0;
   GameObject rootVisual,iceVisual,windVisual,shockVisual;Vector3 windDirection;
   Material waterMat,iceMat,shockMat;
-  bool corruptedWind;
+  bool corruptedWind,corruptedIce;
+  public const float IceSeconds=4f;
   EnemyCombatant health;
   void Awake(){health=GetComponent<EnemyCombatant>();}
   public void Apply(string species,Vector3 direction)
@@ -35,7 +36,7 @@ namespace Nexoterra.World
    {
     case "Arana":RootRemaining=3f;ReplaceRoot(false);break;
     case "Elemental_Agua":RootRemaining=4;ReplaceRoot(true);break;
-    case "ice":FreezeRemaining=4; if(!iceVisual)iceVisual=Ice();if(iceMat)iceMat.SetColor("_BaseColor",corrupted?new Color(.04f,.35f,.65f,.5f):new Color(.25f,.8f,1,.28f));break;
+    case "ice":FreezeRemaining=IceSeconds;if(iceVisual&&corrupted!=corruptedIce)Clear(ref iceVisual);corruptedIce=corrupted;if(!iceVisual)iceVisual=Ice(corrupted);break;
     case "Infierno":case "Elemental_Fuego":FreezeRemaining=0;Clear(ref iceVisual);break;
     case "tazerling":ShockRemaining=4.5f;if(!shockVisual)shockVisual=ImportedSlugVfx.ShockCharacter(transform);if(corrupted)ImportedSlugVfx.Tint(shockVisual,new Color(.15f,1,.55f));break;
     case "Tornado":case "Elemental_Aire":
@@ -79,11 +80,15 @@ namespace Nexoterra.World
   {
    var mat=new Material(Shader.Find("Universal Render Pipeline/Lit"));mat.SetColor("_BaseColor",color);mat.SetFloat("_Surface",1);mat.SetFloat("_SrcBlend",5);mat.SetFloat("_DstBlend",10);mat.SetFloat("_ZWrite",0);mat.SetFloat("_Smoothness",.85f);mat.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");mat.renderQueue=3000;return mat;
   }
-  GameObject Ice()
+  // Transparent ice shell (material assets in Resources so the .exe keeps the transparent variant).
+  // Clear light-blue for normal ice, deep dark blue for evil ice. Pose freezes while it lasts.
+  GameObject Ice(bool corrupted)
   {
-   if(!iceMat)iceMat=Transparent(new Color(.25f,.8f,1,.28f));var go=GameObject.CreatePrimitive(PrimitiveType.Cube);Destroy(go.GetComponent<Collider>());go.name="Prisión de hielo";go.transform.SetParent(transform,false);go.transform.localPosition=Vector3.up*1.15f;go.transform.localScale=new Vector3(1.35f,2.4f,1.35f);go.GetComponent<Renderer>().sharedMaterial=iceMat;
-   // Bright edges keep transparent ice readable against every biome.
-   for(int axis=0;axis<3;axis++)for(int a=-1;a<=1;a+=2)for(int b=-1;b<=1;b+=2){var line=new GameObject("Arista").AddComponent<LineRenderer>();line.transform.SetParent(go.transform,false);line.useWorldSpace=false;line.positionCount=2;Vector3 p=Vector3.zero,q=Vector3.zero;p[axis]=-.5f;q[axis]=.5f;p[(axis+1)%3]=q[(axis+1)%3]=a*.5f;p[(axis+2)%3]=q[(axis+2)%3]=b*.5f;line.SetPositions(new[]{p,q});line.widthMultiplier=.018f;line.sharedMaterial=iceMat;}
+   var mat=IceWall.Clear(corrupted);
+   var go=new GameObject("Prisión de hielo");go.transform.SetParent(transform,false);
+   var body=GetComponent<CharacterController>();float h=body?body.height:2f;
+   var shapes=new[]{(new Vector3(0,h*.5f,0),new Vector3(1.25f,h*1.08f,1.25f),Vector3.zero),(new Vector3(.38f,h*.32f,.3f),new Vector3(.6f,h*.7f,.6f),new Vector3(8,30,-10)),(new Vector3(-.4f,h*.4f,-.25f),new Vector3(.55f,h*.85f,.55f),new Vector3(-6,-20,12)),(new Vector3(.05f,h*1.02f,.1f),new Vector3(.7f,.5f,.7f),new Vector3(0,45,15))};
+   foreach(var (pos,size,rot) in shapes){var s=GameObject.CreatePrimitive(PrimitiveType.Cube);Destroy(s.GetComponent<Collider>());s.name="Cristal";s.transform.SetParent(go.transform,false);s.transform.localPosition=pos;s.transform.localRotation=Quaternion.Euler(rot);s.transform.localScale=size;var r=s.GetComponent<Renderer>();if(mat)r.sharedMaterial=mat;r.shadowCastingMode=UnityEngine.Rendering.ShadowCastingMode.Off;}
    return go;
   }
   GameObject Ring(string name,float height,float radius,Color color,ref Material material)
