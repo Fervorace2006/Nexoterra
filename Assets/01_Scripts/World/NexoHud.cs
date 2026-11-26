@@ -48,44 +48,51 @@ namespace Nexoterra.World
    for(int i=0;i<count;i++){float p=(i+.5f)/count;var cell=new Rect(r.x+1+i*w+1,r.y+2,w-2,r.height-4);
     Color c=p<=fraction?on:p<=trail?lost:new Color(.08f,.12f,.13f);Fill(cell,c);if(p<=fraction)Fill(new Rect(cell.x,cell.y,cell.width,2),Color.Lerp(on,Color.white,.55f));}
   }
-  // One life bar for everyone (player, enemies, overhead): dark frame + segmented ticks.
+  // One life bar for everyone (player, enemies, bosses, overhead): every gauge is a row of
+  // holographic capsules (Kit/Cell_*.png) clipped to its groove, so it never spills sideways.
   public static readonly Color PlayerLife=new Color(.3f,.95f,.35f),EnemyLife=new Color(.95f,.18f,.16f);
+  static string CellFor(Color c){Color.RGBToHSV(c,out float h,out float sat,out _);if(sat<.25f)return "Cell_Grey";if(h<.045f||h>.93f)return "Cell_Red";if(h<.14f)return "Cell_Orange";if(h<.42f)return "Cell_Green";return "Cell_Cyan";}
+  public static void Capsules(Rect groove,float fraction,float trail,Color color)
+  {
+   if(Event.current.type!=EventType.Repaint||groove.width<4||groove.height<3)return;
+   fraction=Mathf.Clamp01(fraction);trail=Mathf.Max(fraction,Mathf.Clamp01(trail));
+   Fill(groove,new Color(.005f,.015f,.018f,.96f));
+   float pad=Mathf.Max(1,groove.height*.1f);var inner=new Rect(groove.x+pad,groove.y+pad,groove.width-pad*2,groove.height-pad*2);
+   float cw=Mathf.Max(2,inner.height*.39f),gap=Mathf.Max(1,cw*.32f);
+   int n=Mathf.Max(1,Mathf.FloorToInt((inner.width+gap)/(cw+gap)));
+   float used=n*cw+(n-1)*gap,x=inner.x+(inner.width-used)*.5f;
+   string lit=CellFor(color);bool tiny=inner.height<9;
+   GUI.BeginClip(groove);float ox=groove.x,oy=groove.y;
+   float lead=fraction*n;
+   for(int i=0;i<n;i++,x+=cw+gap)
+   {
+    var cell=new Rect(x-ox,inner.y-oy,cw,inner.height);
+    float on=Mathf.Clamp01(lead-i);                       // partial last cell fades in
+    if(tiny){Fill(cell,new Color(color.r*.16f,color.g*.16f,color.b*.16f));if(on>0)Fill(cell,new Color(color.r,color.g,color.b,on));else if((i+.5f)/n<=trail)Fill(cell,new Color(1,.55f,.15f,.9f));continue;}
+    NexoUi.DrawKit(cell,"Cell_Grey",.22f);
+    if(on>0)NexoUi.DrawKit(cell,lit,on);else if((i+.5f)/n<=trail)NexoUi.DrawKit(cell,"Cell_Orange",.85f);
+   }
+   GUI.EndClip();
+   Fill(new Rect(groove.x,groove.y,groove.width,1),new Color(1,1,1,.06f));
+  }
   public static void LifeBar(Rect r,float fraction,float trail,Color color)
   {
-   Fill(new Rect(r.x-2,r.y-2,r.width+4,r.height+4),new Color(0,0,0,.6f));
-   Fill(new Rect(r.x-1,r.y-1,r.width+2,r.height+2),new Color(.35f,.42f,.46f));
-   Ticks(r,Mathf.Clamp01(fraction),Mathf.Clamp01(trail),color,new Color(1,.55f,.15f));
-  }
-  // Holographic vertical cells (painted sprites) filling a gauge: lit = life, orange = recent damage, dim = empty.
-  static void Bars(Rect r,float fraction,float trail,Color on)
-  {
-   if(Event.current.type!=EventType.Repaint)return;fraction=Mathf.Clamp01(fraction);trail=Mathf.Clamp01(trail);
-   float w=Mathf.Max(3,r.height*.32f),gap=2;int n=Mathf.Max(1,Mathf.FloorToInt((r.width+gap)/(w+gap)));float x=r.x+(r.width-(n*w+(n-1)*gap))*.5f;
-   Color dim=new Color(on.r*.18f,on.g*.18f,on.b*.18f,1),lit=Color.Lerp(on,Color.white,.35f);
-   for(int i=0;i<n;i++,x+=w+gap){float p=(i+.5f)/n;var b=new Rect(x,r.y,w,r.height);
-    if(p<=fraction){Fill(b,on);Fill(new Rect(b.x,b.y,b.width,Mathf.Max(1,b.height*.35f)),lit);}
-    else if(p<=trail)Fill(b,new Color(1,.55f,.15f));else Fill(b,dim);}
-  }
-  public static void Cells(Rect r,float fraction,float trail,string lit)
-  {
-   if(Event.current.type!=EventType.Repaint)return;
-   float cw=r.height*.36f,gap=Mathf.Max(1,r.height*.06f);int n=Mathf.Max(1,Mathf.FloorToInt((r.width+gap)/(cw+gap)));
-   float x=r.x+(r.width-(n*cw+(n-1)*gap))*.5f;fraction=Mathf.Clamp01(fraction);trail=Mathf.Clamp01(trail);
-   for(int i=0;i<n;i++,x+=cw+gap){float p=(i+.5f)/n;var cell=new Rect(x,r.y,cw,r.height);
-    if(p<=fraction)NexoUi.DrawKit(cell,lit);else if(p<=trail)NexoUi.DrawKit(cell,"Cell_Orange",.9f);else NexoUi.DrawKit(cell,"Cell_Grey",.28f);}
+   Fill(new Rect(r.x-3,r.y-3,r.width+6,r.height+6),new Color(0,0,0,.65f));
+   Fill(new Rect(r.x-2,r.y-2,r.width+4,r.height+4),new Color(.3f,.36f,.4f));
+   Fill(new Rect(r.x-2,r.y-2,r.width+4,1),new Color(.6f,.68f,.72f));
+   Fill(new Rect(r.x-2,r.y-2,2,r.height+4),Orange);Fill(new Rect(r.xMax,r.y-2,2,r.height+4),Orange);
+   Capsules(r,fraction,trail,color);
   }
   public static void PortraitFrame(Rect r,Texture2D portrait,Color accent)
   {
    NexoUi.DrawKit(r,"Frame_Orange");   // frame first: its center is opaque
    NexoUi.Portrait(new Rect(r.x+r.width*.13f,r.y+r.height*.13f,r.width*.74f,r.height*.74f),portrait,accent);
   }
-  // Painted metal bar frame with the segmented gauge inside (player / enemy bars).
+  // Painted metal bar frame (Kit/Bar_Long.png, 523x80) with capsules inside its measured groove (x 46–496, y 12–58).
   public static void FramedLifeBar(Rect r,float fraction,float trail,Color color)
   {
    NexoUi.DrawKit(r,"Bar_Long");
-   // Reference look: dark groove with thin bright vertical bars.
-   var groove=new Rect(r.x+r.width*.065f,r.y+r.height*.32f,r.width*.855f,r.height*.36f);Fill(groove,new Color(.01f,.03f,.02f));
-   Bars(new Rect(groove.x+2,groove.y+2,groove.width-4,groove.height-4),fraction,trail,color);
+   Capsules(new Rect(r.x+r.width*(47f/523),r.y+r.height*(13f/80),r.width*(448f/523),r.height*(44f/80)),fraction,trail,color);
   }
   public static void Shadowed(Rect r,string text,int size,Color color,TextAnchor anchor=TextAnchor.MiddleLeft)
   {
@@ -139,11 +146,7 @@ namespace Nexoterra.World
   // Menu buttons come from the shared UI kit (states + keyboard/gamepad focus).
   public static bool Button(Rect r,string title)=>NexoUi.Action(r,title);
   public static bool PrimaryButton(Rect r,string title)=>NexoUi.Action(r,title,true);
-  public static void HealthBar(Rect r,float fraction,Color color)
-  {
-   Panel(r);var inner=new Rect(r.x+12,r.y+10,r.width-24,r.height-20);int segments=32;float w=inner.width/segments;
-   for(int i=0;i<segments;i++){var cell=new Rect(inner.x+i*w,inner.y,w-2,inner.height);Fill(cell,i/(float)segments<Mathf.Clamp01(fraction)?color:new Color(.035f,.08f,.08f));if(i/(float)segments<fraction)Fill(new Rect(cell.x+1,cell.y+2,Mathf.Max(1,cell.width*.3f),cell.height-4),new Color(.8f,1,1,.25f));}
-  }
+  public static void HealthBar(Rect r,float fraction,Color color){Panel(r);Capsules(new Rect(r.x+12,r.y+10,r.width-24,r.height-20),fraction,fraction,color);}
   readonly Dictionary<EnemyCombatant,float> combatants=new Dictionary<EnemyCombatant,float>();
   float nextCombatScan;
   void DrawOpponents(){

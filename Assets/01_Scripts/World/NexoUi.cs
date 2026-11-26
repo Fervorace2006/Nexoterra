@@ -158,20 +158,31 @@ namespace Nexoterra.World
    bool clicked=Interact(r,out bool hover,out bool pressed,out bool focused);bool enabled=GUI.enabled;bool lit=hover||focused;
    if(Event.current.type==EventType.Repaint)
    {
-    NexoHud.Fill(new Rect(r.x+2,r.y+4,r.width,r.height),new Color(0,0,0,.4f));
-    if(focused)Chamfer(new Rect(r.x-4,r.y-4,r.width+8,r.height+8),ChamferRing,Teal,14);
-    // Green hologram plate: translucent glowing body, scanlines, soft outer glow; silver metallic label.
+    // Gunmetal frame (like the HUD bars) holding a green hologram glass, orange end caps, sheen on hover.
+    if(pressed)r=new Rect(r.x+2,r.y+1,r.width-4,r.height-2);
+    NexoHud.Fill(new Rect(r.x+3,r.y+5,r.width-2,r.height),new Color(0,0,0,.5f));
     float pulse=.5f+.5f*Mathf.Sin(Time.unscaledTime*2.2f);
-    Color body=!enabled?new Color(.28f,.32f,.22f,.75f):pressed?new Color(.03f,.4f,.1f,.8f):lit?new Color(.08f,.62f,.2f,.72f):new Color(.04f,.48f,.14f,.62f);
-    if(enabled)Chamfer(new Rect(r.x-3,r.y-3,r.width+6,r.height+6),ChamferRing,new Color(.25f,1f,.4f,lit?.55f:.22f+.08f*pulse),14);   // glow halo
-    Chamfer(r,ChamferFill,new Color(.02f,.08f,.04f,.85f),12);
-    var face=new Rect(r.x+3,r.y+3,r.width-6,r.height-6);
-    Chamfer(face,ChamferFill,body,10);
-    if(enabled)Chamfer(face,ChamferRing,lit?new Color(.7f,1f,.75f):new Color(.35f,1f,.45f,.9f),10);
-    for(float y=face.y+4;y<face.yMax-3;y+=3)NexoHud.Fill(new Rect(face.x+6,y,face.width-12,1),new Color(.6f,1f,.65f,enabled?.07f:.03f));   // scanlines
-    NexoHud.Fill(new Rect(face.x+10,face.y+3,face.width-20,Mathf.Max(2,face.height*.1f)),new Color(.8f,1f,.85f,enabled?.16f:.05f));
-    Chevrons(face,new Color(.7f,1f,.75f,enabled?.06f:.03f));
-    var text=new Rect(r.x+14,r.y+(pressed?2:0),r.width-28,r.height);
+    if(enabled)Chamfer(new Rect(r.x-4,r.y-4,r.width+8,r.height+8),ChamferRing,new Color(.25f,1f,.4f,focused||lit?.6f:.14f+.08f*pulse),15);   // outer glow
+    Chamfer(r,ChamferFill,new Color(.09f,.11f,.12f),12);                                     // dark metal rim
+    Chamfer(new Rect(r.x+1,r.y+1,r.width-2,r.height*.5f),ChamferFill,new Color(.36f,.4f,.43f,.55f),11);   // lit upper bevel
+    Chamfer(r,ChamferRing,new Color(.5f,.56f,.6f),12);
+    var face=new Rect(r.x+5,r.y+5,r.width-10,r.height-10);
+    Color top=!enabled?new Color(.3f,.33f,.25f):pressed?new Color(.05f,.42f,.13f):lit?new Color(.16f,.78f,.3f):new Color(.1f,.6f,.2f);
+    Color bottom=!enabled?new Color(.14f,.16f,.12f):pressed?new Color(.01f,.2f,.06f):lit?new Color(.03f,.38f,.12f):new Color(.02f,.26f,.08f);
+    Chamfer(face,ChamferFill,new Color(.01f,.06f,.03f),9);
+    int bands=8;float bh=(face.height-4)/bands;
+    for(int i=0;i<bands;i++)NexoHud.Fill(new Rect(face.x+4,face.y+2+i*bh,face.width-8,bh+.5f),Color.Lerp(top,bottom,i/(bands-1f)));
+    if(enabled)Chamfer(face,ChamferRing,lit?new Color(.75f,1f,.8f):new Color(.35f,.95f,.45f,.9f),9);
+    for(float y=face.y+4;y<face.yMax-3;y+=3)NexoHud.Fill(new Rect(face.x+6,y,face.width-12,1),new Color(0,0,0,enabled?.12f:.05f));   // scanlines
+    NexoHud.Fill(new Rect(face.x+8,face.y+3,face.width-16,face.height*.38f),new Color(1,1,1,enabled?(lit?.13f:.08f):.03f));          // glass highlight
+    NexoHud.Fill(new Rect(face.x+8,face.y+3,face.width-16,1),new Color(.85f,1,.9f,enabled?.5f:.1f));
+    if(enabled&&lit){float sweep=Mathf.Repeat(Time.unscaledTime*.9f,1.6f)-.3f;float sx=face.x+face.width*sweep;
+     for(int k=0;k<6;k++){float x=sx+k*4;if(x>face.x+6&&x<face.xMax-10)NexoHud.Fill(new Rect(x,face.y+4,3,face.height-8),new Color(1,1,1,.05f+.02f*(3-Mathf.Abs(k-2.5f))));}}
+    // Orange end caps, like the bar frames.
+    Color cap=enabled?NexoHud.Orange:new Color(.45f,.4f,.33f);float ch=Mathf.Min(r.height-12,r.height*.62f);
+    NexoHud.Fill(new Rect(r.x-2,r.center.y-ch/2,4,ch),cap);NexoHud.Fill(new Rect(r.xMax-2,r.center.y-ch/2,4,ch),cap);
+    NexoHud.Fill(new Rect(r.x-2,r.center.y-ch/2,4,2),Color.Lerp(cap,Color.white,.4f));NexoHud.Fill(new Rect(r.xMax-2,r.center.y-ch/2,4,2),Color.Lerp(cap,Color.white,.4f));
+    var text=new Rect(r.x+14,r.y,r.width-28,r.height);
     int size=r.height<44?15:r.height<58?19:22;
     // Silver: dark drop shadow, darker steel lower edge, bright silver face.
     Write(new Rect(text.x+1,text.y+2,text.width,text.height),label,size,new Color(0,.06f,.02f,.85f),TextAnchor.MiddleCenter,true);

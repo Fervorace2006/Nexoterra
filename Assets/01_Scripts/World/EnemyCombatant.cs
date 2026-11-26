@@ -103,7 +103,7 @@ namespace Nexoterra.World
    else if(healthBody) anchor=new Vector3(healthBody.bounds.center.x,healthBody.bounds.max.y+.1f,healthBody.bounds.center.z);
    var p=cam.WorldToScreenPoint(anchor);if(p.z<=0)return;
    if(label==null)label=new GUIStyle(GUI.skin.label){alignment=TextAnchor.MiddleCenter,fontSize=12};
-   float width=Mathf.Clamp(620f/p.z,36f,80f);float height=width>56?7:5;
+   float width=Mathf.Clamp(760f/p.z,44f,96f);float height=width>64?12:9;
    NexoHud.LifeBar(new Rect(p.x-width*.5f,Screen.height-p.y-height,width,height),Health/maxHealth,Health/maxHealth,IsBurning?new Color(1,.45f,.1f):NexoHud.EnemyLife);
   }
   void OnDisable(){if(status)status.Stop(true,ParticleSystemStopBehavior.StopEmittingAndClear);}
