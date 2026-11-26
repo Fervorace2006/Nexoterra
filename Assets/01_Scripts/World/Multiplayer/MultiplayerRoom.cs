@@ -45,7 +45,8 @@ namespace Nexoterra.World
     await Authenticate();if(Stale(id))return;
     var allocation=await RelayService.Instance.CreateAllocationAsync(3);if(Stale(id))return;
     var code=await RelayService.Instance.GetJoinCodeAsync(allocation.AllocationId);if(Stale(id))return;
-    PrepareNetwork();Code=code;
+    PrepareNetwork();Code=code;GUIUtility.systemCopyBuffer=code;   // ready to paste for the friend
+
     Manager.GetComponent<UnityTransport>().SetRelayServerData(AllocationUtils.ToRelayServerData(allocation,"dtls"));
     if(!Manager.StartHost())throw new Exception("No se pudo iniciar la sala.");
     Status="Código: "+Code;Busy=false;
@@ -94,7 +95,7 @@ namespace Nexoterra.World
    string local=PortMapper.LocalIPv4();Code=local+":"+port;Status="Misma red: "+Code+" · abriendo el puerto en el router…";
    var (ok,publicIp,error)=await PortMapper.MapUdp(port);
    if(Stale(id))return;
-   if(ok){mappedPort=port;Code=(publicIp??local)+":"+port;Status="Comparte esta dirección: "+Code+"  ·  misma red: "+local+":"+port;}
+   if(ok){mappedPort=port;Code=(publicIp??local)+":"+port;GUIUtility.systemCopyBuffer=Code;Status="Comparte esta dirección: "+Code+"  ·  misma red: "+local+":"+port;}
    else Status="Misma red: "+local+":"+port+". Para Internet abre el puerto UDP "+port+" en el router o usa INTERNET · CÓDIGO. ("+error+")";
   }
   void Update(){if(Busy&&Manager&&connectDeadline>0&&Time.unscaledTime>connectDeadline){Cancel();Status="Tiempo de conexión agotado. Revisa IP, puerto y disponibilidad del anfitrión.";}}

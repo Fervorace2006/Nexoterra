@@ -47,7 +47,12 @@ namespace Nexoterra.World
     NexoHud.Backdrop(null);NexoHud.Scale();NexoUi.BeginNav();var room=MultiplayerRoom.Open();
     var panel=new Rect(312,48,656,624);NexoUi.Panel(panel);
     float x=panel.x+40,w=panel.width-80,y=panel.y+28;
-    NexoUi.Title(new Rect(x,y,w,70),"MULTIJUGADOR","Duelo de lanzadores · hasta 4 jugadores");y+=86;
+    NexoUi.Title(new Rect(x,y,w,70),"MULTIJUGADOR","Duelo de lanzadores · hasta 4 jugadores");y+=80;
+    // Player name: saved for good (PlayerPrefs) and shown over your head to the others.
+    NexoUi.Write(new Rect(x,y,120,40),"TU NOMBRE",12,NexoUi.Teal,TextAnchor.MiddleLeft,true);
+    GUI.enabled=!room.Busy&&!room.Connected;
+    string typed=NexoHud.Field(new Rect(x+120,y,w-120,40),ArenaSession.PlayerName,16);if(typed!=ArenaSession.PlayerName)ArenaSession.PlayerName=typed;
+    GUI.enabled=true;y+=54;
     GUI.enabled=!room.Busy&&!room.Connected;
     int mode=NexoUi.Segmented(new Rect(x,y,w,44),new[]{"INTERNET · CÓDIGO","LOCAL · IP"},direct?1:0);direct=mode==1;y+=62;
     float half=(w-16)/2;
@@ -56,7 +61,7 @@ namespace Nexoterra.World
      ip=NexoHud.Field(new Rect(x,y,w-176,46),ip,45);port=NexoHud.Field(new Rect(x+w-160,y,160,46),port,5);y+=64;
      if(NexoHud.PrimaryButton(new Rect(x,y,half,52),"CREAR POR IP"))room.Direct(true,ip,port);
      if(NexoHud.Button(new Rect(x+half+16,y,half,52),"CONECTAR"))room.Direct(false,ip,port);y+=68;
-     NexoUi.Write(new Rect(x,y,w,60),"Modo local: conecta equipos en la misma red con la IP del anfitrión. Para jugar desde redes distintas, selecciona INTERNET · CÓDIGO.",13,NexoUi.Muted,TextAnchor.UpperLeft);
+     NexoUi.Write(new Rect(x,y,w,40),"Modo local: conecta equipos en la misma red con la IP del anfitrión. Para jugar desde redes distintas, selecciona INTERNET · CÓDIGO.",13,NexoUi.Muted,TextAnchor.UpperLeft);
     }else{
      NexoUi.Write(new Rect(x,y,w,18),"CÓDIGO DE INVITACIÓN",12,NexoUi.Teal,TextAnchor.MiddleLeft,true);y+=24;
      joinCode=NexoHud.Field(new Rect(x,y,w,46),joinCode,12).ToUpperInvariant();y+=64;

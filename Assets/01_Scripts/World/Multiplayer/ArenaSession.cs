@@ -11,9 +11,15 @@ namespace Nexoterra.World
  {
   [Serializable] public sealed class Packet {
    public string kind,species; public ulong id,other;public Vector3 position,direction;public Quaternion rotation;
-   public bool female,transformed,evading;public float health,time0,time1,upper,eventTime;public int state0,state1; public string[] collection;
+   public string name;public bool female,transformed,evading;public float health,time0,time1,upper,eventTime;public int state0,state1; public string[] collection;
   }
+  const string NameKey="Nexoterra.PlayerName";
+  public static string PlayerName{get{var n=PlayerPrefs.GetString(NameKey,"");return string.IsNullOrWhiteSpace(n)?"Lanzador":n;}set{PlayerPrefs.SetString(NameKey,(value??"").Trim().Length>16?(value??"").Trim().Substring(0,16):(value??"").Trim());PlayerPrefs.Save();}}
+  static string Clean(string n){n=(n??"").Trim();if(n.Length>16)n=n.Substring(0,16);return n.Length==0?"Lanzador":n;}
+  // One distinct colour per player for the name tags.
+  static readonly Color[] TagColors={new Color(.3f,1,.95f),new Color(1,.62f,.15f),new Color(.55f,1,.3f),new Color(1,.4f,.9f),new Color(1,.95f,.3f),new Color(.55f,.65f,1f)};
   sealed class Peer {
+   public string name="";
    public Vector3 velocity,lastPosePosition;public float lastPoseTime=-1,viewTime;   // for latency-compensated prediction
    public string[] collection;public GameObject proxy;public Vector3 position;public Quaternion rotation;
    public float health=100,lastShot=-10,deadUntil,burnUntil,burnRate,lastMove;
@@ -45,7 +51,7 @@ namespace Nexoterra.World
     inventory.equipped=new[]{-1,-1,-1,-1,-1,-1};for(int i=0;i<Mathf.Min(6,inventory.owned.Count);i++)inventory.equipped[i]=i;
    }else{inventory.owned.Clear();inventory.equipped=new[]{-1,-1,-1,-1,-1,-1};inventory.Add("Infierno");}
    inventory.persist=false;
-   SendToServer(new Packet{kind="hello",collection=inventory.owned.Distinct().ToArray()});
+   SendToServer(new Packet{kind="hello",name=PlayerName,collection=inventory.owned.Distinct().ToArray()});
    player.Teleport(Spawn(network.LocalClientId));health.Restore(health.maxHealth);
   }
   static Vector3 Spawn(ulong id){Vector3[] points={new Vector3(-85,.3f,-90),new Vector3(85,.3f,85),new Vector3(-85,.3f,85),new Vector3(85,.3f,-90)};return points[(int)(id%4)];}
@@ -72,11 +78,11 @@ namespace Nexoterra.World
   }
   void HandleServer(ulong sender,Packet packet){
    if(packet.kind=="hello"){
-    if(peers.ContainsKey(sender)){Send(sender,new Packet{kind="join",id=sender,position=peers[sender].position,health=peers[sender].health});return;}
+    if(peers.ContainsKey(sender)){Send(sender,new Packet{kind="join",name=peers[sender].name,id=sender,position=peers[sender].position,health=peers[sender].health});return;}
     var owned=(packet.collection??Array.Empty<string>()).Where(id=>inventory.catalog.Find(id)!=null).Distinct().Take(64).ToArray();
-    peers[sender]=new Peer{collection=owned,position=Spawn(sender),rotation=Quaternion.identity,lastMove=Time.unscaledTime};
-    foreach(var pair in peers)Send(sender,new Packet{kind="join",id=pair.Key,position=pair.Value.position,rotation=pair.Value.rotation,health=pair.Value.health});
-    Broadcast(new Packet{kind="join",id=sender,position=Spawn(sender),rotation=Quaternion.identity,health=100});return;
+    peers[sender]=new Peer{name=Clean(packet.name),collection=owned,position=Spawn(sender),rotation=Quaternion.identity,lastMove=Time.unscaledTime};
+    foreach(var pair in peers)Send(sender,new Packet{kind="join",name=pair.Value.name,id=pair.Key,position=pair.Value.position,rotation=pair.Value.rotation,health=pair.Value.health});
+    Broadcast(new Packet{kind="join",name=peers[sender].name,id=sender,position=Spawn(sender),rotation=Quaternion.identity,health=100});return;
    }
    if(!peers.TryGetValue(sender,out var peer))return;
    if(packet.kind=="pose"){
@@ -120,6 +126,7 @@ namespace Nexoterra.World
    if(packet.kind=="leave"){if(peers.TryGetValue(packet.id,out var old)&&old.proxy)Destroy(old.proxy);if(!IsServer)peers.Remove(packet.id);return;}
    if(packet.kind=="join"||packet.kind=="pose"){
     if(!peers.TryGetValue(packet.id,out var peer)){peer=new Peer();peers.Add(packet.id,peer);}
+    if(packet.kind=="join"&&!string.IsNullOrEmpty(packet.name))peer.name=Clean(packet.name);
     peer.position=packet.position;peer.rotation=packet.rotation;peer.health=packet.health;
     if(packet.id==network.LocalClientId){health.ApplyArenaHealth(packet.health);return;}
     if(!peer.proxy)CreateProxy(packet.id,peer);
@@ -189,7 +196,7 @@ namespace Nexoterra.World
   void Update(){
    if(!registered||!network||!network.IsListening)return;
    SmoothRemotePlayers();
-   if(!peers.ContainsKey(network.LocalClientId)&&Time.unscaledTime>=helloAt){helloAt=Time.unscaledTime+1;SendToServer(new Packet{kind="hello",collection=inventory.owned.Distinct().ToArray()});}
+   if(!peers.ContainsKey(network.LocalClientId)&&Time.unscaledTime>=helloAt){helloAt=Time.unscaledTime+1;SendToServer(new Packet{kind="hello",name=PlayerName,collection=inventory.owned.Distinct().ToArray()});}
    if(Time.unscaledTime>=sendAt){
     sendAt=Time.unscaledTime+1f/50f;
     var a=(player.female.activeSelf?player.female:player.male).GetComponentInChildren<Animator>();var baseState=a.GetCurrentAnimatorStateInfo(0);var upper=a.layerCount>1?a.GetCurrentAnimatorStateInfo(1):default;
@@ -201,10 +208,35 @@ namespace Nexoterra.World
     if(peer.health<=0&&Time.unscaledTime>=peer.deadUntil){peer.health=100;peer.burnUntil=0;peer.position=Spawn(pair.Key);Broadcast(new Packet{kind="respawn",id=pair.Key,position=peer.position,health=100});}
    }
   }
+  static GUIStyle tagStyle;float copiedUntil;
+  // Names over the other players' heads, each in its own colour (screen space, behind-camera ones skipped).
+  void DrawNameTags()
+  {
+   if(Event.current.type!=EventType.Repaint)return;var cam=Camera.main;if(!cam)return;
+   if(tagStyle==null)tagStyle=new GUIStyle(GUI.skin.label){alignment=TextAnchor.MiddleCenter,fontStyle=FontStyle.Bold,wordWrap=false};
+   tagStyle.fontSize=Mathf.RoundToInt(15*Screen.height/720f);
+   foreach(var pair in peers)
+   {
+    if(pair.Key==network.LocalClientId||!pair.Value.proxy)continue;
+    var head=pair.Value.proxy.transform.position+Vector3.up*2.35f;var p=cam.WorldToScreenPoint(head);if(p.z<=0||p.z>70)continue;
+    var color=TagColors[(int)(pair.Key%(ulong)TagColors.Length)];string text=string.IsNullOrEmpty(pair.Value.name)?"Jugador "+pair.Key:pair.Value.name;
+    var size=tagStyle.CalcSize(new GUIContent(text));var r=new Rect(p.x-size.x/2-8,Screen.height-p.y-size.y/2,size.x+16,size.y+2);
+    NexoHud.Fill(r,new Color(0,0,0,.45f));NexoHud.Fill(new Rect(r.x,r.yMax-2,r.width,2),color);
+    var old=tagStyle.normal.textColor;tagStyle.normal.textColor=new Color(0,0,0,.8f);GUI.Label(new Rect(r.x+1,r.y+1,r.width,r.height),text,tagStyle);
+    tagStyle.normal.textColor=color;GUI.Label(r,text,tagStyle);tagStyle.normal.textColor=old;
+   }
+  }
   void OnGUI(){
    // Room address (to share) under the life bar; leaving is in the Esc menu.
-   if(GameSession.Blocked||!network||!MultiplayerRoom.Current)return;var before=GUI.matrix;NexoHud.Scale();
-   NexoHud.Shadowed(new Rect(122,92,520,18),"SALA "+MultiplayerRoom.Current.Code+"  ·  "+peers.Count+"/4 jugadores",12,NexoUi.Teal);
+   if(GameSession.Blocked||!network||!MultiplayerRoom.Current)return;
+   DrawNameTags();
+   var before=GUI.matrix;NexoHud.Scale();
+   string code=MultiplayerRoom.Current.Code;
+   NexoHud.Shadowed(new Rect(122,92,520,18),"SALA "+code+"  ·  "+peers.Count+"/4 jugadores",12,NexoUi.Teal);
+   bool copyNow=UnityEngine.InputSystem.Keyboard.current!=null&&UnityEngine.InputSystem.Keyboard.current.f8Key.wasPressedThisFrame;
+   if(Cursor.visible&&NexoUi.Button(new Rect(122,108,150,20),"COPIAR CÓDIGO"))copyNow=true;
+   if(copyNow){GUIUtility.systemCopyBuffer=code;copiedUntil=Time.unscaledTime+2;}
+   NexoHud.Shadowed(new Rect(Cursor.visible?280:122,109,300,18),Time.unscaledTime<copiedUntil?"✔ Código copiado":"F8 · copiar código",11,Time.unscaledTime<copiedUntil?new Color(.5f,1,.6f):NexoUi.Muted);
    GUI.matrix=before;
   }
  }
