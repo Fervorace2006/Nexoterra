@@ -49,7 +49,7 @@ namespace Nexoterra.World
    if(EnemyControlEffects.CausesKnockdown(slug.id)&&!earth)Controls.BeginKnockdown();
    float multiplier=golden?1.1f:1f;
    if(!transformed){Damage((slug.id.StartsWith("Malvada_")?3.15f:3)*multiplier);return;}
-   Controls.Apply(slug.id,direction);var p=golden?slug.Combat.WithDamageMultiplier(multiplier):slug.Combat;Damage(Mathf.Max(0,p.impactDamage));if(IsDead)return;
+   Controls.Apply(slug.id,direction);if(earth)knockVelocity=Vector3.zero;var p=golden?slug.Combat.WithDamageMultiplier(multiplier):slug.Combat;Damage(Mathf.Max(0,p.impactDamage));if(IsDead)return;
    if(p.burnDuration>0){corruptedBurn=slug.id.StartsWith("Malvada_");burnRemaining=Mathf.Max(burnRemaining,p.burnDuration);burnRate=Mathf.Max(burnRate,p.burnDamagePerSecond);}
    if(p.slowDuration>0){slowFactor=slowRemaining>0?Mathf.Min(slowFactor,p.slowMultiplier):p.slowMultiplier;slowRemaining=Mathf.Max(slowRemaining,p.slowDuration);}
    if(!earth)downRemaining=Mathf.Max(downRemaining,p.knockdownDuration);stunRemaining=Mathf.Max(stunRemaining,p.stunDuration);

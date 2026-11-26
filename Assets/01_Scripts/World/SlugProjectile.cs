@@ -36,7 +36,10 @@ namespace Nexoterra.World
         Vector3 modelBase,modelScale,hopStart,hopEnd;
         float flightTime,fallSpeed,hopTime,pause,returnDistance;
         bool grounded,hopping;
-        float returnElapsed,stalled,bestDistance=float.PositiveInfinity,hopDuration,activeHopHeight;
+        float returnElapsed,stalled,bestDistance=float.PositiveInfinity,hopDuration,activeHopHeight,nextRecoveryAttempt;
+        bool burrowing,usedBurrowRecovery;
+        float burrowElapsed;
+        Vector3 burrowStart,burrowSurface;
         public void Launch(SlugDefinition slug,Vector3 direction,SlugInventory inventory=null)
         {
             owner=inventory;if(inventory)shooter=inventory.transform;definition=slug;Direction=direction.normalized;
@@ -78,21 +81,52 @@ namespace Nexoterra.World
             float remaining=Mathf.Max(0,seconds);
             while(remaining>0){float dt=Mathf.Min(.025f,remaining);remaining-=dt;if(IsReturning)Return(dt);else Fly(dt);if(HasArrived)break;}
         }
-        // Homing: when launched at a targeted enemy the slug bends toward it for 1.5 s, then keeps flying straight.
-        // A roll (dodge) breaks the lock, so evading is a real escape.
-        public Transform HomingTarget;float homingLeft=1.2f;
+        // Homing assists a deliberate lock or a near miss for a short window; a dodge still escapes it.
+        public Transform HomingTarget;float homingLeft=1.2f,nextAcquireAt;
         void Steer(float dt)
         {
-            if(!HomingTarget||homingLeft<=0||hostile)return;
+            if(homingLeft<=0||hostile)return;
             homingLeft-=dt;
-            var enemy=HomingTarget.GetComponentInParent<EnemyCombatant>();var anim=HomingTarget.GetComponentInParent<NativeEnemyAnimation>();var arena=HomingTarget.GetComponentInParent<ArenaTarget>();
-            if((enemy&&enemy.IsDead)||(anim&&anim.IsDodging)||(arena&&ArenaSession.Current&&ArenaSession.Current.IsRivalEvading(arena.clientId))){HomingTarget=null;return;}
+            if(HomingTarget)
+            {
+                var enemy=HomingTarget.GetComponentInParent<EnemyCombatant>();var anim=HomingTarget.GetComponentInParent<NativeEnemyAnimation>();var arena=HomingTarget.GetComponentInParent<ArenaTarget>();
+                if((enemy&&enemy.IsDead)||(arena&&ArenaSession.Current&&arena.clientId==ArenaSession.Current.LocalClientId)){HomingTarget=null;}
+                else if((anim&&anim.IsDodging)||(arena&&ArenaSession.Current&&ArenaSession.Current.IsRivalEvading(arena.clientId))){HomingTarget=null;homingLeft=0;return;}
+            }
+            if(!HomingTarget&&Time.time>=nextAcquireAt){nextAcquireAt=Time.time+.08f;HomingTarget=AcquireNearMissTarget();}
+            if(!HomingTarget)return;
             var cc=HomingTarget.GetComponentInParent<CharacterController>();
             Vector3 aim=cc?cc.bounds.center+Vector3.up*.2f:HomingTarget.position+Vector3.up*1.1f;
             Vector3 want=(aim-transform.position).normalized;
             if(Vector3.Dot(want,Direction)<-.1f){HomingTarget=null;return;}          // already passed it
-            Direction=Vector3.RotateTowards(Direction,want,Mathf.Deg2Rad*105f*dt,0).normalized;
+            Direction=Vector3.RotateTowards(Direction,want,Mathf.Deg2Rad*130f*dt,0).normalized;
             transform.rotation=Quaternion.LookRotation(Direction);
+        }
+        Transform AcquireNearMissTarget()
+        {
+            float maxAhead=Mathf.Min(maxDistance-Travelled,speed*Mathf.Max(0,homingLeft)*1.6f),best=float.PositiveInfinity;Transform result=null;
+            if(maxAhead<=0)return null;
+            foreach(var enemy in FindObjectsByType<EnemyCombatant>())
+            {
+                if(!enemy||enemy.IsDead)continue;var anim=enemy.GetComponent<NativeEnemyAnimation>();if(anim&&anim.IsDodging)continue;
+                var cc=enemy.GetComponent<CharacterController>();Vector3 aim=cc?cc.bounds.center+Vector3.up*.2f:enemy.transform.position+Vector3.up*1.1f;
+                Consider(aim,enemy.transform,maxAhead,ref best,ref result);
+            }
+            if(ArenaSession.Current)
+            foreach(var arena in FindObjectsByType<ArenaTarget>())
+            {
+                if(!arena||arena.clientId==ArenaSession.Current.LocalClientId||ArenaSession.Current.IsRivalEvading(arena.clientId))continue;
+                var cc=arena.GetComponentInParent<CharacterController>();Vector3 aim=cc?cc.bounds.center+Vector3.up*.2f:arena.transform.position+Vector3.up;
+                Consider(aim,arena.transform,maxAhead,ref best,ref result);
+            }
+            return result;
+        }
+        void Consider(Vector3 aim,Transform candidate,float maxAhead,ref float best,ref Transform result)
+        {
+            Vector3 to=aim-transform.position;float along=Vector3.Dot(to,Direction);
+            if(along<=.15f||along>maxAhead)return;
+            float miss=(to-Direction*along).sqrMagnitude;if(miss>1.8f*1.8f)return;
+            float score=miss+along*.0125f;if(score<best){best=score;result=candidate;}
         }
         void Fly(float dt)
         {
@@ -184,11 +218,14 @@ SlugPurification.Begin(wild.gameObject,()=>ApplyPurifiedWild(wild,clean));}
             Vector3 goal=ReturnTarget.position+Vector3.up*.22f;
             if(enemyOwner){Vector3 approach=Vector3.ProjectOnPlane(transform.position-ReturnTarget.position,Vector3.up);var body=enemyOwner.GetComponent<CharacterController>();goal+=approach.normalized*((body?body.radius:.4f)+.25f);}
             float distance=Vector3.Distance(transform.position,goal);returnElapsed+=dt;
+            if(burrowing){AdvanceBurrow(dt);return;}
             Vector3 waypoint=route.Next(transform.position,goal);
             if(Vector3.Distance(transform.position,lastProgress)>.25f){lastProgress=transform.position;stalled=0;}else stalled+=dt;
             // A blocked route, a teleport, or a fall under terrain cannot strand a collected creature.
-            if((stalled>8)||transform.position.y< -25||distance>500)
+            if((stalled>8||returnElapsed>12||transform.position.y< -25||distance>500)&&Time.time>=nextRecoveryAttempt)
             {
+                nextRecoveryAttempt=Time.time+1;
+                if(TryStartBurrowReturn(goal))return;
                 if(TryRecall(goal)){grounded=true;hopping=false;fallSpeed=0;pause=0;stalled=0;returnElapsed=0;bestDistance=float.PositiveInfinity;}
             }
             if(stunRemaining<=0&&Vector3.Distance(transform.position,goal)<Mathf.Clamp(.85f+targetSpeed*.06f,.85f,1.5f))
@@ -231,6 +268,33 @@ SlugPurification.Begin(wild.gameObject,()=>ApplyPurifiedWild(wild,clean));}
             transform.position=next;
             if(model){float squash=1-.18f*Mathf.Abs(2*t-1);model.transform.localScale=Vector3.Scale(modelScale,new Vector3(1/squash,squash,1/squash));}
             if(t>=1){hopping=false;pause=0;if(model){model.transform.localScale=modelScale;model.transform.localPosition=modelBase;}}
+        }
+        bool TryStartBurrowReturn(Vector3 goal)
+        {
+            if(!owner||usedBurrowRecovery)return false;
+            for(int ring=0;ring<3;ring++)for(int i=0;i<12;i++)
+            {
+                float angle=i*Mathf.PI/6;float radius=1.35f+ring*.55f;
+                Vector3 point=goal+new Vector3(Mathf.Cos(angle),0,Mathf.Sin(angle))*radius;
+                if(!Physics.Raycast(point+Vector3.up*2.2f,Vector3.down,out var ground,7,SlugHop.WorldMask,QueryTriggerInteraction.Ignore)||ground.normal.y<.6f)continue;
+                point=ground.point+Vector3.up*.22f;
+                if(Physics.CheckSphere(point,.12f,SlugHop.WorldMask,QueryTriggerInteraction.Ignore)||SlugHop.Blocked(point,goal-point,.075f,ReturnTarget))continue;
+                burrowSurface=point;burrowStart=point-Vector3.up*.8f;burrowElapsed=0;burrowing=true;usedBurrowRecovery=true;
+                transform.position=burrowStart;grounded=false;hopping=false;fallSpeed=0;stalled=0;returnElapsed=0;lastProgress=burrowStart;EmergencyRecalls++;
+                return true;
+            }
+            return false;
+        }
+        void AdvanceBurrow(float dt)
+        {
+            const float duration=.62f;
+            burrowElapsed+=dt;float t=Mathf.Clamp01(burrowElapsed/duration);
+            float lift=.18f*Mathf.Sin(Mathf.PI*t);
+            transform.position=Vector3.Lerp(burrowStart,burrowSurface,t)+Vector3.up*lift;
+            if(model){float squash=1-.22f*Mathf.Sin(Mathf.PI*t);model.transform.localScale=Vector3.Scale(modelScale,new Vector3(1/squash,squash,1/squash));}
+            if(t<1)return;
+            burrowing=false;grounded=true;hopping=false;pause=0;fallSpeed=0;stalled=0;returnElapsed=0;lastProgress=transform.position;
+            if(model){model.transform.localScale=modelScale;model.transform.localPosition=modelBase;}
         }
         // Fallback hop that simply follows the ground toward the waypoint (gentle hills, no clean arc found).
         bool GroundStep(Vector3 waypoint,float stride,out Vector3 end)

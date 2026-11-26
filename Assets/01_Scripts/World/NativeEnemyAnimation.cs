@@ -33,7 +33,7 @@ namespace Nexoterra.World
       if(!shot||shot.Hostile||shot.IsReturning)continue;var to=transform.position+Vector3.up-shot.transform.position;
       if(to.magnitude<7&&Vector3.Dot(shot.Direction,to.normalized)>.82f&&Random.value<.8f){
        var side=Vector3.Cross(Vector3.up,shot.Direction).normalized*(Random.value>.5f?1:-1);
-       direction=side;dodge=PlayerAbilities.QuickRollDuration;ready=Time.time+3.5f;if((name.Contains("Sir Black")||name.Contains("Sir_Black"))&&!name.Contains("Secuaz"))TechShield.Activate(transform,1.4f,1.1f);break;}}}
+       direction=side;dodge=PlayerAbilities.QuickRollDuration;ready=Time.time+10f;if((name.Contains("Sir Black")||name.Contains("Sir_Black"))&&!name.Contains("Secuaz"))TechShield.Activate(transform,1.4f,1.1f);break;}}}
    }
    if(dodge>0){motor.Move(direction*(3.675f*Mathf.Min(Time.deltaTime,dodge)/PlayerAbilities.QuickRollDuration));dodge=Mathf.Max(0,dodge-Time.deltaTime);}
    bool incapacitated=health.IsKnockedDown||health.IsStunned;

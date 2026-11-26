@@ -96,9 +96,12 @@ namespace Nexoterra.World
      Application.Quit();
 #endif
     }
-    var stack=new Rect(470,265,340,370);NexoUi.Panel(stack);
-    float x=stack.x+16,w=stack.width-32,h=66,gap=12,y=stack.y+16;
     bool hasSave=GameSession.SavedGameExists;
+    const float h=66,gap=12;
+    int buttonCount=hasSave?3:4;
+    float stackHeight=buttonCount*h+(buttonCount-1)*gap+32;
+    var stack=new Rect(470,450-stackHeight*.5f,340,stackHeight);NexoUi.Panel(stack);
+    float x=stack.x+16,w=stack.width-32,y=stack.y+16;
     if(!hasSave){if(NexoHud.Button(new Rect(x,y,w,h),"NUEVA PARTIDA"))GameSession.BeginNew();y+=h+gap;}
     GUI.enabled=hasSave;if(NexoHud.Button(new Rect(x,y,w,h),"CONTINUAR")){if(!GameSession.BeginSaved(out error))Debug.LogWarning(error);}GUI.enabled=true;y+=h+gap;
     if(NexoHud.Button(new Rect(x,y,w,h),"SELECCIONAR NIVEL")){selectingLevel=true;NexoUi.ResetFocus();}y+=h+gap;

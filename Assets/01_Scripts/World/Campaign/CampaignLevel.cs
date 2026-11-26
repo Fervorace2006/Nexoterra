@@ -32,12 +32,31 @@ namespace Nexoterra.World
   public int Remaining=>enemies.Count(e=>e&&(!e.gameObject.activeInHierarchy||!e.IsDead));
   public bool GuardianDefeated=>guardian&&guardian.gameObject.activeInHierarchy&&guardian.IsDead;
   public bool Cleared=>Remaining==0&&(string.IsNullOrEmpty(Rewards[index])||inventory&&inventory.owned.Contains(Rewards[index])&&GuardianDefeated);
-  void Awake(){index=Mathf.Clamp(index,0,Scenes.Length-1);Current=this;introUntil=Time.unscaledTime+18;}
+  void Awake(){index=Mathf.Clamp(index,0,Scenes.Length-1);Current=this;introUntil=Time.unscaledTime+18;EnsureAltarColliders();}
   void Start(){
    player=FindAnyObjectByType<NexoterraThirdPerson>();inventory=player.GetComponent<SlugInventory>();
    for(int i=0;i<enemies.Length;i++){int slot=i;var e=enemies[i];if(!e)continue;var ai=e.GetComponent<EnemyShooter>();if(ai)ai.campaignMember=true;e.onDeath.AddListener(()=>Defeated(slot));}
-   if(index==4)ArrangeVolcanoOutpost();
+   if(index==4){ArrangeVolcanoOutpost();ArrangeVolcanoLava();}
    RefreshReturnedVisual();
+  }
+  void EnsureAltarColliders(){
+   foreach(var mesh in FindObjectsByType<MeshFilter>()){
+    if(!mesh||!mesh.sharedMesh)continue;string objectName=mesh.gameObject.name;
+    if(!objectName.StartsWith("Santuario_")&&!objectName.StartsWith("Altar_")&&!objectName.StartsWith("Templo_"))continue;
+    var collider=mesh.GetComponent<MeshCollider>();if(!collider)collider=mesh.gameObject.AddComponent<MeshCollider>();
+    collider.sharedMesh=null;collider.convex=false;collider.isTrigger=false;collider.sharedMesh=mesh.sharedMesh;
+   }
+   Physics.SyncTransforms();
+  }
+  void ArrangeVolcanoLava(){
+   var volcano=GameObject.Find("Volcan_caldera");var lava=GameObject.Find("Lava_en_crater");if(!volcano||!lava)return;
+   Vector3 volcanoPosition=volcano.transform.localPosition,lavaPosition=lava.transform.localPosition;
+   lava.transform.localPosition=new Vector3(volcanoPosition.x,lavaPosition.y,volcanoPosition.z);
+   var mesh=lava.GetComponent<MeshFilter>();if(!mesh||!mesh.sharedMesh)return;
+   var surface=lava.GetComponent<MeshCollider>();if(!surface)surface=lava.AddComponent<MeshCollider>();
+   surface.sharedMesh=null;surface.convex=false;surface.isTrigger=false;surface.sharedMesh=mesh.sharedMesh;
+   var hazard=lava.GetComponent<LavaHazard>();if(!hazard)hazard=lava.AddComponent<LavaHazard>();hazard.surface=surface;
+   Physics.SyncTransforms();
   }
   readonly List<Material> outpostMaterials=new List<Material>();
   void ArrangeVolcanoOutpost(){

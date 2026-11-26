@@ -15,6 +15,7 @@ namespace Nexoterra.World
   NexoterraThirdPerson player;
   void Awake(){Health=maxHealth;player=GetComponent<NexoterraThirdPerson>();}
   public void ReceiveDamage(float damage){if(IsDead||TechShield.Protects(transform)||(GetComponent<PlayerAbilities>()&&GetComponent<PlayerAbilities>().Evading))return;Health=Mathf.Max(0,Health-Mathf.Max(0,damage));if(IsDead){recovery=Mathf.Max(2,respawnDelay);if(player)player.Notify("Derrotado · regresando al inicio");}}
+  public void ApplyBurn(float damagePerSecond,float duration){if(IsDead)return;corruptedBurn=false;burnRemaining=Mathf.Max(burnRemaining,duration);burnRate=Mathf.Max(burnRate,damagePerSecond);}
   void Update(){if(!IsDead&&burnRemaining>0){float dt=Mathf.Min(Time.deltaTime,burnRemaining);burnRemaining-=dt;ReceiveDamage(burnRate*dt);if(!burnVisual)burnVisual=ImportedSlugVfx.BurningCharacter(transform);}if(corruptedBurn&&burnVisual)ImportedSlugVfx.Tint(burnVisual,new Color(.15f,1,.55f));if((IsDead||burnRemaining<=0)&&burnVisual)Destroy(burnVisual);if(IsDead)burnRemaining=0;if(!IsDead||ArenaSession.Current)return;recovery-=Time.deltaTime;if(recovery<=0){if(player)player.Teleport(player.spawn);Health=maxHealth;var control=GetComponent<EnemyControlEffects>();if(control)control.ResetEffects();}}
   public void ApplyArenaHealth(float value){bool dying=!IsDead&&value<=0;Health=Mathf.Clamp(value,0,maxHealth);if(dying)recovery=3;}
   public void CorruptionCost(){if(!IsDead)Health=Mathf.Max(1,Health-5f);}

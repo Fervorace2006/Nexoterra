@@ -26,7 +26,7 @@ namespace Nexoterra.World
   public bool CanShoot=>knockdownRemaining<=0&&FreezeRemaining<=0&&ShockRemaining<=0;
   GameObject rootVisual,iceVisual,windVisual,shockVisual;Vector3 windDirection;
   Material waterMat,iceMat,shockMat;
-  Renderer[] stoneRenderers;MaterialPropertyBlock[] stoneBlocks;bool stoneTinted;
+  Renderer[] stoneRenderers;MaterialPropertyBlock[] stoneBlocks;bool stoneTextureRemoved;
   bool corruptedWind,corruptedIce;
   public const float IceSeconds=4f;
   EnemyCombatant health;
@@ -53,13 +53,17 @@ namespace Nexoterra.World
      break;
    }
   }
-  void ApplyStone(){StoneRemaining=3.5f;ApplyStoneTint(true);}
-  public void CancelStone(){StoneRemaining=0;ApplyStoneTint(false);}
-  void ApplyStoneTint(bool apply){
+  void ApplyStone(){StoneRemaining=3.5f;SetStoneTextureRemoved(true);}
+  public void CancelStone(){StoneRemaining=0;SetStoneTextureRemoved(false);}
+  void SetStoneTextureRemoved(bool apply){
    if(apply){
-    if(!stoneTinted){stoneRenderers=System.Array.FindAll(GetComponentsInChildren<Renderer>(true),r=>!(r is ParticleSystemRenderer||r is TrailRenderer||r is LineRenderer));stoneBlocks=new MaterialPropertyBlock[stoneRenderers.Length];for(int i=0;i<stoneRenderers.Length;i++){stoneBlocks[i]=new MaterialPropertyBlock();stoneRenderers[i].GetPropertyBlock(stoneBlocks[i]);}}
-    for(int i=0;i<stoneRenderers.Length;i++){var r=stoneRenderers[i];if(!r)continue;var block=new MaterialPropertyBlock();r.GetPropertyBlock(block);block.SetColor("_Color",new Color(.48f,.39f,.29f,1));block.SetColor("_BaseColor",new Color(.48f,.39f,.29f,1));r.SetPropertyBlock(block);}stoneTinted=true;
-   }else if(stoneTinted){for(int i=0;i<stoneRenderers.Length;i++)if(stoneRenderers[i])stoneRenderers[i].SetPropertyBlock(stoneBlocks[i]);stoneTinted=false;}
+    if(!stoneTextureRemoved){stoneRenderers=System.Array.FindAll(GetComponentsInChildren<Renderer>(true),r=>!(r is ParticleSystemRenderer||r is TrailRenderer||r is LineRenderer));stoneBlocks=new MaterialPropertyBlock[stoneRenderers.Length];for(int i=0;i<stoneRenderers.Length;i++){stoneBlocks[i]=new MaterialPropertyBlock();stoneRenderers[i].GetPropertyBlock(stoneBlocks[i]);}}
+    for(int i=0;i<stoneRenderers.Length;i++){
+     var r=stoneRenderers[i];if(!r)continue;var block=new MaterialPropertyBlock();r.GetPropertyBlock(block);
+     foreach(var material in r.sharedMaterials){if(!material)continue;if(material.HasProperty("_BaseMap"))block.SetTexture("_BaseMap",Texture2D.whiteTexture);if(material.HasProperty("_MainTex"))block.SetTexture("_MainTex",Texture2D.whiteTexture);}
+     r.SetPropertyBlock(block);
+    }stoneTextureRemoved=true;
+   }else if(stoneTextureRemoved){for(int i=0;i<stoneRenderers.Length;i++)if(stoneRenderers[i])stoneRenderers[i].SetPropertyBlock(stoneBlocks[i]);stoneTextureRemoved=false;}
   }
   void Update(){Advance(Time.deltaTime);}
   public void Advance(float dt)
@@ -67,7 +71,7 @@ namespace Nexoterra.World
    if(health&&health.IsDead){ResetEffects();return;}
    knockdownRemaining=Mathf.Max(0,knockdownRemaining-dt);
    RootRemaining=Mathf.Max(0,RootRemaining-dt);FreezeRemaining=Mathf.Max(0,FreezeRemaining-dt);ShockRemaining=Mathf.Max(0,ShockRemaining-dt);WindRemaining=Mathf.Max(0,WindRemaining-dt);StoneRemaining=Mathf.Max(0,StoneRemaining-dt);
-   if(StoneRemaining<=0)ApplyStoneTint(false);
+   if(StoneRemaining<=0)SetStoneTextureRemoved(false);
    if(RootRemaining<=0)Clear(ref rootVisual);if(FreezeRemaining<=0)Clear(ref iceVisual);if(ShockRemaining<=0)Clear(ref shockVisual);
    if(WindRemaining<=0)Clear(ref windVisual);
    else if(knockdownRemaining<=0&&RootRemaining<=0&&FreezeRemaining<=0)
@@ -81,7 +85,7 @@ namespace Nexoterra.World
    }
   }
   static void Clear(ref GameObject obj){if(obj)Destroy(obj);obj=null;}
-  public void ResetEffects(){knockdownRemaining=RootRemaining=FreezeRemaining=ShockRemaining=WindRemaining=StoneRemaining=0;ApplyStoneTint(false);Clear(ref rootVisual);Clear(ref iceVisual);Clear(ref windVisual);Clear(ref shockVisual);}
+  public void ResetEffects(){knockdownRemaining=RootRemaining=FreezeRemaining=ShockRemaining=WindRemaining=StoneRemaining=0;SetStoneTextureRemoved(false);Clear(ref rootVisual);Clear(ref iceVisual);Clear(ref windVisual);Clear(ref shockVisual);}
   void ReplaceRoot(bool water)
   {
    Clear(ref rootVisual);

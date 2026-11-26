@@ -13,6 +13,7 @@ namespace Nexoterra.World
   public string[] slugSlots=Array.Empty<string>();
   public bool dropSlugsOnDeath;
   readonly SlugProjectile[] travelling=new SlugProjectile[3];
+  readonly RaycastHit[] spawnGroundHits=new RaycastHit[24];
   bool dropped;
   public bool IsDead=>GetComponent<EnemyCombatant>().IsDead;
   public bool IsSlotBusy(int slot)=>slot>=0&&slot<3&&travelling[slot];
@@ -42,29 +43,31 @@ namespace Nexoterra.World
   public bool IsPursuing {get;private set;}
   public bool IsAiming {get;private set;}
   public Vector3 AimDirection=>target&&weapon?(target.transform.position+Vector3.up-weapon.position).normalized:transform.forward;
-  void Start(){health=GetComponent<EnemyCombatant>();EnsureSlots();health.onDeath.AddListener(DropSlugs);motor=GetComponent<CharacterController>();native=GetComponent<NativeEnemyAnimation>();target=FindAnyObjectByType<PlayerHealth>();home=transform.position;if(model)modelOrigin=model.localPosition;volley=Mathf.Abs(Mathf.RoundToInt(home.x*3+home.z*7))%commonLoadout.Length;patrolPoint=volley%4;flankSide=(volley%2==0)?1:-1;fireAt=Time.time+2;}
+  void Start(){health=GetComponent<EnemyCombatant>();EnsureSlots();health.onDeath.AddListener(DropSlugs);motor=GetComponent<CharacterController>();native=GetComponent<NativeEnemyAnimation>();target=FindAnyObjectByType<PlayerHealth>();
+   Vector3 spawn=FindFreeSpawn(transform.position);motor.enabled=false;transform.position=spawn;motor.enabled=true;home=spawn;if(model)modelOrigin=model.localPosition;volley=Mathf.Abs(Mathf.RoundToInt(home.x*3+home.z*7))%commonLoadout.Length;patrolPoint=volley%4;flankSide=(volley%2==0)?1:-1;fireAt=Time.time+2;SnapToGround();}
   void Update()
   {
    IsPursuing=false;IsAiming=false;if(GameSession.Blocked)return;
-   if(health.IsDead){deadTime+=Time.deltaTime;if(!boss&&!campaignMember&&deadTime>=respawnSeconds){motor.enabled=false;transform.position=home;motor.enabled=true;health.Revive();deadTime=0;}return;}
+   if(Time.time>=groundCheckAt){groundCheckAt=Time.time+.25f;SnapToGround();}
+   if(health.IsDead){deadTime+=Time.deltaTime;if(!boss&&!campaignMember&&deadTime>=respawnSeconds){Vector3 spawn=FindFreeSpawn(home);motor.enabled=false;transform.position=spawn;motor.enabled=true;home=spawn;health.Revive();deadTime=0;SnapToGround();}return;}
    Vector3 move=Vector3.zero;bool evading=native&&native.IsDodging;
    if(target&&health.CanAct&&!target.IsDead)
    {
     float distance=Vector3.Distance(transform.position,target.transform.position);
     bool engaged=distance<aggroRange&&Vector3.Distance(transform.position,home)<35;
+    Vector3 forward=Vector3.ProjectOnPlane(target.transform.position-transform.position,Vector3.up);
     IsPursuing=engaged;
     IsAiming=engaged&&distance<attackRange&&health.CanShoot;
     if(engaged)
     {
-     Vector3 forward=Vector3.ProjectOnPlane(target.transform.position-transform.position,Vector3.up);
-     if(forward.sqrMagnitude>.05f)transform.rotation=Quaternion.Slerp(transform.rotation,Quaternion.LookRotation(forward),1-Mathf.Exp(-5*Time.deltaTime));
+     if(forward.sqrMagnitude>.05f)transform.rotation=Quaternion.RotateTowards(transform.rotation,Quaternion.LookRotation(forward),Mathf.Lerp(360f,900f,IsAiming?1:0)*Time.deltaTime);
      if(!evading&&health.CanMove)move=CombatDirection(forward.normalized,distance)*speed*(tactic==Tactic.Retreat?1.5f:1.8f)*health.SpeedMultiplier;
     }
     else if(!evading&&health.CanMove)move=PatrolVelocity();
     if(!loaded&&reloadUntil==0&&health.CanShoot&&engaged){reloadUntil=Time.time+1.67f;if(native)native.Reload();}
     if(reloadUntil>0&&!health.CanShoot)reloadUntil+=Time.deltaTime;   // frozen/shocked: reload paused
     if(reloadUntil>0&&Time.time>=reloadUntil){loaded=true;reloadUntil=0;}
-    if(loaded&&!evading&&health.CanShoot&&engaged&&distance<attackRange&&Time.time>=fireAt)
+    if(loaded&&!evading&&health.CanShoot&&engaged&&distance<attackRange&&forward.sqrMagnitude>.05f&&Quaternion.Angle(transform.rotation,Quaternion.LookRotation(forward))<8f&&Time.time>=fireAt)
     {
      Vector3 origin=weapon?weapon.position+weapon.forward*.65f:transform.position+Vector3.up*1.4f+transform.forward*.85f,aim=target.transform.position+Vector3.up;
      // Lead the target a little (where it will be when the slug arrives).
@@ -80,12 +83,54 @@ namespace Nexoterra.World
    float wanted=new Vector2(move.x,move.z).magnitude*Time.deltaTime,got=Vector3.ProjectOnPlane(transform.position-before,Vector3.up).magnitude;
    stuckTime=wanted>.01f&&got<wanted*.15f?stuckTime+Time.deltaTime:0;
    if(stuckTime>.6f){stuckTime=0;tacticUntil=0;flankSide=-flankSide;}
-   if(Time.time>=groundCheckAt){groundCheckAt=Time.time+.5f;
-    float feet=transform.position.y+motor.center.y-motor.height*.5f;
-    if(Physics.Raycast(new Vector3(transform.position.x,feet+1.2f,transform.position.z),Vector3.down,out var floor,3,Physics.DefaultRaycastLayers,QueryTriggerInteraction.Ignore)&&!floor.transform.IsChildOf(transform)&&!floor.collider.GetComponentInParent<EnemyCombatant>()&&floor.point.y>feet+.25f)
-    {motor.enabled=false;transform.position=new Vector3(transform.position.x,floor.point.y+motor.skinWidth+.02f-(motor.center.y-motor.height*.5f),transform.position.z);motor.enabled=true;vertical=0;}}
+   if(Time.time>=groundCheckAt){groundCheckAt=Time.time+.25f;SnapToGround();}
    MotionVelocity=move.sqrMagnitude>0 && Time.deltaTime>0?Vector3.ProjectOnPlane(transform.position-before,Vector3.up)/Time.deltaTime:Vector3.zero;
    recoil=Mathf.MoveTowards(recoil,0,Time.deltaTime*3);if(model&&pose){model.localPosition=modelOrigin+Vector3.up*(Mathf.Sin(Time.time*10)*.035f*Mathf.Clamp01(MotionSpeed))+Vector3.back*(recoil*.12f);}
+  }
+  Vector3 FindFreeSpawn(Vector3 requested)
+  {
+   Vector3 basePosition=GroundedPosition(requested);if(!SpawnBlocked(basePosition))return basePosition;
+   for(int ring=1;ring<=8;ring++)for(int i=0;i<12;i++)
+   {
+    float angle=(i+ring*.37f)*Mathf.PI/6;Vector3 candidate=requested+new Vector3(Mathf.Cos(angle),0,Mathf.Sin(angle))*(ring*1.5f);
+    candidate=GroundedPosition(candidate);if(Mathf.Abs(candidate.y-basePosition.y)>2f)continue;
+    if(!SpawnBlocked(candidate))return candidate;
+   }
+   return basePosition;
+  }
+  Vector3 GroundedPosition(Vector3 position)
+  {
+   if(!motor)return position;
+   int count=Physics.RaycastNonAlloc(position+Vector3.up*2.5f,Vector3.down,spawnGroundHits,7f,Physics.DefaultRaycastLayers,QueryTriggerInteraction.Ignore);
+   RaycastHit floor=default;float nearest=float.PositiveInfinity;
+   for(int i=0;i<count;i++)
+   {
+    var hit=spawnGroundHits[i];var collider=hit.collider;
+    if(!collider||collider.transform==transform||collider.transform.IsChildOf(transform)||collider.GetComponentInParent<EnemyCombatant>()||collider.GetComponentInParent<PlayerHealth>()||hit.normal.y<.55f)continue;
+    if(hit.distance<nearest){nearest=hit.distance;floor=hit;}
+   }
+   if(float.IsPositiveInfinity(nearest))return position;
+   position.y=floor.point.y+motor.skinWidth+.02f-(motor.center.y-motor.height*.5f);return position;
+  }
+  bool SpawnBlocked(Vector3 position)
+  {
+   if(!motor)return false;float radius=Mathf.Max(.12f,motor.radius*.82f),half=Mathf.Max(0,motor.height*.5f-radius);
+   Vector3 center=position+motor.center;var overlaps=Physics.OverlapCapsule(center+Vector3.up*half,center-Vector3.up*half,radius,Physics.DefaultRaycastLayers,QueryTriggerInteraction.Ignore);
+   foreach(var c in overlaps)
+   {
+    if(!c||c.transform==transform||c.transform.IsChildOf(transform)||c.GetComponentInParent<EnemyCombatant>()||c.GetComponentInParent<PlayerHealth>())continue;
+    return true;
+   }
+   return false;
+  }
+  void SnapToGround()
+  {
+   if(!motor||!motor.enabled||!health)return;
+   float feet=transform.position.y+motor.center.y-motor.height*.5f;
+   if(!Physics.Raycast(new Vector3(transform.position.x,feet+1.2f,transform.position.z),Vector3.down,out var floor,3.5f,Physics.DefaultRaycastLayers,QueryTriggerInteraction.Ignore)||floor.transform.IsChildOf(transform)||floor.collider.GetComponentInParent<EnemyCombatant>()||floor.normal.y<.45f)return;
+   float targetFeet=floor.point.y+motor.skinWidth+.02f,delta=targetFeet-feet;
+   if(Mathf.Abs(delta)<.08f||delta<0&&!health.IsDead&&!motor.isGrounded)return;
+   motor.enabled=false;transform.position+=Vector3.up*delta;motor.enabled=true;vertical=0;
   }
   Vector3 PatrolVelocity()
   {
