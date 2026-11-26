@@ -70,6 +70,7 @@ namespace Nexoterra.World
             if(!GameSession.Current&&k.escapeKey.wasPressedThisFrame&&IsOpen){SetOpen(false);Cursor.lockState=CursorLockMode.None;Cursor.visible=true;}
             var keys=new[]{k.digit1Key,k.digit2Key,k.digit3Key,k.digit4Key,k.digit5Key,k.digit6Key};
             for(int i=0;i<6;i++)if(keys[i].wasPressedThisFrame)selected=i;
+            if(IsOpen)PadBackpack();else padHeld=-1;
             if(!IsOpen&&NexoInput.Cycle!=0)selected=(selected+(NexoInput.Cycle>0?1:5))%6;
             if(!IsOpen&&NexoInput.Slot>=0)selected=NexoInput.Slot;
             if(!IsOpen&&m!=null&&Mathf.Abs(m.scroll.ReadValue().y)>.01f)selected=(selected+(m.scroll.ReadValue().y>0?5:1))%6;
@@ -264,6 +265,7 @@ namespace Nexoterra.World
                 Slot(r,d,slot==selected&&slot>=0,slot>=0?(slot+1).ToString():"·",d?.displayName??"No disponible");
                 if(r.Contains(Event.current.mousePosition))previewIndex=i;
                 var e=Event.current;
+                if(!padOnBar&&k==padIndex)PadCursor(r);
                 if(d!=null&&e.type==EventType.MouseDown&&e.button==0&&r.Contains(e.mousePosition)){dragOwned=i;dragFromSlot=-1;dragging=false;dragStart=e.mousePosition-scroll+new Vector2(192,178);e.Use();}
             }
             GUI.EndScrollView();
@@ -278,6 +280,54 @@ namespace Nexoterra.World
             GUI.enabled=equipped[selected]>=0;if(NexoUi.Button(new Rect(798,491,288,34),"RETIRAR DEL ESPACIO "+(selected+1))){equipped[selected]=-1;Status="Babosa guardada en la mochila.";}GUI.enabled=true;
             HandleDrag();
         }
+        // ---- Gamepad: D-pad/stick moves a cursor over the grid and the equipment bar; X picks up/drops, Circle cancels or closes ----
+        int padIndex;bool padOnBar,padActive;int padHeld=-1,padHeldSlot=-1;
+        List<int> Visible(){var v=new List<int>();for(int i=0;i<owned.Count;i++)if(!onlyElementals||(catalog.Find(owned[i])?.IsElemental??false))v.Add(i);return v;}
+        void PadBackpack()
+        {
+            if(NexoInput.Pad==null)return;
+            var step=NexoInput.NavStep;bool ok=NexoInput.Confirm,cancel=NexoInput.Cancel;
+            if(step!=Vector2Int.zero||ok||cancel)padActive=true;
+            if(Mouse.current!=null&&Mouse.current.delta.ReadValue().sqrMagnitude>4)padActive=false;
+            var v=Visible();
+            if(padOnBar)
+            {
+                padIndex=Mathf.Clamp(padIndex+step.x,0,5);
+                if(step.y<0&&v.Count>0){padOnBar=false;padIndex=Mathf.Min(v.Count-1,(Mathf.CeilToInt(v.Count/5f)-1)*5+Mathf.Min(padIndex,4));}
+                else selected=padIndex;
+            }
+            else
+            {
+                if(v.Count==0){padOnBar=true;padIndex=selected;}
+                else
+                {
+                    int col=padIndex%5,row=padIndex/5,rows=Mathf.CeilToInt(v.Count/5f);
+                    if(step.x!=0)col=Mathf.Clamp(col+step.x,0,4);
+                    if(step.y>0&&row>=rows-1){padOnBar=true;padIndex=Mathf.Clamp(col,0,5);}
+                    else{row=Mathf.Clamp(row+step.y,0,rows-1);padIndex=Mathf.Min(row*5+col,v.Count-1);previewIndex=v[padIndex];
+                        float top=row*144;if(top<scroll.y)scroll.y=top;if(top+132>scroll.y+300)scroll.y=top+132-300;}
+                }
+            }
+            if(cancel){if(padHeld>=0){padHeld=-1;Status="Movimiento cancelado.";}else SetOpen(false);return;}
+            if(!ok)return;
+            if(padHeld<0)
+            {
+                if(padOnBar){if(equipped[padIndex]>=0){padHeld=equipped[padIndex];padHeldSlot=padIndex;previewIndex=padHeld;}}
+                else if(padIndex<v.Count){padHeld=v[padIndex];padHeldSlot=-1;padOnBar=true;padIndex=selected;}
+                if(padHeld>=0)Status="Elige un espacio y pulsa X para soltarla.";
+                return;
+            }
+            if(padOnBar)
+            {
+                if(padHeldSlot>=0){int t=equipped[padIndex];equipped[padIndex]=equipped[padHeldSlot];equipped[padHeldSlot]=t;Status="Equipamiento reordenado.";}
+                else Equip(padHeld,padIndex);
+                selected=padIndex;
+            }
+            else if(padHeldSlot>=0){equipped[padHeldSlot]=-1;Status="Babosa guardada en la mochila.";}
+            padHeld=-1;padHeldSlot=-1;
+        }
+        void PadCursor(Rect r){if(!padActive||NexoInput.Pad==null)return;NexoHud.Brackets(new Rect(r.x-4,r.y-4,r.width+8,r.height+8),padHeld>=0?NexoUi.Amber:NexoHud.Orange,16,3);
+            if(padHeld>=0&&padHeld<owned.Count&&Event.current.type==EventType.Repaint){var d=catalog.Find(owned[padHeld]);var pr=new Rect(r.center.x-30,r.y-58,60,66);NexoHud.Fill(pr,new Color(0,0,0,.4f));NexoUi.Portrait(pr,d?.portrait,NexoUi.Accent(d),.9f);}}
         // ---- Equipment bar under the collection + drag & drop ----
         int dragOwned=-1,dragFromSlot=-1;bool dragging;Vector2 dragStart;
         static readonly Rect GridArea=new Rect(192,178,588,300);
@@ -285,12 +335,13 @@ namespace Nexoterra.World
         void DrawEquipBar()
         {
             NexoUi.Panel(new Rect(320,552,640,156));
-            NexoUi.Write(new Rect(330,557,620,20),dragging?"SUELTA EN UN ESPACIO PARA EQUIPARLA":"EQUIPO · arrastra para ordenar",12,dragging?NexoUi.Amber:NexoUi.Teal,TextAnchor.MiddleCenter,true);
+            NexoUi.Write(new Rect(330,557,620,20),dragging||padHeld>=0?"SUELTA EN UN ESPACIO PARA EQUIPARLA":padActive?"EQUIPO · cruceta para moverte, X para coger y soltar":"EQUIPO · arrastra para ordenar",12,dragging?NexoUi.Amber:NexoUi.Teal,TextAnchor.MiddleCenter,true);
             var e=Event.current;
             for(int s=0;s<6;s++)
             {
                 int index=equipped[s];var def=index>=0&&index<owned.Count?catalog.Find(owned[index]):null;var r=EquipSlot(s);
                 Slot(r,def,s==selected,(s+1).ToString(),def?.displayName??"Vacío");
+                if(padOnBar&&s==padIndex)PadCursor(r);
                 if(dragging&&r.Contains(e.mousePosition))NexoHud.Brackets(new Rect(r.x-3,r.y-3,r.width+6,r.height+6),NexoHud.Orange,14,3);
                 if(e.type==EventType.MouseDown&&e.button==0&&r.Contains(e.mousePosition)){selected=s;if(index>=0){dragOwned=index;dragFromSlot=s;dragging=false;dragStart=e.mousePosition;previewIndex=index;}e.Use();}
             }

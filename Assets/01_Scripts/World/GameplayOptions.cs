@@ -105,8 +105,10 @@ namespace Nexoterra.World
             bool v=NexoUi.Toggle(new Rect(rect.x,y,rect.width,50),"Sincronización vertical","Evita cortes en la imagen.",vsync);if(v!=vsync)SetVSync(v);
         }
         // Full settings page: title, graphics, audio, gameplay and a back button. Returns true when the player goes back.
+        static bool padPage;
         public static bool DrawSettingsPage(Rect rect)
         {
+            if(padPage){if(NexoInput.DrawPage(rect)){padPage=false;NexoUi.ResetFocus();}return false;}
             NexoUi.Title(new Rect(rect.x,rect.y,rect.width,70),"CALIDAD GRÁFICA","Los cambios se aplican y guardan al instante.");
             float y=rect.y+76;
             DrawGraphics(new Rect(rect.x,y,rect.width,232));y+=232;
@@ -117,7 +119,9 @@ namespace Nexoterra.World
             y+=54;
             bool auto=AutoReload,next=NexoUi.Toggle(new Rect(rect.x,y,rect.width,50),"Recarga automática","Carga la babosa seleccionada cuando esté disponible.",auto);
             if(next!=auto)AutoReload=next;
-            bool back=NexoHud.Button(new Rect(rect.x,rect.yMax-50,rect.width,50),"VOLVER");
+            float bw=(rect.width-16)/2;
+            if(NexoUi.Button(new Rect(rect.x,rect.yMax-50,bw,50),"MANDO")){padPage=true;NexoUi.ResetFocus();}
+            bool back=NexoHud.Button(new Rect(rect.x+bw+16,rect.yMax-50,bw,50),"VOLVER");
             return back||NexoUi.BackPressed;
         }
     }
