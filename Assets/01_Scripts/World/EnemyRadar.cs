@@ -14,7 +14,7 @@ namespace Nexoterra.World
   NexoterraThirdPerson player;SlugInventory inventory;PlayerHealth health;
   readonly List<EnemyCombatant> enemies=new List<EnemyCombatant>();float nextScan;
   Camera mapCamera;RenderTexture mapTexture;
-  static Texture2D arrow,dot,ring;
+  static Texture2D arrow,dot,ring,heading;
   void Start(){player=GetComponent<NexoterraThirdPerson>();inventory=GetComponent<SlugInventory>();health=GetComponent<PlayerHealth>();}
   void Scan()
   {
@@ -38,7 +38,7 @@ namespace Nexoterra.World
    // Below cave roofs (y≈25) and above the player, rotated with the view so "up" is where you look.
    float yaw=Camera.main?Camera.main.transform.eulerAngles.y:player.transform.eulerAngles.y;
    mapCamera.transform.position=player.transform.position+Vector3.up*18;
-   mapCamera.transform.rotation=Quaternion.Euler(90,yaw,0);
+   mapCamera.transform.rotation=Quaternion.Euler(90,0,0);   // north-up; the player arrow shows the view direction
    mapCamera.enabled=!GameSession.Blocked;
   }
   void OnDestroy(){if(mapTexture)mapTexture.Release();}
@@ -85,42 +85,54 @@ namespace Nexoterra.World
     }
    }
   }
-  // ---- Minimap + radar (in the 1280×720 HUD space) ----
+  // ---- Minimap (in the 1280×720 HUD space). North-up; the cyan arrow in the centre is the player,
+  // rotated to where the camera looks. Red dots = enemies (boss larger/orange), green = exit. ----
   void DrawMinimap()
   {
-   var r=MapRect;var inner=new Rect(r.x+6,r.y+6,r.width-12,r.height-12);
-   NexoHud.Fill(new Rect(r.x+2,r.y+4,r.width,r.height),new Color(0,0,0,.45f));
-   NexoHud.Fill(r,new Color(.05f,.07f,.08f,.95f));
-   if(mapTexture){var o=GUI.color;GUI.color=new Color(.75f,.95f,.95f,1);GUI.DrawTexture(inner,mapTexture,ScaleMode.StretchToFill,false);GUI.color=o;}
-   NexoHud.Fill(inner,new Color(0,.18f,.2f,.28f));
-   // radar rings + sweep
-   Draw(ring,inner,new Color(.3f,1,.95f,.45f));
-   var ci=new Rect(inner.center.x-inner.width*.25f,inner.center.y-inner.height*.25f,inner.width*.5f,inner.height*.5f);Draw(ring,ci,new Color(.3f,1,.95f,.3f));
-   float sweep=(Time.unscaledTime*120)%360;var m=GUI.matrix;GUIUtility.RotateAroundPivot(sweep,inner.center);
-   for(int i=0;i<10;i++)NexoHud.Fill(new Rect(inner.center.x-1,inner.y+8,2,inner.height/2-8),new Color(.4f,1,.9f,.035f*(10-i)));
-   GUI.matrix=m;
-   // enemy blips (rotated so up = view direction), clamped to the edge
-   float yaw=Camera.main?Camera.main.transform.eulerAngles.y:0;var rot=Quaternion.Euler(0,-yaw,0);
-   float scale=(inner.width/2)/MapRange;float pulse=.75f+.25f*Mathf.Sin(Time.unscaledTime*6);
+   var r=MapRect;var inner=new Rect(r.x+7,r.y+7,r.width-14,r.height-14);
+   // metal frame
+   NexoHud.Fill(new Rect(r.x+3,r.y+5,r.width,r.height),new Color(0,0,0,.5f));
+   NexoHud.Fill(r,new Color(.02f,.03f,.04f));
+   NexoHud.Gradient(new Rect(r.x+1,r.y+1,r.width-2,r.height-2),new Color(.3f,.36f,.4f),NexoHud.MetalDark);
+   NexoHud.Fill(new Rect(r.x+2,r.y+2,r.width-4,1),new Color(.65f,.72f,.76f,.6f));
+   NexoHud.Fill(new Rect(inner.x-1,inner.y-1,inner.width+2,inner.height+2),new Color(.01f,.03f,.04f));
+   // map image
+   if(mapTexture){var o=GUI.color;GUI.color=new Color(.8f,.95f,.95f,1);GUI.DrawTexture(inner,mapTexture,ScaleMode.StretchToFill,false);GUI.color=o;}
+   NexoHud.Fill(inner,new Color(0,.16f,.18f,.25f));
+   // range rings
+   Draw(ring,new Rect(inner.x+2,inner.y+2,inner.width-4,inner.height-4),new Color(.35f,1,.95f,.35f));
+   Draw(ring,new Rect(inner.center.x-inner.width*.25f,inner.center.y-inner.height*.25f,inner.width*.5f,inner.height*.5f),new Color(.35f,1,.95f,.22f));
+   float half=inner.width/2-6,scale=(inner.width/2)/MapRange,pulse=.8f+.2f*Mathf.Sin(Time.unscaledTime*6);
+   Vector2 ToMap(Vector3 world,out bool edge){var d=world-player.transform.position;var v=new Vector2(d.x,-d.z)*scale;edge=v.magnitude>half;if(edge)v=v.normalized*half;return inner.center+v;}
    foreach(var e in enemies)
    {
-    if(!e||e.IsDead)continue;var rel=rot*(e.transform.position-player.transform.position);
-    var v=new Vector2(rel.x,-rel.z)*scale;bool edge=v.magnitude>inner.width/2-6;if(edge)v=v.normalized*(inner.width/2-6);
-    bool boss=e.GetComponent<EnemyShooter>()&&e.GetComponent<EnemyShooter>().boss;float s=(boss?12:8)*(edge?.8f:pulse);
-    Draw(dot,new Rect(inner.center.x+v.x-s/2,inner.center.y+v.y-s/2,s,s),boss?new Color(1,.35f,.1f):new Color(1,.12f,.1f));
+    if(!e||e.IsDead)continue;var p=ToMap(e.transform.position,out bool edge);
+    bool boss=e.GetComponent<EnemyShooter>()&&e.GetComponent<EnemyShooter>().boss;float s=(boss?13:9)*(edge?.75f:pulse);
+    Draw(dot,new Rect(p.x-s/2-1,p.y-s/2-1,s+2,s+2),new Color(0,0,0,.6f));
+    Draw(dot,new Rect(p.x-s/2,p.y-s/2,s,s),boss?new Color(1,.45f,.1f):new Color(1,.15f,.12f));
    }
-   // exit marker
    var level=CampaignLevel.Current;
-   if(level&&level.exit){var rel=rot*(level.exit.position-player.transform.position);var v=new Vector2(rel.x,-rel.z)*scale;if(v.magnitude>inner.width/2-6)v=v.normalized*(inner.width/2-6);Draw(dot,new Rect(inner.center.x+v.x-5,inner.center.y+v.y-5,10,10),new Color(.3f,1,.4f));}
-   // player arrow (points up = view direction)
-   var pr=new Rect(inner.center.x-8,inner.center.y-8,16,16);var mm=GUI.matrix;GUIUtility.RotateAroundPivot(180,inner.center);Draw(arrow,pr,new Color(.4f,1,1));GUI.matrix=mm;
+   if(level&&level.exit){var p=ToMap(level.exit.position,out _);Draw(dot,new Rect(p.x-6,p.y-6,12,12),new Color(0,0,0,.6f));Draw(dot,new Rect(p.x-5,p.y-5,10,10),new Color(.35f,1,.45f));}
+   // compass letters
+   var lc=new Color(.85f,.95f,.95f,.9f);
+   NexoHud.Shadowed(new Rect(inner.center.x-8,inner.y,16,14),"N",11,new Color(1,.7f,.3f),TextAnchor.MiddleCenter);
+   NexoHud.Shadowed(new Rect(inner.center.x-8,inner.yMax-14,16,14),"S",10,lc,TextAnchor.MiddleCenter);
+   NexoHud.Shadowed(new Rect(inner.x+1,inner.center.y-7,14,14),"O",10,lc,TextAnchor.MiddleCenter);
+   NexoHud.Shadowed(new Rect(inner.xMax-15,inner.center.y-7,14,14),"E",10,lc,TextAnchor.MiddleCenter);
+   // player arrow: rotate in HUD space around the map centre (texture points down → +180°)
+   float yaw=Camera.main?Camera.main.transform.eulerAngles.y:player.transform.eulerAngles.y;
+   var saved=GUI.matrix;var c=new Vector3(inner.center.x,inner.center.y,0);
+   GUI.matrix=saved*Matrix4x4.TRS(c,Quaternion.Euler(0,0,180+yaw),Vector3.one)*Matrix4x4.TRS(-c,Quaternion.identity,Vector3.one);
+   var pr=new Rect(inner.center.x-12,inner.center.y-12,24,24);
+   Draw(heading,new Rect(pr.x-3,pr.y-3,pr.width+6,pr.height+6),new Color(0,0,0,.8f));Draw(heading,pr,new Color(.35f,1,1));
+   GUI.matrix=saved;
    NexoHud.Brackets(new Rect(r.x-3,r.y-3,r.width+6,r.height+6),NexoHud.Orange,18,4);
-   NexoHud.Label(new Rect(r.x,r.yMax+2,r.width,16),enemies.Count>0?"ENEMIGOS: "+enemies.Count:"ZONA DESPEJADA",11,enemies.Count>0?new Color(1,.55f,.5f):new Color(.5f,1,.6f),TextAnchor.UpperCenter);
+   NexoHud.Shadowed(new Rect(r.x,r.yMax+3,r.width,16),enemies.Count>0?"ENEMIGOS: "+enemies.Count:"ZONA DESPEJADA",11,enemies.Count>0?new Color(1,.6f,.55f):new Color(.5f,1,.6f),TextAnchor.UpperCenter);
   }
   static void Draw(Texture2D tex,Rect r,Color c){var o=GUI.color;GUI.color=c;GUI.DrawTexture(r,tex,ScaleMode.StretchToFill,true);GUI.color=o;}
   static void EnsureTextures()
   {
-   if(arrow&&dot&&ring)return;
+   if(arrow&&dot&&ring&&heading)return;
    const int n=64;
    arrow=new Texture2D(n,n,TextureFormat.RGBA32,false){wrapMode=TextureWrapMode.Clamp,name="Flecha"};
    dot=new Texture2D(32,32,TextureFormat.RGBA32,false){wrapMode=TextureWrapMode.Clamp,name="Punto"};
@@ -135,6 +147,17 @@ namespace Nexoterra.World
     var col=Color.Lerp(new Color(1,1,1,a),new Color(1,.9f,.9f,a),rim);arrow.SetPixel(x,y,col);
    }
    arrow.Apply();
+   // Player heading: slim arrowhead with a notch at the back (tip at the bottom row, like `arrow`).
+   heading=new Texture2D(n,n,TextureFormat.RGBA32,false){wrapMode=TextureWrapMode.Clamp,name="Rumbo"};
+   for(int y=0;y<n;y++)for(int x=0;x<n;x++)
+   {
+    float fy=y/(n-1f),dx=Mathf.Abs(x/(n-1f)-.5f);
+    float edge=.42f*fy-dx;                       // sides
+    float notch=fy-(.72f+.5f*dx);                // back notch (inside when <0)
+    float inside=Mathf.Min(edge,-notch*.5f);
+    heading.SetPixel(x,y,new Color(1,1,1,Mathf.Clamp01(inside*n*.7f)));
+   }
+   heading.Apply();
    for(int y=0;y<32;y++)for(int x=0;x<32;x++){float d=Vector2.Distance(new Vector2(x,y),new Vector2(15.5f,15.5f));dot.SetPixel(x,y,new Color(1,1,1,Mathf.Clamp01(15-d)));}dot.Apply();
    for(int y=0;y<128;y++)for(int x=0;x<128;x++){float d=Vector2.Distance(new Vector2(x,y),new Vector2(63.5f,63.5f));ring.SetPixel(x,y,new Color(1,1,1,Mathf.Clamp01(1.5f-Mathf.Abs(d-61))));}ring.Apply();
   }
