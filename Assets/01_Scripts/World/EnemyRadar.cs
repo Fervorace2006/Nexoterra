@@ -32,7 +32,7 @@ namespace Nexoterra.World
     var go=new GameObject("Cámara del minimapa");go.transform.SetParent(transform,false);
     mapCamera=go.AddComponent<Camera>();mapCamera.orthographic=true;mapCamera.orthographicSize=MapRange;mapCamera.targetTexture=mapTexture;
     mapCamera.clearFlags=CameraClearFlags.SolidColor;mapCamera.backgroundColor=new Color(.02f,.06f,.07f);mapCamera.nearClipPlane=.3f;mapCamera.farClipPlane=60;
-    mapCamera.cullingMask=~(1<<5);mapCamera.depth=-50;
+    mapCamera.cullingMask=~((1<<5)|(1<<2));mapCamera.depth=-50;   // skip UI and the cave shell (layer 2) so the roof never covers the map
     var data=go.AddComponent<UniversalAdditionalCameraData>();data.renderPostProcessing=false;data.renderShadows=false;
    }
    // Below cave roofs (y≈25) and above the player, rotated with the view so "up" is where you look.
