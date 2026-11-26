@@ -74,6 +74,8 @@ namespace Nexoterra.World
     current.SetLayerWeight(jumpLayer,jumpWeight);
    }
    bool aim=!dancing&&knockdown==null&&!GameSession.Blocked&&!dead&&!roll&&(Mouse.current!=null&&Mouse.current.rightButton.isPressed||NexoInput.Aim)&&Cursor.lockState==CursorLockMode.Locked&&!(GetComponent<SlugInventory>()&&GetComponent<SlugInventory>().IsOpen);
+   // Freeze and shock pause an ongoing reload (the web does not).
+   if(effects&&!effects.CanShoot&&reloadRemaining>0)reloadRemaining+=Time.deltaTime;
    if(reloadRemaining>0 && reloadRemaining<=Time.deltaTime)loaded=true;
    reloadRemaining=Mathf.Max(0,reloadRemaining-Time.deltaTime);shootRemaining=Mathf.Max(0,shootRemaining-Time.deltaTime);
    TryAutoReload(GameplayOptions.AutoReload);

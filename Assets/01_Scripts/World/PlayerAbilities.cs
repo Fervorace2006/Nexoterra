@@ -18,7 +18,12 @@ namespace Nexoterra.World
   public float DodgeCooldown=>Mathf.Max(0,readyAt-Time.time);
   float dodgeRemaining,readyAt,boostUntil;PlayerHealth health;
   void Awake(){health=GetComponent<PlayerHealth>();}
-  void Update(){if(GameSession.Blocked)return;if(!health.CanMove)dodgeRemaining=0;else dodgeRemaining=Mathf.Max(0,dodgeRemaining-Time.deltaTime);}
+  // Energy elemental self-heal: up to 40 % of max health over 5 s, once every 60 s (healing slugs is unlimited).
+  public const float EnergySelfHeal=.4f,EnergyCooldown=60f,EnergyHealSeconds=5f;
+  float energyReadyAt,energyHealLeft;
+  public float EnergyCooldownLeft=>Mathf.Max(0,energyReadyAt-Time.time);
+  void Update(){if(GameSession.Blocked)return;
+   if(energyHealLeft>0){float step=Mathf.Min(energyHealLeft,health.maxHealth*EnergySelfHeal/EnergyHealSeconds*Time.deltaTime);health.Heal(step);energyHealLeft-=step;if(health.IsDead)energyHealLeft=0;}if(!health.CanMove)dodgeRemaining=0;else dodgeRemaining=Mathf.Max(0,dodgeRemaining-Time.deltaTime);}
   public bool TryDodge(int side,Vector3 right)
   {return TryDodge(side,right,false);}
   public bool TryDodge(int side,Vector3 axis,bool longitudinal)
@@ -40,7 +45,13 @@ namespace Nexoterra.World
   }
   public void OnSlugLaunched(string id)
   {
-   if(id=="Gon_Doc"||id=="Elemental_Energia"){health.Heal(id=="Gon_Doc"?docHealing:32);GetComponent<NexoterraThirdPerson>().Notify("Curación recibida");}
+   if(id=="Gon_Doc"){health.Heal(docHealing);GetComponent<NexoterraThirdPerson>().Notify("Curación recibida");}
+   if(id=="Elemental_Energia")
+   {
+    var who=GetComponent<NexoterraThirdPerson>();
+    if(Time.time>=energyReadyAt){energyHealLeft=health.maxHealth*EnergySelfHeal;energyReadyAt=Time.time+EnergyCooldown;who.Notify("Energía · curación gradual (+40 % de salud)");}
+    else who.Notify("Curación de Energía disponible en "+Mathf.CeilToInt(energyReadyAt-Time.time)+" s");
+   }
    id=SlugCatalog.BaseSpecies(id);
    if(id=="Elemental_Aire"||id=="Tornado"){boostUntil=Time.time+windDuration;GetComponent<NexoterraThirdPerson>().Notify("Viento · movimiento +25% durante 6 s");}
   }

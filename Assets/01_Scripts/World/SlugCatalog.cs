@@ -15,7 +15,7 @@ namespace Nexoterra.World
         public SlugCombatProfile combat;
         public bool combatConfigured;
         public bool usePrefabCombat=true;
-        public SlugCombatProfile Combat {get {var stats=usePrefabCombat&&normal?normal.GetComponent<SlugPrefabStats>():null;var profile=stats&&stats.combat!=null?stats.combat:combatConfigured&&combat!=null?combat:SlugCombatProfile.Default(id);return id.StartsWith("Malvada_")?profile.WithDamageMultiplier(1.05f):profile;}}
+        public SlugCombatProfile Combat {get {var stats=usePrefabCombat&&normal?normal.GetComponent<SlugPrefabStats>():null;var profile=stats&&stats.combat!=null?stats.combat:combatConfigured&&combat!=null?combat:SlugCombatProfile.Default(id);if(id.StartsWith("Malvada_"))profile=profile.WithDamageMultiplier(1.05f);return IsElemental?profile.WithDamageMultiplier(1.1f):profile;/* elementals +10 % */}}
     }
 
     [CreateAssetMenu(menuName="Nexoterra/Catalogo de babosas")]

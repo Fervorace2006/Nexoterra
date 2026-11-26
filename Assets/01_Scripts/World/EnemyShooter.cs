@@ -62,6 +62,7 @@ namespace Nexoterra.World
     }
     else if(!evading&&health.CanMove)move=PatrolVelocity();
     if(!loaded&&reloadUntil==0&&health.CanShoot&&engaged){reloadUntil=Time.time+1.67f;if(native)native.Reload();}
+    if(reloadUntil>0&&!health.CanShoot)reloadUntil+=Time.deltaTime;   // frozen/shocked: reload paused
     if(reloadUntil>0&&Time.time>=reloadUntil){loaded=true;reloadUntil=0;}
     if(loaded&&!evading&&health.CanShoot&&engaged&&distance<attackRange&&Time.time>=fireAt)
     {
