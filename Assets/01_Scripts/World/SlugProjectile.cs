@@ -119,7 +119,9 @@ namespace Nexoterra.World
         void TransformSound()
         {
             string clip=definition!=null&&definition.id.StartsWith("Malvada_")?"slug_launch_malvada":"slug_launch";
-            if(hostile)NexoAudio.PlayAt(clip,transform.position,.85f);else NexoAudio.Play(clip,.9f,.04f);
+            // Enemy slugs and other players' slugs (multiplayer) sound in 3D from the slug; ours is 2D.
+            bool remote=arenaShot&&Unity.Netcode.NetworkManager.Singleton&&Unity.Netcode.NetworkManager.Singleton.IsListening&&arenaOwner!=Unity.Netcode.NetworkManager.Singleton.LocalClientId;
+            if(hostile||remote)NexoAudio.PlayAt(clip,transform.position,.95f);else NexoAudio.Play(clip,.9f,.04f);
         }
         void HealArea(Vector3 point){if(CanCorrupt){CorruptArea(point);return;}if(healedArea||!CanPurify)return;healedArea=true;var inventory=owner?owner:FindAnyObjectByType<SlugInventory>();HealingRadiusVisual.Burst(point,docHealingRadius);foreach(var wild in FindObjectsByType<WildSlug>(FindObjectsSortMode.None))if(!wild.adopted&&Vector3.Distance(wild.transform.position,point)<=docHealingRadius)PurifyWild(wild,inventory);foreach(var loose in FindObjectsByType<LooseSlug>(FindObjectsSortMode.None))if(Vector3.Distance(loose.transform.position,point)<=docHealingRadius)loose.Purify();}
         void Purify(Collider collider){if(CanCorrupt){CorruptTarget(collider);return;}if(!CanPurify)return;var loose=collider.GetComponentInParent<LooseSlug>();if(loose)loose.Purify();PurifyWild(collider.GetComponentInParent<WildSlug>(),owner?owner:FindAnyObjectByType<SlugInventory>());}
