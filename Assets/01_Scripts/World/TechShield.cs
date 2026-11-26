@@ -22,7 +22,7 @@ namespace Nexoterra.World
    go.AddComponent<MeshFilter>().sharedMesh=Panels();
    s.rend=go.AddComponent<MeshRenderer>();s.rend.shadowCastingMode=UnityEngine.Rendering.ShadowCastingMode.Off;
    var src=Resources.Load<Material>("Nexoterra/Materials/Escudo_Tecnologico");
-   if(src){s.mat=new Material(src);s.baseColor=s.mat.GetColor("_BaseColor");s.rend.sharedMaterial=s.mat;}
+   if(src){s.mat=new Material(src);s.baseColor=s.mat.color;s.rend.sharedMaterial=s.mat;}
    NexoAudio.Play("ui_click",.9f);
   }
   void Update()
@@ -32,7 +32,10 @@ namespace Nexoterra.World
    float appear=Mathf.Clamp01((Seconds-remaining)/.18f);
    float fade=remaining<1?(Mathf.Repeat(remaining*8,1)<.5f?.35f:1f):1f;   // blinks during the last second
    transform.localScale=Vector3.one*radius*Mathf.Lerp(.6f,1,appear)*(1+.02f*Mathf.Sin(Time.time*6));
-   if(mat){var c=baseColor;c.a*=appear*fade;mat.SetColor("_BaseColor",c);}
+   // Fade further when the camera is close to or inside the sphere, so it never blocks the view.
+   float near=1;var cam=Camera.main;
+   if(cam){float d=Vector3.Distance(cam.transform.position,transform.position)/Mathf.Max(.1f,radius);near=Mathf.Lerp(.3f,1,Mathf.InverseLerp(1.2f,3.5f,d));}
+   if(mat){var c=baseColor;c.a*=appear*fade*near;mat.color=c;}
    if(remaining<=0){if(owner)active.Remove(owner);Destroy(gameObject);}
   }
   void OnDestroy(){if(mat)Destroy(mat);if(owner&&active.TryGetValue(owner,out var s)&&s==this)active.Remove(owner);}
@@ -51,7 +54,7 @@ namespace Nexoterra.World
     f=next;}
    var verts=new List<Vector3>();var tris=new List<int>();
    foreach(var tri in f){var c=(v[tri[0]]+v[tri[1]]+v[tri[2]])/3;int n=verts.Count;for(int k=0;k<3;k++)verts.Add(Vector3.Lerp(c,v[tri[k]],.86f));
-    tris.AddRange(new[]{n,n+1,n+2,n,n+2,n+1});}                 // both sides
+    tris.AddRange(new[]{n,n+1,n+2});}                 // the material renders both sides (cull off)
    panels=new Mesh{name="Paneles del escudo"};panels.SetVertices(verts);panels.SetTriangles(tris,0);panels.RecalculateNormals();panels.RecalculateBounds();
    return panels;
   }
