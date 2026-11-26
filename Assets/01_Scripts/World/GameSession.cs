@@ -121,7 +121,7 @@ namespace Nexoterra.World
     NexoHud.ControlRow(l,y0,"caminar","W","A","S","D");NexoHud.ControlRow(l,y0+step,"correr","Mayús");
     NexoHud.ControlRow(l,y0+step*2,"voltereta","Ctrl","+","A","/","D");NexoHud.ControlRow(l,y0+step*3,"recoger","E");NexoHud.ControlRow(l,y0+step*4,"alimentar","F");NexoHud.ControlRow(l,y0+step*5,"gestos","B");
     NexoHud.ControlRow(r,y0,"apuntar","Clic der");NexoHud.ControlRow(r,y0+step,"lanzar","Clic izq");NexoHud.ControlRow(r,y0+step*2,"recargar","R");
-    NexoHud.ControlRow(r,y0+step*3,"mochila","Alt");NexoHud.ControlRow(r,y0+step*4,"mapa","M");NexoHud.ControlRow(r,y0+step*5,"menú","Esc");}
+    NexoHud.ControlRow(r,y0+step*3,"mochila","Alt");NexoHud.ControlRow(r,y0+step*4,"compañera","G");NexoHud.ControlRow(r,y0+step*5,"menú","Esc");}
    // Right: actions, or one of its sub-pages.
    var right=new Rect(616,56,592,608);NexoUi.Panel(right);
    var content=new Rect(right.x+40,right.y+28,right.width-80,right.height-56);

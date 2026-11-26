@@ -49,7 +49,8 @@ namespace Nexoterra.World
             if(capturing)
             {Cursor.lockState=CursorLockMode.Locked;Cursor.visible=false;}
             if(k.hKey.wasPressedThisFrame)help=!help;
-            if(k.mKey.wasPressedThisFrame||NexoInput.Map){map=!map;if(inventory&&inventory.IsOpen)inventory.SetOpen(false);if(map)Release();}
+            // Biome map removed (keyboard and gamepad); the minimap replaces it.
+            map=false;
             if(inventoryOpen)map=false;
             if(k.vKey.wasPressedThisFrame){bool chooseFemale=!female.activeSelf;female.SetActive(chooseFemale);male.SetActive(!chooseFemale);Notify(chooseFemale?"Personaje: Comando":"Personaje: Jugador");}
             if(k.homeKey.wasPressedThisFrame||transform.position.y < -6)Teleport(spawn);
@@ -155,7 +156,7 @@ namespace Nexoterra.World
                 GUI.Label(new Rect(32,25,540,28),"NEXOTERRA / "+BiomeAt(transform.position),title);
                 GUI.Label(new Rect(32,54,540,24),"WASD · mover   Mayús · correr   Ratón · cámara",label);
                 GUI.Label(new Rect(32,78,540,24),"Clic der. · apuntar   Clic izq. · lanzar babosa   V · personaje",label);
-                GUI.Label(new Rect(32,101,540,24),"E · recoger   F · alimentar   Alt · mochila   B · gestos   M · mapa   T · visitar zona",label);
+                GUI.Label(new Rect(32,101,540,24),"E · recoger   F · alimentar   Alt · mochila   B · gestos   T · visitar zona",label);
             }
 
             if(Time.time<noticeUntil)GUI.Label(new Rect(cx-260,Screen.height-195,590,30),notice,label);

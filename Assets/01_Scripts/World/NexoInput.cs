@@ -7,7 +7,7 @@ namespace Nexoterra.World
  // PS5 (DualSense) / any gamepad layer, combined with keyboard and mouse by the callers.
  // Fixed: left stick move, right stick camera, L1/R1 cycle slugs, D-pad slot 1–4, L1+down emotes, Options pause.
  // Remappable (saved in PlayerPrefs): see Act. Defaults: R2 shoot, L2 aim, Square reload, Cross collect/feed,
- // Circle (+ stick sideways) roll, Triangle backpack, Create map, R3 companion, L3 sprint.
+ // Circle (+ stick sideways) roll, Triangle backpack, R3 companion, L3 sprint.
  public static class NexoInput
  {
   public enum Act{Shoot,Aim,Reload,Interact,Dodge,Backpack,Map,Companion,Sprint}
@@ -77,14 +77,16 @@ namespace Nexoterra.World
     else if(Pad!=null&&Pad.startButton.wasPressedThisFrame||Keyboard.current!=null&&Keyboard.current.escapeKey.wasPressedThisFrame)listening=-1;
    }
    float y=rect.y+80,half=(rect.width-16)/2,row=46;
+   int slot=0;
    for(int i=0;i<ActNames.Length;i++)
    {
-    float x=rect.x+(i%2)*(half+16),yy=y+(i/2)*row;
+    if(i==(int)Act.Map)continue;   // biome map was removed
+    float x=rect.x+(slot%2)*(half+16),yy=y+(slot/2)*row;slot++;
     NexoUi.Write(new Rect(x,yy,half*.5f,38),ActNames[i],14,NexoUi.Text);
     string label=listening==i?"PULSA UN BOTÓN…":ButtonName(Binding((Act)i));
     if(NexoUi.Button(new Rect(x+half*.5f,yy+2,half*.5f,36),label,listening==i)&&!wasListening&&listening<0){listening=i;listenFrame=Time.frameCount;}
    }
-   y+=Mathf.Ceil(ActNames.Length/2f)*row+6;
+   y+=Mathf.Ceil((ActNames.Length-1)/2f)*row+6;
    NexoUi.Write(new Rect(rect.x,y,rect.width,40),"Fijos: stick izq. mover · stick der. cámara · L1/R1 cambiar babosa · cruceta ranura 1–4 · L1 + abajo gestos · Options pausa.\nEn la mochila: cruceta mueve, X coge/suelta, Círculo cancela.",12,NexoUi.Muted);
    if(wasListening||listening>=0)return false;
    float half2=(rect.width-16)/2;
