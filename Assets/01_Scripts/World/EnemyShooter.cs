@@ -206,11 +206,12 @@ namespace Nexoterra.World
    foreach(var shot in travelling)if(shot)Destroy(shot.gameObject);
    if(dropped||!dropSlugsOnDeath||!catalog)return;dropped=true;
    var campaign=CampaignLevel.Current;int enemyIndex=campaign?Array.IndexOf(campaign.enemies,GetComponent<EnemyCombatant>()):-1;
+   var playerInventory=target?target.GetComponent<SlugInventory>():FindAnyObjectByType<SlugInventory>();
    for(int i=0;i<slugSlots.Length;i++){
     string species=slugSlots[i];if(SlugCatalog.BaseSpecies(species)=="Goon")continue;
     if(campaign&&campaign.guardian==GetComponent<EnemyCombatant>()&&SlugCatalog.BaseSpecies(species)==CampaignLevel.Rewards[campaign.index])continue;
     string key=enemyIndex+":"+i;if(campaign&&campaign.LootCollected(key))continue;
-    var definition=catalog.Find(species);if(definition==null)continue;
+    var definition=catalog.Find(species);if(definition==null||definition.unique&&playerInventory&&playerInventory.HasSpecies(species))continue;
     var position=transform.position+Quaternion.Euler(0,i*120,0)*Vector3.forward*.8f;
     var wild=EnemySlugLoot.Spawn(definition,position,key);
    }

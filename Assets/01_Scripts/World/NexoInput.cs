@@ -40,18 +40,18 @@ namespace Nexoterra.World
   public static Gamepad Pad=>Gamepad.current;
   static bool Down(ButtonControl b)=>b!=null&&b.wasPressedThisFrame;
   static bool Held(ButtonControl b)=>b!=null&&b.isPressed;
-  public static Vector2 Move{get{var p=Pad;if(p==null)return Vector2.zero;var v=p.leftStick.ReadValue();return v.magnitude<.15f?Vector2.zero:v;}}
+  public static Vector2 Move{get{var touch=MobileTouchControls.Move;if(touch.sqrMagnitude>.01f)return touch;var p=Pad;if(p==null)return Vector2.zero;var v=p.leftStick.ReadValue();return v.magnitude<.15f?Vector2.zero:v;}}
   public static Vector2 Look{get{var p=Pad;if(p==null)return Vector2.zero;var v=p.rightStick.ReadValue();return v.magnitude<.12f?Vector2.zero:v*v.magnitude;}}
-  public static bool Sprint=>Pad!=null&&(HeldAct(Act.Sprint)||Pad.leftStick.ReadValue().magnitude>.92f);
-  public static bool Aim=>HeldAct(Act.Aim);
-  public static bool Shoot=>Pressed(Act.Shoot);
-  public static bool Reload=>Pressed(Act.Reload);
-  public static bool Interact=>Pressed(Act.Interact);
-  public static bool Dodge=>Pressed(Act.Dodge);
+  public static bool Sprint=>MobileTouchControls.Sprint||Pad!=null&&(HeldAct(Act.Sprint)||Pad.leftStick.ReadValue().magnitude>.92f);
+  public static bool Aim=>MobileTouchControls.Aim||HeldAct(Act.Aim);
+  public static bool Shoot=>MobileTouchControls.ShootPressed||Pressed(Act.Shoot);
+  public static bool Reload=>MobileTouchControls.ReloadPressed||Pressed(Act.Reload);
+  public static bool Interact=>MobileTouchControls.InteractPressed||Pressed(Act.Interact);
+  public static bool Dodge=>MobileTouchControls.DodgePressed||Pressed(Act.Dodge);
   public static bool Backpack=>Pressed(Act.Backpack);
   public static bool Map=>Pressed(Act.Map);
-  public static bool Companion=>Pressed(Act.Companion);
-  public static bool Pause=>Pad!=null&&Down(Pad.startButton);
+  public static bool Companion=>MobileTouchControls.CompanionPressed||Pressed(Act.Companion);
+  public static bool Pause=>MobileTouchControls.PausePressed||Pad!=null&&Down(Pad.startButton);
   public static bool Emotes=>Pad!=null&&Held(Pad.leftShoulder)&&Down(Pad.dpad.down);
   public static int Cycle=>Pad==null||Held(Pad.leftShoulder)&&Pad.dpad.ReadValue().sqrMagnitude>0?0:Down(Pad.rightShoulder)?1:Down(Pad.leftShoulder)?-1:0;
   // D-pad picks slots: up=1, right=2, down=3, left=4 (only when L1 is not held).
@@ -60,7 +60,7 @@ namespace Nexoterra.World
   public static Vector2Int NavStep{get{var p=Pad;if(p==null)return Vector2Int.zero;int x=(Down(p.dpad.right)||Down(p.leftStick.right)?1:0)-(Down(p.dpad.left)||Down(p.leftStick.left)?1:0);int y=(Down(p.dpad.down)||Down(p.leftStick.down)?1:0)-(Down(p.dpad.up)||Down(p.leftStick.up)?1:0);return new Vector2Int(x,y);}}
   public static bool Confirm=>Pad!=null&&Down(Pad.buttonSouth);
   public static bool Cancel=>Pad!=null&&Down(Pad.buttonEast);
-  public static bool AnyActivity{get{var p=Pad;if(p==null)return false;return Move!=Vector2.zero||Look!=Vector2.zero||p.rightTrigger.isPressed||p.leftTrigger.isPressed||p.buttonSouth.isPressed||p.buttonWest.isPressed||p.buttonEast.isPressed;}}
+  public static bool AnyActivity{get{var p=Pad;return MobileTouchControls.HasGameplayActivity||Move!=Vector2.zero||Look!=Vector2.zero||p!=null&&(p.rightTrigger.isPressed||p.leftTrigger.isPressed||p.buttonSouth.isPressed||p.buttonWest.isPressed||p.buttonEast.isPressed);}}
 
   // ---- Settings page for remapping ----
   static int listening=-1,listenFrame;

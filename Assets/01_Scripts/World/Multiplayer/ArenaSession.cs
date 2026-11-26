@@ -29,6 +29,7 @@ namespace Nexoterra.World
    public readonly Dictionary<string,float> busyUntil=new Dictionary<string,float>();
   }
   public static ArenaSession Current {get;private set;}
+  public bool LocalPaused {get;private set;}
   readonly Dictionary<ulong,Peer> peers=new Dictionary<ulong,Peer>();
   NetworkManager network;
   NexoterraThirdPerson player;SlugInventory inventory;PlayerHealth health;
@@ -208,6 +209,8 @@ namespace Nexoterra.World
   }
   void Update(){
    if(!registered||!network||!network.IsListening)return;
+   var keyboard=UnityEngine.InputSystem.Keyboard.current;
+   if(!GameSession.Current&&(MobileTouchControls.PausePressed||keyboard!=null&&keyboard.escapeKey.wasPressedThisFrame))LocalPaused=!LocalPaused;
    SmoothRemotePlayers();
    if(!peers.ContainsKey(network.LocalClientId)&&Time.unscaledTime>=helloAt){helloAt=Time.unscaledTime+1;SendToServer(new Packet{kind="hello",name=PlayerName,collection=inventory.owned.Distinct().ToArray(),goldenCollection=GoldenSpecies()});}
    if(Time.unscaledTime>=sendAt){
@@ -242,7 +245,8 @@ namespace Nexoterra.World
   }
   void OnGUI(){
    // Room address (to share) under the life bar; leaving is in the Esc menu.
-   if(GameSession.Blocked||!network||!MultiplayerRoom.Current)return;
+   if(GameSession.Current&&GameSession.Current.menu||!network||!MultiplayerRoom.Current)return;
+   if(LocalPaused){DrawPauseMenu();return;}
    DrawNameTags();
    var before=GUI.matrix;NexoHud.Scale();
    string code=MultiplayerRoom.Current.Code;
@@ -251,6 +255,13 @@ namespace Nexoterra.World
    if(Cursor.visible&&NexoUi.Button(new Rect(122,108,150,20),"COPIAR CÓDIGO"))copyNow=true;
    if(copyNow){GUIUtility.systemCopyBuffer=code;copiedUntil=Time.unscaledTime+2;}
    NexoHud.Shadowed(new Rect(Cursor.visible?280:122,109,300,18),Time.unscaledTime<copiedUntil?"✔ Código copiado":"F8 · copiar código",11,Time.unscaledTime<copiedUntil?new Color(.5f,1,.6f):NexoUi.Muted);
+   GUI.matrix=before;
+  }
+  void DrawPauseMenu(){
+   var before=GUI.matrix;NexoHud.Fill(new Rect(0,0,Screen.width,Screen.height),new Color(.005f,.02f,.03f,.78f));NexoHud.Scale();
+   var panel=new Rect(440,226,400,268);NexoUi.Panel(panel);NexoUi.Title(new Rect(panel.x+30,panel.y+22,panel.width-60,62),"PARTIDA EN PAUSA","La sala sigue activa para los demás jugadores.");
+   if(NexoHud.PrimaryButton(new Rect(panel.x+40,panel.y+112,panel.width-80,54),"REANUDAR")){LocalPaused=false;NexoUi.ResetFocus();}
+   if(NexoHud.Button(new Rect(panel.x+40,panel.y+180,panel.width-80,50),"SALIR AL MENÚ PRINCIPAL")){LocalPaused=false;if(MultiplayerRoom.Current)MultiplayerRoom.Current.Leave();FrontEndMenu.Load(FrontEndMenu.MenuScene);}
    GUI.matrix=before;
   }
  }

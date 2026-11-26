@@ -68,11 +68,10 @@ namespace Nexoterra.World
         {
             if(GameSession.Blocked)return;
             int selectionBefore=selected;
-            var k=Keyboard.current;var m=Mouse.current;if(k==null)return;
-            if(k.leftAltKey.wasPressedThisFrame||k.rightAltKey.wasPressedThisFrame||NexoInput.Backpack)SetOpen(!IsOpen);
-            if(!GameSession.Current&&k.escapeKey.wasPressedThisFrame&&IsOpen){SetOpen(false);Cursor.lockState=CursorLockMode.None;Cursor.visible=true;}
-            var keys=new[]{k.digit1Key,k.digit2Key,k.digit3Key,k.digit4Key,k.digit5Key,k.digit6Key};
-            for(int i=0;i<6;i++)if(keys[i].wasPressedThisFrame)selected=i;
+            var k=Keyboard.current;var m=Mouse.current;
+            if(k!=null&&(k.leftAltKey.wasPressedThisFrame||k.rightAltKey.wasPressedThisFrame)||NexoInput.Backpack)SetOpen(!IsOpen);
+            if(!GameSession.Current&&k!=null&&k.escapeKey.wasPressedThisFrame&&IsOpen){SetOpen(false);Cursor.lockState=CursorLockMode.None;Cursor.visible=true;}
+            if(k!=null){var keys=new[]{k.digit1Key,k.digit2Key,k.digit3Key,k.digit4Key,k.digit5Key,k.digit6Key};for(int i=0;i<6;i++)if(keys[i].wasPressedThisFrame)selected=i;}
             if(IsOpen)PadBackpack();else padHeld=-1;
             if(!IsOpen&&NexoInput.Cycle!=0)selected=(selected+(NexoInput.Cycle>0?1:5))%6;
             if(!IsOpen&&NexoInput.Slot>=0)selected=NexoInput.Slot;
@@ -205,7 +204,7 @@ namespace Nexoterra.World
                 bool active=i==selected;bool busy=def!=null&&IsBusy(def.id);
                 NexoUi.SlugCanister(r,def,active,i+1,busy?.4f:1);
                 if(busy)DrawReturnRing(r,def.id);
-                if(Cursor.lockState!=CursorLockMode.Locked&&GUI.Button(r,GUIContent.none,GUIStyle.none))selected=i;
+                if((MobileTouchControls.IsEnabled||Cursor.lockState!=CursorLockMode.Locked)&&(MobileTouchControls.TryConsumeTap(r)||GUI.Button(r,GUIContent.none,GUIStyle.none)))selected=i;
             }
             // Charge gauge: full when the selected slug is loaded, fills during reload.
             var definition=SelectedDefinition();var current=definition==null?null:Travelling(definition.id);
@@ -231,7 +230,7 @@ namespace Nexoterra.World
             NexoHud.Shadowed(new Rect(inner.x,inner.y+4,inner.width,34),value,24,accent,TextAnchor.MiddleCenter);
             NexoHud.Fill(new Rect(inner.x+8,inner.y+44,inner.width-16,1),accent*new Color(1,1,1,.5f));
             NexoHud.Label(new Rect(inner.x,inner.y+48,inner.width,26),caption,10,NexoUi.Text,TextAnchor.MiddleCenter);
-            return GUI.Button(r,GUIContent.none,GUIStyle.none)&&Cursor.lockState!=CursorLockMode.Locked;
+            return (MobileTouchControls.TryConsumeTap(r)||GUI.Button(r,GUIContent.none,GUIStyle.none))&&(MobileTouchControls.IsEnabled||Cursor.lockState!=CursorLockMode.Locked);
         }
         bool DrawResource(Rect r,string value,string caption,Texture2D icon,Color accent,bool active=false)
         {
@@ -239,7 +238,7 @@ namespace Nexoterra.World
             if(icon)GUI.DrawTexture(new Rect(inner.center.x-21,inner.y+4,42,42),icon,ScaleMode.ScaleToFit,true);
             else if(caption!=null)NexoHud.Label(new Rect(inner.x,inner.y+10,inner.width,20),caption,10,NexoUi.Text,TextAnchor.MiddleCenter);
             NexoHud.Shadowed(new Rect(inner.x,inner.y+46,inner.width,24),value,18,accent,TextAnchor.MiddleCenter);
-            return GUI.Button(r,GUIContent.none,GUIStyle.none)&&Cursor.lockState!=CursorLockMode.Locked;
+            return (MobileTouchControls.TryConsumeTap(r)||GUI.Button(r,GUIContent.none,GUIStyle.none))&&(MobileTouchControls.IsEnabled||Cursor.lockState!=CursorLockMode.Locked);
         }
         // Thin dodge recharge line: fills while recharging, glows when ready.
         static void DrawDodgeRecharge(Rect r,float fraction,bool ready)
@@ -263,6 +262,8 @@ namespace Nexoterra.World
             var visible=new List<int>();for(int i=0;i<owned.Count;i++)if(!onlyElementals||(catalog.Find(owned[i])?.IsElemental??false))visible.Add(i);
             if(!visible.Contains(previewIndex))previewIndex=visible.Count>0?visible[0]:-1;
             if(visible.Count==0)NexoHud.Label(new Rect(218,236,490,105),owned.Count==0?"TU COLECCIÓN EMPIEZA AQUÍ\nRecoge hongos con E y alimenta babosas con F.":"AÚN NO TIENES ELEMENTALES\nExplora los lugares especiales de cada bioma.",18,NexoUi.Muted,TextAnchor.MiddleCenter);
+            if(MobileTouchControls.IsEnabled&&MobileTouchControls.TryGetPointer(out var touchPoint)&&new Rect(192,178,588,300).Contains(touchPoint))
+                scroll.y=Mathf.Clamp(scroll.y+MobileTouchControls.UiDragDelta.y/Mathf.Max(.01f,scale),0,Mathf.Max(0,Mathf.Ceil(visible.Count/5f)*144-298));
             scroll=GUI.BeginScrollView(new Rect(192,178,588,300),scroll,new Rect(0,0,564,Mathf.Max(298,Mathf.Ceil(visible.Count/5f)*144)));
             for(int k=0;k<visible.Count;k++)
             {
@@ -270,6 +271,7 @@ namespace Nexoterra.World
                 Slot(r,d,slot==selected&&slot>=0,slot>=0?(slot+1).ToString():"·",d?.displayName??"No disponible");
                 if(r.Contains(Event.current.mousePosition))previewIndex=i;
                 var e=Event.current;
+                if(d!=null&&MobileTouchControls.TryConsumeTap(r)){previewIndex=i;if(slot>=0)selected=slot;else Equip(i,selected);}
                 if(!padOnBar&&k==padIndex)PadCursor(r);
                 if(d!=null&&e.type==EventType.MouseDown&&e.button==0&&r.Contains(e.mousePosition)){dragOwned=i;dragFromSlot=-1;dragging=false;dragStart=e.mousePosition-scroll+new Vector2(192,178);e.Use();}
             }
@@ -347,6 +349,7 @@ namespace Nexoterra.World
                 int index=equipped[s];var def=index>=0&&index<owned.Count?catalog.Find(owned[index]):null;var r=EquipSlot(s);
                 Slot(r,def,s==selected,(s+1).ToString(),def?.displayName??"Vacío");
                 if(padOnBar&&s==padIndex)PadCursor(r);
+                if(MobileTouchControls.TryConsumeTap(r)){selected=s;if(index>=0)previewIndex=index;}
                 if(dragging&&r.Contains(e.mousePosition))NexoHud.Brackets(new Rect(r.x-3,r.y-3,r.width+6,r.height+6),NexoHud.Orange,14,3);
                 if(e.type==EventType.MouseDown&&e.button==0&&r.Contains(e.mousePosition)){selected=s;if(index>=0){dragOwned=index;dragFromSlot=s;dragging=false;dragStart=e.mousePosition;previewIndex=index;}e.Use();}
             }

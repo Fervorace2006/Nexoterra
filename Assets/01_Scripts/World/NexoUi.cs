@@ -105,7 +105,8 @@ namespace Nexoterra.World
   {
    int index=navActive?navCount++:-1;
    int id=GUIUtility.GetControlID(FocusType.Passive,r);var e=Event.current;bool enabled=GUI.enabled,clicked=false;
-   hover=enabled&&r.Contains(e.mousePosition);
+   bool touchHover=MobileTouchControls.TryGetPointer(out var touchPosition)&&r.Contains(touchPosition);
+   hover=enabled&&(r.Contains(e.mousePosition)||touchHover);
    switch(e.GetTypeForControl(id))
    {
     case EventType.MouseDown:if(hover&&e.button==0){GUIUtility.hotControl=id;e.Use();}break;
@@ -116,6 +117,7 @@ namespace Nexoterra.World
    pressed=GUIUtility.hotControl==id&&hover;
    focused=index>=0&&index==focus&&keyboardMode&&enabled;
    if(index>=0&&index==activate){activate=-1;if(enabled)clicked=true;}
+   if(enabled&&MobileTouchControls.TryConsumeTap(r)){hover=true;clicked=true;}
    // Sounds: hover when the pointer/focus enters a control, click when it activates.
    if(e.type==EventType.Repaint){bool over=hover||focused;if(over&&hoverId!=id){hoverId=id;NexoAudio.Play("ui_hover",.22f);}else if(!over&&hoverId==id)hoverId=0;}
    if(clicked)NexoAudio.Play("ui_click",.5f);
@@ -196,6 +198,7 @@ namespace Nexoterra.World
   {
    int id=GUIUtility.GetControlID(FocusType.Passive,r);var e=Event.current;
    var track=new Rect(r.x+10,r.y+30,r.width-20,8);var hit=new Rect(r.x,r.y+18,r.width,r.height-14);
+   if(GUI.enabled&&MobileTouchControls.TryConsumeTap(hit,out var touchPoint)){value=Mathf.Clamp01((touchPoint.x-track.x)/track.width);GUI.changed=true;NexoAudio.Play("ui_click",.5f);}
    switch(e.GetTypeForControl(id))
    {
     case EventType.MouseDown:if(GUI.enabled&&hit.Contains(e.mousePosition)&&e.button==0){GUIUtility.hotControl=id;value=Mathf.Clamp01((e.mousePosition.x-track.x)/track.width);GUI.changed=true;e.Use();}break;

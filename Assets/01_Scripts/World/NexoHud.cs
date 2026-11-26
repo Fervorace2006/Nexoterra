@@ -118,7 +118,7 @@ namespace Nexoterra.World
    }
    Label(new Rect(x+4,y,220,26),description,13,NexoUi.Text,TextAnchor.MiddleLeft);
   }
-  static Texture2D vignette;static GUIStyle field;
+  static Texture2D vignette;static GUIStyle field;static TouchScreenKeyboard mobileKeyboard;static Rect mobileKeyboardRect;
   // Full-screen menu backdrop: key art cropped to fill, deep-water tint, vignette and slow caustic bands.
   public static void Backdrop(Texture2D art)
   {
@@ -134,10 +134,21 @@ namespace Nexoterra.World
   public static string Field(Rect r,string value,int max)
   {
    if(field==null){field=new GUIStyle(GUI.skin.textField){fontSize=19,alignment=TextAnchor.MiddleLeft,padding=new RectOffset(14,14,6,6)};foreach(var s in new[]{field.normal,field.hover,field.focused,field.active}){s.background=Texture2D.whiteTexture;}field.normal.textColor=field.hover.textColor=NexoUi.Text;field.focused.textColor=field.active.textColor=Color.white;}
-   bool focus=GUI.enabled&&r.Contains(Event.current.mousePosition);
+   bool touchFocus=MobileTouchControls.TryGetPointer(out var touchPosition)&&r.Contains(touchPosition);
+   if(GUI.enabled&&MobileTouchControls.TryConsumeTap(r)&&MobileTouchControls.IsEnabled)
+   {
+    var keyboardType=max<=5?TouchScreenKeyboardType.NumberPad:max>=30?TouchScreenKeyboardType.NumbersAndPunctuation:TouchScreenKeyboardType.Default;
+    mobileKeyboard=TouchScreenKeyboard.Open(value,keyboardType,false,false,false,false,"Escribe aquí",max);mobileKeyboardRect=r;
+   }
+   bool focus=GUI.enabled&&(r.Contains(Event.current.mousePosition)||touchFocus||MobileTouchControls.IsEnabled&&mobileKeyboard!=null&&mobileKeyboardRect==r);
    Fill(r,focus?NexoUi.Teal:NexoUi.Edge);
    var old=GUI.backgroundColor;GUI.backgroundColor=GUI.enabled?new Color(.03f,.075f,.095f):new Color(.04f,.06f,.07f);
    string result=GUI.TextField(new Rect(r.x+1,r.y+1,r.width-2,r.height-2),value,max,field);
+   if(MobileTouchControls.IsEnabled&&mobileKeyboard!=null&&mobileKeyboardRect==r)
+   {
+    if(mobileKeyboard.status!=TouchScreenKeyboard.Status.Canceled)result=mobileKeyboard.text;
+    if(mobileKeyboard.status==TouchScreenKeyboard.Status.Done||mobileKeyboard.status==TouchScreenKeyboard.Status.Canceled)mobileKeyboard=null;
+   }
    GUI.backgroundColor=old;Fill(new Rect(r.x,r.yMax-2,r.width,2),focus?NexoUi.Teal:NexoUi.Edge*1.5f);
    return result;
   }

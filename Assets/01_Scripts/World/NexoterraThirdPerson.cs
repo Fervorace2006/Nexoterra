@@ -32,45 +32,38 @@ namespace Nexoterra.World
         {
             if(GameSession.Blocked)return;
             var k=Keyboard.current;var m=Mouse.current;
-            if(k==null||m==null)
-            {
-                if(motor.isGrounded&&vertical<0)vertical=-2;
-                vertical+=Physics.gravity.y*1.8f*Time.deltaTime;
-                Vector3 automatic=abilities&&abilities.IsDodging?abilities.DodgeDirection*abilities.DodgeSpeed:Vector3.zero;
-                if(health&&!health.CanMove)automatic=Vector3.zero;
-                motor.Move((automatic+Vector3.up*vertical)*Time.deltaTime);
-                return;
-            }
-            if(k.escapeKey.wasPressedThisFrame&&!GameSession.Current)Release();
+            if(k!=null&&k.escapeKey.wasPressedThisFrame&&!GameSession.Current)Release();
             if(NexoInput.AnyActivity&&Cursor.lockState!=CursorLockMode.Locked&&!map&&!(inventory&&inventory.IsOpen)&&!(GetComponent<PlayerEmotes>()&&GetComponent<PlayerEmotes>().IsOpen)){Cursor.lockState=CursorLockMode.Locked;Cursor.visible=false;}
             bool inventoryOpen=inventory&&inventory.IsOpen;
             bool emoteMenu=GetComponent<PlayerEmotes>()&&GetComponent<PlayerEmotes>().IsOpen;
-            bool capturing=m.leftButton.wasPressedThisFrame&&Cursor.lockState!=CursorLockMode.Locked&&!map&&!inventoryOpen&&!emoteMenu&&!(inventory&&inventory.PointerOverBar);
+            bool capturing=m!=null&&m.leftButton.wasPressedThisFrame&&Cursor.lockState!=CursorLockMode.Locked&&!map&&!inventoryOpen&&!emoteMenu&&!(inventory&&inventory.PointerOverBar);
             if(capturing)
             {Cursor.lockState=CursorLockMode.Locked;Cursor.visible=false;}
-            if(k.hKey.wasPressedThisFrame)help=!help;
-            if(k.mKey.wasPressedThisFrame||NexoInput.Map)map=!map;
+            if(k!=null&&k.hKey.wasPressedThisFrame)help=!help;
+            if(k!=null&&k.mKey.wasPressedThisFrame||NexoInput.Map)map=!map;
             if(inventoryOpen)map=false;
-            if(k.vKey.wasPressedThisFrame){bool chooseFemale=!female.activeSelf;female.SetActive(chooseFemale);male.SetActive(!chooseFemale);Notify(chooseFemale?"Personaje: Comando":"Personaje: Jugador");}
-            if(k.homeKey.wasPressedThisFrame||transform.position.y < -6)Teleport(spawn);
-            if(!CampaignLevel.Current&&k.tKey.wasPressedThisFrame&&travelPoints.Length>0){travelIndex=(travelIndex+1)%travelPoints.Length;Teleport(travelPoints[travelIndex].position);Notify("Visita de prueba: "+travelPoints[travelIndex].name);}
+            if(k!=null&&k.vKey.wasPressedThisFrame){bool chooseFemale=!female.activeSelf;female.SetActive(chooseFemale);male.SetActive(!chooseFemale);Notify(chooseFemale?"Personaje: Comando":"Personaje: Jugador");}
+            if(k!=null&&k.homeKey.wasPressedThisFrame||transform.position.y < -6)Teleport(spawn);
+            if(!CampaignLevel.Current&&k!=null&&k.tKey.wasPressedThisFrame&&travelPoints.Length>0){travelIndex=(travelIndex+1)%travelPoints.Length;Teleport(travelPoints[travelIndex].position);Notify("Visita de prueba: "+travelPoints[travelIndex].name);}
             Vector2 input=Vector2.zero;
-            if(Cursor.lockState==CursorLockMode.Locked&&!map&&!inventoryOpen&&!emoteMenu)
+            if((Cursor.lockState==CursorLockMode.Locked||MobileTouchControls.IsEnabled)&&!map&&!inventoryOpen&&!emoteMenu)
             {
-                Vector2 mouse=m.delta.ReadValue()*.09f;Vector2 stick=NexoInput.Look*Time.deltaTime*(NexoInput.Aim?110:200);mouse+=new Vector2(stick.x,stick.y*.7f);yaw+=mouse.x;pitch=Mathf.Clamp(pitch-mouse.y,-30,65);
-                input=new Vector2((k.dKey.isPressed?1:0)-(k.aKey.isPressed?1:0),(k.wKey.isPressed?1:0)-(k.sKey.isPressed?1:0));
+                Vector2 mouse=m!=null?m.delta.ReadValue()*.09f:Vector2.zero;
+                if(MobileTouchControls.IsEnabled)mouse+=MobileTouchControls.LookDelta*.12f;
+                Vector2 stick=NexoInput.Look*Time.deltaTime*(NexoInput.Aim?110:200);mouse+=new Vector2(stick.x,stick.y*.7f);yaw+=mouse.x;pitch=Mathf.Clamp(pitch-mouse.y,-30,65);
+                if(k!=null)input=new Vector2((k.dKey.isPressed?1:0)-(k.aKey.isPressed?1:0),(k.wKey.isPressed?1:0)-(k.sKey.isPressed?1:0));
                 Vector2 padMove=NexoInput.Move;if(padMove!=Vector2.zero)input=padMove;
-                if(abilities&&NexoInput.Dodge&&Mathf.Abs(padMove.x)>.3f)abilities.TryDodge(padMove.x>0?1:-1,Quaternion.Euler(0,yaw,0)*Vector3.right);
-                if(abilities&&(k.leftCtrlKey.isPressed||k.rightCtrlKey.isPressed)){
+                if(abilities&&NexoInput.Dodge){int side=Mathf.Abs(input.x)>.3f?(input.x>0?1:-1):1;abilities.TryDodge(side,Quaternion.Euler(0,yaw,0)*Vector3.right);}
+                if(abilities&&k!=null&&(k.leftCtrlKey.isPressed||k.rightCtrlKey.isPressed)){
                     bool ctrl=k.leftCtrlKey.wasPressedThisFrame||k.rightCtrlKey.wasPressedThisFrame;
                     if(k.aKey.wasPressedThisFrame||(ctrl&&k.aKey.isPressed))abilities.TryDodge(-1,Quaternion.Euler(0,yaw,0)*Vector3.right);
                     else if(k.dKey.wasPressedThisFrame||(ctrl&&k.dKey.isPressed))abilities.TryDodge(1,Quaternion.Euler(0,yaw,0)*Vector3.right);
                 }
-                if(k.eKey.wasPressedThisFrame)Collect();
-                if(k.fKey.wasPressedThisFrame){if(!CampaignLevel.Current||!CampaignLevel.Current.TryReturnElemental())Feed();}
+                if(k!=null&&k.eKey.wasPressedThisFrame)Collect();
+                if(k!=null&&k.fKey.wasPressedThisFrame){if(!CampaignLevel.Current||!CampaignLevel.Current.TryReturnElemental())Feed();}
                 if(NexoInput.Interact){bool returned=CampaignLevel.Current&&CampaignLevel.Current.TryReturnElemental();if(!returned){Collect();Feed();}}
-                if((k.rKey.wasPressedThisFrame||NexoInput.Reload)&&animationDriver)animationDriver.Reload();
-                if((m.leftButton.wasPressedThisFrame&&!capturing)||NexoInput.Shoot)Shoot();
+                if((k!=null&&k.rKey.wasPressedThisFrame||NexoInput.Reload)&&animationDriver)animationDriver.Reload();
+                if((m!=null&&m.leftButton.wasPressedThisFrame&&!capturing)||NexoInput.Shoot)Shoot();
             }
             if(health&&!health.CanMove)input=Vector2.zero;
             Vector3 movement=Quaternion.Euler(0,yaw,0)*Vector3.ClampMagnitude(new Vector3(input.x,0,input.y),1);
@@ -78,13 +71,13 @@ namespace Nexoterra.World
             // Jumping is disabled in Nexoterra (Space does nothing).
             // Snappy arc: lighter going up, heavier coming down (no floaty hang time).
             vertical+=Physics.gravity.y*(vertical>0?2.2f:2.9f)*Time.deltaTime;
-            float moveSpeed=(k.leftShiftKey.isPressed||NexoInput.Sprint?sprintSpeed:walkSpeed)*(abilities?abilities.MovementMultiplier:1);
+            float moveSpeed=(k!=null&&k.leftShiftKey.isPressed||NexoInput.Sprint?sprintSpeed:walkSpeed)*(abilities?abilities.MovementMultiplier:1);
             if(abilities&&abilities.IsDodging){movement=abilities.DodgeDirection;moveSpeed=abilities.DodgeSpeed;}
             if(health&&!health.CanMove)movement=Vector3.zero;
             motor.Move((movement*moveSpeed+Vector3.up*vertical)*Time.deltaTime);
-            if(movement.sqrMagnitude>.01f||((m.rightButton.isPressed||NexoInput.Aim)&&!inventoryOpen))
+            if(movement.sqrMagnitude>.01f||(((m!=null&&m.rightButton.isPressed)||NexoInput.Aim)&&!inventoryOpen))
             {
-                float facing=(m.rightButton.isPressed||NexoInput.Aim||(abilities&&abilities.IsDodging))?yaw:Mathf.Atan2(movement.x,movement.z)*Mathf.Rad2Deg;
+                float facing=((m!=null&&m.rightButton.isPressed)||NexoInput.Aim||(abilities&&abilities.IsDodging))?yaw:Mathf.Atan2(movement.x,movement.z)*Mathf.Rad2Deg;
                 visuals.rotation=Quaternion.Slerp(visuals.rotation,Quaternion.Euler(0,facing,0),1-Mathf.Exp(-15*Time.deltaTime));
             }
             if(tracer)tracer.enabled=Time.time<tracerUntil;
@@ -92,7 +85,7 @@ namespace Nexoterra.World
         void LateUpdate()
         {
             if(!view)return;
-            bool aim=(Mouse.current!=null&&Mouse.current.rightButton.isPressed||NexoInput.Aim)&&Cursor.lockState==CursorLockMode.Locked;
+            bool aim=(Mouse.current!=null&&Mouse.current.rightButton.isPressed||NexoInput.Aim)&&(Cursor.lockState==CursorLockMode.Locked||MobileTouchControls.IsEnabled);
             Quaternion rotation=Quaternion.Euler(pitch,yaw,0);
             Vector3 pivot=transform.position+Vector3.up*1.5f;
             Vector3 offset=rotation*new Vector3(aim?.55f:.75f,.25f,aim?-2.2f:-4.1f);

@@ -5,6 +5,8 @@ namespace Nexoterra.World
  {
   public string key;
   public static WildSlug Spawn(SlugDefinition definition,Vector3 position,string key){
+   var inventory=FindAnyObjectByType<SlugInventory>();
+   if(definition!=null&&definition.unique&&inventory&&inventory.HasSpecies(definition.id))return null;
    float ground=float.NegativeInfinity;
    foreach(var hit in Physics.RaycastAll(position+Vector3.up*2,Vector3.down,8,SlugHop.WorldMask,QueryTriggerInteraction.Ignore))
     if(hit.normal.y>.5f&&!hit.collider.GetComponentInParent<EnemyCombatant>()&&!hit.collider.GetComponentInParent<NexoterraThirdPerson>())ground=Mathf.Max(ground,hit.point.y);

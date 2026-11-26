@@ -17,7 +17,7 @@ namespace Nexoterra.World
    public int selected,food,boss,darkWater; public Vector3 position; public float health=100; public bool female,campaignComplete; public bool[] returnedElementals=new bool[5],completedLevels=new bool[7];
   }
   public static GameSession Current {get;private set;}
-  public static bool Blocked=>Current&&Current.menu;
+  public static bool Blocked=>Current&&Current.menu||ArenaSession.Current&&ArenaSession.Current.LocalPaused;
   static Data pending; static bool startNew,pendingEntrance;
   public bool Ready {get;private set;}
   public bool CampaignComplete{get;private set;}
