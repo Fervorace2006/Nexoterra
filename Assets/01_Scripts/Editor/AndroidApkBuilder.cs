@@ -16,12 +16,18 @@ namespace Nexoterra.EditorTools
     {
         const string RequestPath = "Library/NexoterraAndroidBuild.request";
         const string ResultPath = "Library/NexoterraAndroidBuild.result";
+        const string WindowsRequestPath = "Library/NexoterraWindowsBuild.request";
+        const string WindowsResultPath = "Library/NexoterraWindowsBuild.result";
         const string OutputPath = "Build/Android/Nexoterra.apk";
+        const string WindowsOutputPath = @"C:\Users\johnn\Downloads\NEXOTERRA\Nexoterra.exe";
 
         static AndroidApkBuilder() => EditorApplication.update += PollRequest;
 
         [MenuItem("Nexoterra/Build Android APK")]
         public static void BuildFromMenu() => Build();
+
+        [MenuItem("Nexoterra/Build Windows (PS5 Controller)")]
+        public static void BuildWindowsFromMenu() => BuildWindows();
 
         [MenuItem("Nexoterra/Polish Mobile Scenes and Build APK")]
         public static void PolishScenesAndBuild()
@@ -34,19 +40,38 @@ namespace Nexoterra.EditorTools
 
         static void PollRequest()
         {
-            if (EditorApplication.isPlayingOrWillChangePlaymode || EditorApplication.isCompiling || EditorApplication.isUpdating || !File.Exists(RequestPath)) return;
-            File.Delete(RequestPath);
-            try
+            if (EditorApplication.isPlayingOrWillChangePlaymode || EditorApplication.isCompiling || EditorApplication.isUpdating) return;
+            if (File.Exists(RequestPath))
             {
-                int houses = EmbedArenaHouses();
-                int enemies = DisperseFinalEnemies();
-                var report = Build();
-                File.WriteAllText(ResultPath, "PASS " + OutputPath + " · " + report.summary.totalSize + " bytes · casas " + houses + " · enemigos " + enemies);
+                File.Delete(RequestPath);
+                try
+                {
+                    int houses = EmbedArenaHouses();
+                    int enemies = DisperseFinalEnemies();
+                    var report = Build();
+                    File.WriteAllText(ResultPath, "PASS " + OutputPath + " · " + report.summary.totalSize + " bytes · casas " + houses + " · enemigos " + enemies);
+                }
+                catch (Exception exception)
+                {
+                    File.WriteAllText(ResultPath, "FAIL " + exception);
+                    Debug.LogException(exception);
+                }
             }
-            catch (Exception exception)
+            if (File.Exists(WindowsRequestPath))
             {
-                File.WriteAllText(ResultPath, "FAIL " + exception);
-                Debug.LogException(exception);
+                File.Delete(WindowsRequestPath);
+                try
+                {
+                    int houses = EmbedArenaHouses();
+                    int enemies = DisperseFinalEnemies();
+                    var report = BuildWindows();
+                    File.WriteAllText(WindowsResultPath, "PASS " + WindowsOutputPath + " · " + report.summary.totalSize + " bytes · casas " + houses + " · enemigos " + enemies);
+                }
+                catch (Exception exception)
+                {
+                    File.WriteAllText(WindowsResultPath, "FAIL " + exception);
+                    Debug.LogException(exception);
+                }
             }
         }
 
@@ -74,6 +99,28 @@ namespace Nexoterra.EditorTools
             return report;
         }
 
+        static BuildReport BuildWindows()
+        {
+            PlayerSettings.companyName = "Nexoterra";
+            PlayerSettings.productName = "Nexoterra";
+            PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Standalone, "com.nexoterra.game");
+
+            var scenes = EditorBuildSettings.scenes.Where(scene => scene.enabled).Select(scene => scene.path).ToArray();
+            if (scenes.Length == 0) throw new InvalidOperationException("No hay escenas habilitadas en EditorBuildSettings.");
+            var fullOutput = Path.GetFullPath(WindowsOutputPath);
+            Directory.CreateDirectory(Path.GetDirectoryName(fullOutput));
+            var report = BuildPipeline.BuildPlayer(new BuildPlayerOptions
+            {
+                scenes = scenes,
+                locationPathName = fullOutput,
+                target = BuildTarget.StandaloneWindows64,
+                options = BuildOptions.None
+            });
+            if (report.summary.result != BuildResult.Succeeded)
+                throw new InvalidOperationException("El build Windows terminó con estado " + report.summary.result + ". Revisa Editor.log.");
+            return report;
+        }
+
         static int EmbedArenaHouses()
         {
             var scene = OpenSceneSafely("Assets/00_Scenes/Campaign/Nexoterra_Arena.unity", out var opened);
@@ -96,7 +143,8 @@ namespace Nexoterra.EditorTools
                     for (int i = 1; i < renderers.Length; i++) bounds.Encapsulate(renderers[i].bounds);
                     var ray = new Ray(new Vector3(house.position.x, ground.bounds.max.y + 80, house.position.z), Vector3.down);
                     if (!ground.Raycast(ray, out var hit, 240)) continue;
-                    float correction = hit.point.y - bounds.min.y - .12f;
+                    const float foundationInset = .55f;
+                    float correction = hit.point.y - bounds.min.y - foundationInset;
                     if (Mathf.Abs(correction) < .005f) continue;
                     house.position += Vector3.up * correction;
                     PrefabUtility.RecordPrefabInstancePropertyModifications(house);
