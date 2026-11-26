@@ -33,7 +33,6 @@ namespace Nexoterra.World
   NetworkManager network;
   NexoterraThirdPerson player;SlugInventory inventory;PlayerHealth health;
   float sendAt,helloAt;bool registered;
-  readonly List<Material> arenaMaterials=new List<Material>();
   SlugProjectile predictedHostShot;
   public bool IsServer=>network&&network.IsServer;
   public ulong LocalClientId=>network?network.LocalClientId:ulong.MaxValue;
@@ -65,24 +64,10 @@ namespace Nexoterra.World
   void OnDestroy(){
    if(registered&&network){network.CustomMessagingManager.UnregisterNamedMessageHandler("arena");network.OnClientDisconnectCallback-=RemovePeer;}
    foreach(var peer in peers.Values)if(peer.proxy)Destroy(peer.proxy);
-   foreach(var material in arenaMaterials)if(material)Destroy(material);arenaMaterials.Clear();
    if(Current==this)Current=null;
   }
   void PrepareArenaEnvironment(){
    foreach(var t in FindObjectsByType<Transform>(FindObjectsSortMode.None))if(t&&t.parent==null&&(t.name.Contains("Santuario")||t.name.Contains("Elemental")||t.name.Contains("Recompensa del guardián")))Destroy(t.gameObject);
-   foreach(var r in FindObjectsByType<MeshRenderer>(FindObjectsSortMode.None))if(r.gameObject.name=="Suelo del bioma"){r.enabled=false;var c=r.GetComponent<Collider>();if(c)c.enabled=false;}
-   var floor=GameObject.CreatePrimitive(PrimitiveType.Plane);floor.name="Arena plana · suelo";floor.transform.position=new Vector3(0,-.15f,0);floor.transform.localScale=Vector3.one*25;SetArenaMaterial(floor,new Color(.18f,.24f,.25f));
-   Vector3[] sites={new Vector3(-42,0,-42),new Vector3(42,0,-42),new Vector3(-42,0,42),new Vector3(42,0,42)};
-   for(int i=0;i<sites.Length;i++)BuildArenaHouse("Casa de arena "+(i+1),sites[i],i);
-  }
-  Material ArenaMaterial(Color color){var shader=Shader.Find("Universal Render Pipeline/Lit");if(!shader)shader=Shader.Find("Standard");var m=new Material(shader);m.color=color;arenaMaterials.Add(m);return m;}
-  void SetArenaMaterial(GameObject go,Color color){var r=go.GetComponent<Renderer>();if(r)r.sharedMaterial=ArenaMaterial(color);}
-  void BuildArenaHouse(string name,Vector3 position,int style){
-   var root=new GameObject(name);root.transform.position=position;
-   var body=GameObject.CreatePrimitive(PrimitiveType.Cube);body.name="Muros";body.transform.SetParent(root.transform,false);body.transform.localPosition=Vector3.up*2;body.transform.localScale=new Vector3(12,4,9);SetArenaMaterial(body,new Color(.35f,.26f,.18f));
-   var roof=GameObject.CreatePrimitive(PrimitiveType.Cube);roof.name="Techo";roof.transform.SetParent(root.transform,false);roof.transform.localPosition=Vector3.up*4.5f;roof.transform.localScale=new Vector3(13,.8f,10);roof.transform.localRotation=Quaternion.Euler(0,style%2==0?0:90,0);SetArenaMaterial(roof,new Color(.12f,.19f,.22f));
-   var door=GameObject.CreatePrimitive(PrimitiveType.Cube);door.name="Puerta";door.transform.SetParent(root.transform,false);door.transform.localPosition=new Vector3(0,1.05f,-4.55f);door.transform.localScale=new Vector3(1.5f,2.1f,.12f);SetArenaMaterial(door,new Color(.1f,.14f,.15f));
-   foreach(float side in new[]{-3.5f,3.5f}){var window=GameObject.CreatePrimitive(PrimitiveType.Cube);window.name="Ventana";window.transform.SetParent(root.transform,false);window.transform.localPosition=new Vector3(side,2.4f,-4.56f);window.transform.localScale=new Vector3(1.7f,1.1f,.14f);SetArenaMaterial(window,new Color(.08f,.62f,.68f));}
   }
   void RemovePeer(ulong id){
    if(peers.TryGetValue(id,out var peer)){if(peer.proxy)Destroy(peer.proxy);peers.Remove(id);}
