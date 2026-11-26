@@ -19,9 +19,9 @@ La distancia de transformación y velocidad se editan en SlugInventory, en el ob
 
 ## Guardado
 
-El menú inicial ofrece Nueva partida y Continuar. Esc abre pausa con Guardar y Cargar. No hay guardado automático al recoger, equipar o salir. Nueva partida comienza sin babosas y reinicia los encuentros; no borra el archivo guardado. Guardar escribe nexoterra-save-v2.json en Application.persistentDataPath y conserva una copia .bak del guardado anterior. Incluye colección, seis espacios, selección, hongos, posición, salud, personaje y encuentros completados de Sir Black. Cargar reconstruye el mundo: enemigos normales y objetos destructibles se reinician, y un encuentro activo vuelve a empezar. El archivo legado nexoterra-slugs-v1.json se conserva, pero no se carga automáticamente.
+El menú inicial ofrece Nueva partida, Continuar y Seleccionar nivel. Esc abre pausa con Guardar y Cargar. La colección, las babosas equipadas, la ranura seleccionada y la comida se actualizan automáticamente al cambiar. El punto de historia y los encuentros se guardan al pulsar Guardar. Nueva partida comienza sin babosas y reinicia los encuentros; no borra el archivo guardado. Guardar escribe nexoterra-save-v2.json en Application.persistentDataPath y conserva una copia .bak del guardado anterior. Incluye colección, variantes doradas, seis espacios, selección, hongos, posición, salud, personaje y encuentros completados de Sir Black. Cargar reconstruye el mundo: enemigos normales y objetos destructibles se reinician, y un encuentro activo vuelve a empezar. El archivo legado nexoterra-slugs-v1.json se conserva, pero no se carga automáticamente.
 
-Las elementales son únicas y deben domesticarse en su bioma. Cargar una elemental adquirida impide que vuelva a aparecer. Las pruebas usan un perfil independiente.
+Las elementales son únicas y deben domesticarse en su bioma. Cargar una elemental adquirida impide que vuelva a aparecer. Las babosas doradas aparecen rara vez, conservan su aspecto dorado en ambas formas y hacen un 10 % más de daño; no cambian la especie ni sus habilidades. Las pruebas usan un perfil independiente.
 
 ## Techo y personajes
 

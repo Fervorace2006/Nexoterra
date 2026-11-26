@@ -13,8 +13,10 @@ namespace Nexoterra.World
         public float transformationDistance=8,projectileSpeed=24;
         public bool persist=true;
         public List<string> owned=new List<string>();
+        public List<bool> goldenOwned=new List<bool>();
         public int[] equipped={-1,-1,-1,-1,-1,-1};
         public int selected;
+        int lastSavedSelection=-1;
         public bool IsOpen { get; private set; }
         public bool PointerOverBar
         {
@@ -54,7 +56,7 @@ namespace Nexoterra.World
         GUIStyle text,small,heading,center;
         Texture2D mushroomIcon,backpackIcon;
         static readonly Color Ink=new Color(.025f,.065f,.085f,.97f),Teal=new Color(.02f,.35f,.40f),Gold=new Color(1,.62f,.13f);
-        [Serializable] sealed class SaveData { public int version=1; public List<string> owned; public int[] equipped; public int selected; }
+        [Serializable] sealed class SaveData { public int version=1; public List<string> owned; public bool[] goldenOwned; public int[] equipped; public int selected; }
         string SavePath=>Path.Combine(Application.persistentDataPath,"nexoterra-slugs-v1.json");
         void Awake(){player=GetComponent<NexoterraThirdPerson>();if(persist&&!GetComponent<GameSession>())Load();}
         public void SetOpen(bool value)
@@ -65,6 +67,7 @@ namespace Nexoterra.World
         void Update()
         {
             if(GameSession.Blocked)return;
+            int selectionBefore=selected;
             var k=Keyboard.current;var m=Mouse.current;if(k==null)return;
             if(k.leftAltKey.wasPressedThisFrame||k.rightAltKey.wasPressedThisFrame||NexoInput.Backpack)SetOpen(!IsOpen);
             if(!GameSession.Current&&k.escapeKey.wasPressedThisFrame&&IsOpen){SetOpen(false);Cursor.lockState=CursorLockMode.None;Cursor.visible=true;}
@@ -74,24 +77,25 @@ namespace Nexoterra.World
             if(!IsOpen&&NexoInput.Cycle!=0)selected=(selected+(NexoInput.Cycle>0?1:5))%6;
             if(!IsOpen&&NexoInput.Slot>=0)selected=NexoInput.Slot;
             if(!IsOpen&&m!=null&&Mathf.Abs(m.scroll.ReadValue().y)>.01f)selected=(selected+(m.scroll.ReadValue().y>0?5:1))%6;
+            if(selected!=selectionBefore)Save();
         }
         public bool HasSpecies(string species)=>owned.Exists(id=>SlugCatalog.BaseSpecies(id)==SlugCatalog.BaseSpecies(species));
-        public bool Add(string species)
+        public bool Add(string species,bool golden=false)
         {
             species=SlugCatalog.Canonical(species);
             var definition=catalog?catalog.Find(species):null;
             if(definition!=null&&definition.unique&&HasSpecies(species)){Status="Ya domesticaste esta criatura única.";return false;}
             if(catalog==null||catalog.Find(species)==null){Status="Esta especie aún no está registrada.";return false;}
-            owned.Add(species);int index=owned.Count-1;
+            owned.Add(species);goldenOwned.Add(golden);int index=owned.Count-1;
             int empty=Array.IndexOf(equipped,-1);if(empty>=0){equipped[empty]=index;selected=empty;}
-            Status=catalog.Find(species).displayName+(empty>=0?" equipada.":" guardada en la mochila.");return true;
+            Status=catalog.Find(species).displayName+(empty>=0?" equipada.":" guardada en la mochila.");if(!GameSession.Current)Save();return true;
         }
         public bool Equip(int ownedIndex,int slot)
         {
             if(ownedIndex<0||ownedIndex>=owned.Count||slot<0||slot>=6)return false;
             int previous=Array.IndexOf(equipped,ownedIndex),displaced=equipped[slot];
             if(previous>=0)equipped[previous]=displaced;
-            equipped[slot]=ownedIndex;selected=slot;Status="Equipamiento actualizado.";return true;
+            equipped[slot]=ownedIndex;selected=slot;Status="Equipamiento actualizado.";Save();return true;
         }
         public SlugDefinition SelectedDefinition()
         {
@@ -103,8 +107,9 @@ namespace Nexoterra.World
         {
             var cam=Camera.main;if(!cam)return null;
             var ray=cam.ViewportPointToRay(new Vector3(.5f,.5f));
-            foreach(var hit in Physics.SphereCastAll(ray,.6f,60,Physics.DefaultRaycastLayers,QueryTriggerInteraction.Ignore))
-            {var e=hit.collider.GetComponentInParent<EnemyCombatant>();if(e&&!e.IsDead)return e.transform;}
+            var hits=Physics.SphereCastAll(ray,.6f,60,Physics.DefaultRaycastLayers,QueryTriggerInteraction.Ignore);Array.Sort(hits,(a,b)=>a.distance.CompareTo(b.distance));
+            foreach(var hit in hits)
+            {var e=hit.collider.GetComponentInParent<EnemyCombatant>();if(e&&!e.IsDead)return e.transform;var arena=hit.collider.GetComponentInParent<ArenaTarget>();if(arena&&ArenaSession.Current&&arena.clientId!=ArenaSession.Current.LocalClientId)return arena.transform;if(!hit.collider.isTrigger&&hit.collider.gameObject.layer!=2)return null;}
             return null;
         }
         public SlugProjectile Fire(Transform muzzle,Vector3 direction)
@@ -117,13 +122,13 @@ namespace Nexoterra.World
             var go=new GameObject("Disparo · "+definition.id);go.layer=2;go.transform.position=muzzle.position;
             var shot=go.AddComponent<SlugProjectile>();shot.speed=projectileSpeed;shot.transformDistance=transformationDistance;shot.docHealingRadius=docHealingRadius;
             if(definition.id.StartsWith("Malvada_")){var health=GetComponent<PlayerHealth>();if(health)health.CorruptionCost();}
-            travelling[definition.id]=shot;shot.Launch(definition,direction,this);shot.HomingTarget=TargetUnderCrosshair();if(ArenaSession.Current)ArenaSession.Current.SubmitShot(definition,muzzle.position,direction,shot);var abilities=GetComponent<PlayerAbilities>();if(abilities)abilities.OnSlugLaunched(definition.id);return shot;
+            travelling[definition.id]=shot;shot.Launch(definition,direction,this);int ownedIndex=equipped[selected];shot.SetGolden(ownedIndex>=0&&ownedIndex<goldenOwned.Count&&goldenOwned[ownedIndex]);shot.HomingTarget=TargetUnderCrosshair();if(ArenaSession.Current)ArenaSession.Current.SubmitShot(definition,muzzle.position,direction,shot);var abilities=GetComponent<PlayerAbilities>();if(abilities)abilities.OnSlugLaunched(definition.id);return shot;
         }
         public void Save()
         {
-            if(GameSession.Current){GameSession.Current.SaveGame();return;}
+            if(GameSession.Current){lastSavedSelection=selected;GameSession.Current.SaveInventory();return;}
             if(!persist)return;
-            try{File.WriteAllText(SavePath,JsonUtility.ToJson(new SaveData{owned=owned,equipped=equipped,selected=selected},true));}
+            try{File.WriteAllText(SavePath,JsonUtility.ToJson(new SaveData{owned=owned,goldenOwned=goldenOwned.ToArray(),equipped=equipped,selected=selected},true));}
             catch(Exception e){Debug.LogWarning("No se pudo guardar la mochila: "+e.Message);}
         }
         void Load()
@@ -133,13 +138,13 @@ namespace Nexoterra.World
             {
                 var data=JsonUtility.FromJson<SaveData>(File.ReadAllText(SavePath));
                 if(data==null||data.version!=1||data.owned==null)return;
-                owned=new List<string>();equipped=new[]{-1,-1,-1,-1,-1,-1};
+                owned=new List<string>();goldenOwned=new List<bool>();equipped=new[]{-1,-1,-1,-1,-1,-1};
                 var remap=new Dictionary<int,int>();var uniques=new Dictionary<string,int>();
                 for(int i=0;i<data.owned.Count;i++)
                 {
                     string id=SlugCatalog.Canonical(data.owned[i]);var definition=catalog.Find(id);
                     if(definition!=null&&definition.unique&&uniques.TryGetValue(id,out int existing)){remap[i]=existing;continue;}
-                    remap[i]=owned.Count;owned.Add(id);if(definition!=null&&definition.unique)uniques[id]=owned.Count-1;
+                    remap[i]=owned.Count;owned.Add(id);goldenOwned.Add(data.goldenOwned!=null&&i<data.goldenOwned.Length&&data.goldenOwned[i]);if(definition!=null&&definition.unique)uniques[id]=owned.Count-1;
                 }
                 var seen=new HashSet<int>();
                 if(data.equipped!=null)for(int i=0;i<Mathf.Min(6,data.equipped.Length);i++)

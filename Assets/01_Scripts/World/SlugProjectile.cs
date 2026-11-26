@@ -30,6 +30,7 @@ namespace Nexoterra.World
         EnemyShooter enemyOwner;int enemySlot=-1;
         Transform ReturnTarget=>owner?owner.transform:enemyOwner&&!enemyOwner.IsDead?enemyOwner.transform:null;
         GameObject model;
+        bool golden;
         SlugFlightEffects effects;
         bool hostile;public bool Hostile=>hostile;
         Vector3 modelBase,modelScale,hopStart,hopEnd;
@@ -64,8 +65,11 @@ namespace Nexoterra.World
                 model.transform.localScale=Vector3.one*scale;model.transform.localPosition=-center*scale;
             }
             if(IsTransformed)ElementalAura.Create(model.transform,definition.id,.72f/Mathf.Max(.0001f,model.transform.localScale.x),-model.transform.localPosition/Mathf.Max(.0001f,model.transform.localScale.x));
-            transform.rotation=rotation;modelBase=model.transform.localPosition;modelScale=model.transform.localScale;
+            transform.rotation=rotation;modelBase=model.transform.localPosition;modelScale=model.transform.localScale;ApplyGoldenVisual();
         }
+        public void SetGolden(bool value){golden=value;ApplyGoldenVisual();}
+        void ApplyGoldenVisual(){if(!golden||!model)return;foreach(var r in model.GetComponentsInChildren<Renderer>(true)){var block=new MaterialPropertyBlock();r.GetPropertyBlock(block);var gold=new Color(1f,.67f,.12f,1);block.SetColor("_Color",gold);block.SetColor("_BaseColor",gold);block.SetColor("_EmissionColor",new Color(.18f,.075f,.006f,1));r.SetPropertyBlock(block);}}
+        public bool IsGolden=>golden;
         void Update(){Advance(Time.deltaTime);}
         public void Advance(float seconds)
         {
@@ -76,18 +80,18 @@ namespace Nexoterra.World
         }
         // Homing: when launched at a targeted enemy the slug bends toward it for 1.5 s, then keeps flying straight.
         // A roll (dodge) breaks the lock, so evading is a real escape.
-        public Transform HomingTarget;float homingLeft=1.5f;
+        public Transform HomingTarget;float homingLeft=1.2f;
         void Steer(float dt)
         {
             if(!HomingTarget||homingLeft<=0||hostile)return;
             homingLeft-=dt;
-            var enemy=HomingTarget.GetComponentInParent<EnemyCombatant>();var anim=HomingTarget.GetComponentInParent<NativeEnemyAnimation>();
-            if((enemy&&enemy.IsDead)||(anim&&anim.IsDodging)){HomingTarget=null;return;}
+            var enemy=HomingTarget.GetComponentInParent<EnemyCombatant>();var anim=HomingTarget.GetComponentInParent<NativeEnemyAnimation>();var arena=HomingTarget.GetComponentInParent<ArenaTarget>();
+            if((enemy&&enemy.IsDead)||(anim&&anim.IsDodging)||(arena&&ArenaSession.Current&&ArenaSession.Current.IsRivalEvading(arena.clientId))){HomingTarget=null;return;}
             var cc=HomingTarget.GetComponentInParent<CharacterController>();
             Vector3 aim=cc?cc.bounds.center+Vector3.up*.2f:HomingTarget.position+Vector3.up*1.1f;
             Vector3 want=(aim-transform.position).normalized;
             if(Vector3.Dot(want,Direction)<-.1f){HomingTarget=null;return;}          // already passed it
-            Direction=Vector3.RotateTowards(Direction,want,Mathf.Deg2Rad*260f*dt,0).normalized;
+            Direction=Vector3.RotateTowards(Direction,want,Mathf.Deg2Rad*105f*dt,0).normalized;
             transform.rotation=Quaternion.LookRotation(Direction);
         }
         void Fly(float dt)
@@ -102,7 +106,7 @@ namespace Nexoterra.World
                 CheckProjectileContacts(collided?Mathf.Min(step,hit.distance):step);
                 if(IsReturning)return;
                 if(collided)
-                {transform.position=hit.point+hit.normal*.23f;if(IceWall.TryHit(hit.collider)){if(effects){effects.End(true,hit.point);effects=null;}BeginReturn();return;}IceGround(hit);ArenaHit(hit.collider);DemoledoraImpact(hit.point);HealArea(hit.point);Purify(hit.collider);var enemy=hit.collider.GetComponentInParent<EnemyCombatant>();if(enemy&&!hostile)enemy.ReceiveSlug(definition,Direction,IsTransformed);var player=hit.collider.GetComponentInParent<PlayerHealth>();if(player&&hostile)player.ReceiveSlug(definition,IsTransformed,Direction);var prop=hit.collider.GetComponentInParent<WorldDestructible>();if(prop)prop.Hit(definition.id,IsTransformed);if(effects){effects.End(true,hit.point);effects=null;}BeginReturn();return;}
+                {transform.position=hit.point+hit.normal*.23f;if(IceWall.TryHit(hit.collider)){if(effects){effects.End(true,hit.point);effects=null;}BeginReturn();return;}IceGround(hit);ArenaHit(hit.collider);DemoledoraImpact(hit.point);HealArea(hit.point);Purify(hit.collider);var enemy=hit.collider.GetComponentInParent<EnemyCombatant>();if(enemy&&!hostile)enemy.ReceiveSlug(definition,Direction,IsTransformed,golden);var player=hit.collider.GetComponentInParent<PlayerHealth>();if(player&&hostile)player.ReceiveSlug(definition,IsTransformed,Direction,golden);var prop=hit.collider.GetComponentInParent<WorldDestructible>();if(prop)prop.Hit(definition.id,IsTransformed);if(effects){effects.End(true,hit.point);effects=null;}BeginReturn();return;}
                 if(IsReturning)return;transform.position+=Direction*step;Travelled+=step;remaining-=step;
                 if(!IsTransformed&&Travelled>=transformDistance-.0001f){IsTransformed=true;TransformSound();Show(definition.transformed,1.8f);effects=SlugFlightEffects.Create(transform,definition.id);effects.transform.localScale=Vector3.one*.7f;effects.transform.localPosition*=.7f;}
             }
@@ -128,7 +132,7 @@ namespace Nexoterra.World
         static void PurifyWild(WildSlug wild,SlugInventory inventory){if(!wild||!inventory||!wild.species.StartsWith("Malvada_"))return;var clean=inventory.catalog.Find(SlugCatalog.BaseSpecies(wild.species));if(clean==null||wild.GetComponent<SlugPurification>()||wild.GetComponent<WildSlugCorruption>())return;
 SlugPurification.Begin(wild.gameObject,()=>ApplyPurifiedWild(wild,clean));}
         static void ApplyPurifiedWild(WildSlug wild,SlugDefinition clean){if(!wild)return;wild.species=clean.id;foreach(var r in wild.GetComponentsInChildren<Renderer>())if(!r.GetComponentInParent<ParticleSystem>())r.enabled=false;var visual=Instantiate(clean.normal,wild.transform);foreach(var c in visual.GetComponentsInChildren<Collider>())c.enabled=false;var rs=visual.GetComponentsInChildren<Renderer>();if(rs.Length==0)return;var b=rs[0].bounds;foreach(var r in rs)b.Encapsulate(r.bounds);float scale=.35f/Mathf.Max(.01f,b.size.y);Vector3 center=b.center-wild.transform.position;visual.transform.localScale*=scale;visual.transform.localPosition=-center*scale+Vector3.up*.175f;}
-        void ArenaHit(Collider c){if(!arenaShot||!arenaAuthority||!ArenaSession.Current)return;var target=c.GetComponentInParent<ArenaTarget>();if(target)ArenaSession.Current.Hit(target.clientId,definition,IsTransformed,Direction);}
+        void ArenaHit(Collider c){if(!arenaShot||!arenaAuthority||!ArenaSession.Current)return;var target=c.GetComponentInParent<ArenaTarget>();if(target)ArenaSession.Current.Hit(target.clientId,definition,IsTransformed,Direction,golden);}
         bool Eligible(Collider c)
         {
             var arena=c?c.GetComponentInParent<ArenaTarget>():null;
@@ -155,8 +159,8 @@ SlugPurification.Begin(wild.gameObject,()=>ApplyPurifiedWild(wild,clean));}
             for(int i=0;i<overlapCount;i++)if(Eligible(overlaps[i]))
             {
                 var c=overlaps[i];if(IceWall.TryHit(c)){if(effects){effects.End(true,transform.position);effects=null;}BeginReturn();return false;}ArenaHit(c);DemoledoraImpact(transform.position);HealArea(transform.position);Purify(c);var enemy=c.GetComponentInParent<EnemyCombatant>();var player=c.GetComponentInParent<PlayerHealth>();
-                if(enemy&&!hostile)enemy.ReceiveSlug(definition,Direction,IsTransformed);
-                if(player&&hostile)player.ReceiveSlug(definition,IsTransformed,Direction);
+                if(enemy&&!hostile)enemy.ReceiveSlug(definition,Direction,IsTransformed,golden);
+                if(player&&hostile)player.ReceiveSlug(definition,IsTransformed,Direction,golden);
                 var prop=c.GetComponentInParent<WorldDestructible>();if(prop)prop.Hit(definition.id,IsTransformed);
                 if(effects){effects.End(true,c.ClosestPoint(transform.position));effects=null;}
                 BeginReturn();return false;

@@ -80,13 +80,12 @@ namespace Nexoterra.World
    int slot=0;
    for(int i=0;i<ActNames.Length;i++)
    {
-    if(i==(int)Act.Map)continue;   // biome map was removed
     float x=rect.x+(slot%2)*(half+16),yy=y+(slot/2)*row;slot++;
     NexoUi.Write(new Rect(x,yy,half*.5f,38),ActNames[i],14,NexoUi.Text);
     string label=listening==i?"PULSA UN BOTÓN…":ButtonName(Binding((Act)i));
     if(NexoUi.Button(new Rect(x+half*.5f,yy+2,half*.5f,36),label,listening==i)&&!wasListening&&listening<0){listening=i;listenFrame=Time.frameCount;}
    }
-   y+=Mathf.Ceil((ActNames.Length-1)/2f)*row+6;
+   y+=Mathf.Ceil(ActNames.Length/2f)*row+6;
    NexoUi.Write(new Rect(rect.x,y,rect.width,40),"Fijos: stick izq. mover · stick der. cámara · L1/R1 cambiar babosa · cruceta ranura 1–4 · L1 + abajo gestos · Options pausa.\nEn la mochila: cruceta mueve, X coge/suelta, Círculo cancela.",12,NexoUi.Muted);
    if(wasListening||listening>=0)return false;
    float half2=(rect.width-16)/2;

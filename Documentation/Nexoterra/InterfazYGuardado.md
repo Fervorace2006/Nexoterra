@@ -1,8 +1,8 @@
 # Interfaz y guardado manual
 
-Abre Nexoterra_CuatroNodos y pulsa Play. Nueva partida comienza sin criaturas; recoge hongos con E y domestica con F. Las elementales se consiguen en sus biomas, una sola copia por especie.
+Abre Nexoterra_CuatroNodos y pulsa Play. Nueva partida comienza sin criaturas; recoge hongos con E y domestica con F. Las elementales se consiguen en sus biomas, una sola copia por especie. Desde el menú inicial también se puede seleccionar cualquiera de los seis niveles sin borrar el guardado actual.
 
-Esc abre el menú de pausa. Guardar conserva colección, equipo, selección, hongos, posición, salud, personaje y encuentros de jefe completados. Continuar y Cargar usan el último guardado manual. Salir, recoger y equipar no guardan. Nueva partida conserva el archivo anterior hasta que pulses Guardar. El archivo legado se conserva sin cargarlo automáticamente.
+Esc abre el menú de pausa. Guardar conserva el punto de historia, posición, salud, personaje y encuentros de jefe completados. Continuar y Cargar usan ese punto manual. La colección, el equipo, la selección y la comida se guardan al modificarse y se combinan con el punto de historia sin cambiar su escena ni sus encuentros. Nueva partida conserva el archivo anterior. El archivo legado se conserva sin cargarlo automáticamente.
 
 El HUD muestra el retrato real del personaje y vida segmentada abajo a la izquierda, seis espacios más pequeños abajo al centro, y Sir Black con vida roja arriba y nombre debajo durante el encuentro. Las barras leen la salud de combate, incluyendo quemadura y explosiones.
 

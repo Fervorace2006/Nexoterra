@@ -17,6 +17,7 @@ namespace Nexoterra.World
         public int population=1;
         public bool unique;
         public float activeDistance=85,respawnSeconds=75;
+        [Range(0,.05f)] public float goldenChance=.004f;
         public Transform editorPreview;
         readonly List<GameObject> instances=new List<GameObject>();
         Transform player;
@@ -56,7 +57,7 @@ namespace Nexoterra.World
                 }
                 var g=Instantiate(prefab,p,Quaternion.Euler(0,Random.Range(0,360),0),transform);
                 if(chosen.StartsWith("Malvada_")&&inventory){var d=inventory.catalog.Find(chosen);if(d!=null){foreach(var renderer in g.GetComponentsInChildren<Renderer>())renderer.enabled=false;var visual=Instantiate(d.normal,g.transform);var rs=visual.GetComponentsInChildren<Renderer>();if(rs.Length>0){var bounds=rs[0].bounds;foreach(var r in rs)bounds.Encapsulate(r.bounds);float scale=.35f/Mathf.Max(.01f,bounds.size.y);var center=bounds.center-g.transform.position;visual.transform.localScale*=scale;visual.transform.localPosition=-center*scale+Vector3.up*.175f;}}}
-                var slug=g.GetComponent<WildSlug>();slug.species=SlugCatalog.Canonical(chosen);slug.roamRadius=unique||elemental?.65f:2;slug.SetHabitat(habitat,!unique&&!elemental);instances.Add(g);
+                var slug=g.GetComponent<WildSlug>();slug.species=SlugCatalog.Canonical(chosen);slug.roamRadius=unique||elemental?.65f:2;slug.SetHabitat(habitat,!unique&&!elemental);if(!unique&&!elemental&&Random.value<goldenChance)slug.SetGolden(true);instances.Add(g);
             }
         }
         Rect Habitat()

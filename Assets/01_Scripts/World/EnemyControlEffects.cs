@@ -9,6 +9,7 @@ namespace Nexoterra.World
   public float FreezeRemaining {get;private set;}
   public float ShockRemaining {get;private set;}
   public float WindRemaining {get;private set;}
+  public float StoneRemaining {get;private set;}
   const float FallSeconds=54f/30f, StandSeconds=43f/30f;
   float knockdownRemaining;
   public string KnockdownPose=>knockdownRemaining>StandSeconds?"CaidaAtras":knockdownRemaining>0?"levantarsedecaida":null;
@@ -21,16 +22,19 @@ namespace Nexoterra.World
   {
    if(knockdownRemaining<=StandSeconds)knockdownRemaining=FallSeconds+StandSeconds;
   }
-  public bool CanMove=>WindRemaining<=0&&knockdownRemaining<=0&&RootRemaining<=0&&FreezeRemaining<=0&&ShockRemaining<=0;
+  public bool CanMove=>WindRemaining<=0&&knockdownRemaining<=0&&RootRemaining<=0&&FreezeRemaining<=0&&ShockRemaining<=0&&StoneRemaining<=0;
   public bool CanShoot=>knockdownRemaining<=0&&FreezeRemaining<=0&&ShockRemaining<=0;
   GameObject rootVisual,iceVisual,windVisual,shockVisual;Vector3 windDirection;
   Material waterMat,iceMat,shockMat;
+  Renderer[] stoneRenderers;MaterialPropertyBlock[] stoneBlocks;bool stoneTinted;
   bool corruptedWind,corruptedIce;
   public const float IceSeconds=4f;
   EnemyCombatant health;
   void Awake(){health=GetComponent<EnemyCombatant>();}
   public void Apply(string species,Vector3 direction)
   {
+   string baseSpecies=SlugCatalog.BaseSpecies(species);
+   if(baseSpecies=="Elemental_Tierra")ApplyStone();
    bool corrupted=species.StartsWith("Malvada_");
    switch(SlugCatalog.Canonical(species.Replace("Malvada_","")))
    {
@@ -49,12 +53,21 @@ namespace Nexoterra.World
      break;
    }
   }
+  void ApplyStone(){StoneRemaining=3.5f;ApplyStoneTint(true);}
+  public void CancelStone(){StoneRemaining=0;ApplyStoneTint(false);}
+  void ApplyStoneTint(bool apply){
+   if(apply){
+    if(!stoneTinted){stoneRenderers=System.Array.FindAll(GetComponentsInChildren<Renderer>(true),r=>!(r is ParticleSystemRenderer||r is TrailRenderer||r is LineRenderer));stoneBlocks=new MaterialPropertyBlock[stoneRenderers.Length];for(int i=0;i<stoneRenderers.Length;i++){stoneBlocks[i]=new MaterialPropertyBlock();stoneRenderers[i].GetPropertyBlock(stoneBlocks[i]);}}
+    for(int i=0;i<stoneRenderers.Length;i++){var r=stoneRenderers[i];if(!r)continue;var block=new MaterialPropertyBlock();r.GetPropertyBlock(block);block.SetColor("_Color",new Color(.48f,.39f,.29f,1));block.SetColor("_BaseColor",new Color(.48f,.39f,.29f,1));r.SetPropertyBlock(block);}stoneTinted=true;
+   }else if(stoneTinted){for(int i=0;i<stoneRenderers.Length;i++)if(stoneRenderers[i])stoneRenderers[i].SetPropertyBlock(stoneBlocks[i]);stoneTinted=false;}
+  }
   void Update(){Advance(Time.deltaTime);}
   public void Advance(float dt)
   {
    if(health&&health.IsDead){ResetEffects();return;}
    knockdownRemaining=Mathf.Max(0,knockdownRemaining-dt);
-   RootRemaining=Mathf.Max(0,RootRemaining-dt);FreezeRemaining=Mathf.Max(0,FreezeRemaining-dt);ShockRemaining=Mathf.Max(0,ShockRemaining-dt);WindRemaining=Mathf.Max(0,WindRemaining-dt);
+   RootRemaining=Mathf.Max(0,RootRemaining-dt);FreezeRemaining=Mathf.Max(0,FreezeRemaining-dt);ShockRemaining=Mathf.Max(0,ShockRemaining-dt);WindRemaining=Mathf.Max(0,WindRemaining-dt);StoneRemaining=Mathf.Max(0,StoneRemaining-dt);
+   if(StoneRemaining<=0)ApplyStoneTint(false);
    if(RootRemaining<=0)Clear(ref rootVisual);if(FreezeRemaining<=0)Clear(ref iceVisual);if(ShockRemaining<=0)Clear(ref shockVisual);
    if(WindRemaining<=0)Clear(ref windVisual);
    else if(knockdownRemaining<=0&&RootRemaining<=0&&FreezeRemaining<=0)
@@ -68,7 +81,7 @@ namespace Nexoterra.World
    }
   }
   static void Clear(ref GameObject obj){if(obj)Destroy(obj);obj=null;}
-  public void ResetEffects(){knockdownRemaining=RootRemaining=FreezeRemaining=ShockRemaining=WindRemaining=0;Clear(ref rootVisual);Clear(ref iceVisual);Clear(ref windVisual);Clear(ref shockVisual);}
+  public void ResetEffects(){knockdownRemaining=RootRemaining=FreezeRemaining=ShockRemaining=WindRemaining=StoneRemaining=0;ApplyStoneTint(false);Clear(ref rootVisual);Clear(ref iceVisual);Clear(ref windVisual);Clear(ref shockVisual);}
   void ReplaceRoot(bool water)
   {
    Clear(ref rootVisual);

@@ -20,7 +20,7 @@ namespace Nexoterra.World
   public bool IsKnockedDown=>!IsDead&&(downRemaining>0||(Controls&&Controls.KnockdownPose!=null));
   public bool IsStunned=>stunRemaining>0&&!IsDead;
   public float SpeedMultiplier=>slowRemaining>0?slowFactor:1;
-  public bool CanAct=>!IsDead&&!IsKnockedDown&&!IsStunned;
+  public bool CanAct=>!IsDead&&!IsKnockedDown&&!IsStunned&&(!Controls||Controls.StoneRemaining<=0);
   public EnemyControlEffects Controls {get;private set;}
   public bool CanMove=>CanAct&&(!Controls||Controls.CanMove);
   public bool CanShoot=>CanAct&&(!Controls||Controls.CanShoot);
@@ -41,17 +41,20 @@ namespace Nexoterra.World
    motor=GetComponent<CharacterController>();nativeAnimation=GetComponent<NativeEnemyAnimation>();shooter=GetComponent<EnemyShooter>();
   }
   void Awake(){Controls=GetComponent<EnemyControlEffects>();if(!Controls)Controls=gameObject.AddComponent<EnemyControlEffects>();Health=maxHealth;upright=visualRoot?visualRoot.localRotation:Quaternion.identity;}
-  public void ReceiveSlug(SlugDefinition slug,Vector3 direction,bool transformed)
+  public void ReceiveSlug(SlugDefinition slug,Vector3 direction,bool transformed,bool golden=false)
   {
    if(IsDead||slug==null||TechShield.Protects(transform))return;
-   if(EnemyControlEffects.CausesKnockdown(slug.id))Controls.BeginKnockdown();
-   if(!transformed){Damage(slug.id.StartsWith("Malvada_")?3.15f:3);return;}
-   Controls.Apply(slug.id,direction);var p=slug.Combat;Damage(Mathf.Max(0,p.impactDamage));if(IsDead)return;
+   if(SlugCatalog.BaseSpecies(slug.id)!="Elemental_Tierra")Controls.CancelStone();
+   bool earth=SlugCatalog.BaseSpecies(slug.id)=="Elemental_Tierra";
+   if(EnemyControlEffects.CausesKnockdown(slug.id)&&!earth)Controls.BeginKnockdown();
+   float multiplier=golden?1.1f:1f;
+   if(!transformed){Damage((slug.id.StartsWith("Malvada_")?3.15f:3)*multiplier);return;}
+   Controls.Apply(slug.id,direction);var p=golden?slug.Combat.WithDamageMultiplier(multiplier):slug.Combat;Damage(Mathf.Max(0,p.impactDamage));if(IsDead)return;
    if(p.burnDuration>0){corruptedBurn=slug.id.StartsWith("Malvada_");burnRemaining=Mathf.Max(burnRemaining,p.burnDuration);burnRate=Mathf.Max(burnRate,p.burnDamagePerSecond);}
    if(p.slowDuration>0){slowFactor=slowRemaining>0?Mathf.Min(slowFactor,p.slowMultiplier):p.slowMultiplier;slowRemaining=Mathf.Max(slowRemaining,p.slowDuration);}
-   downRemaining=Mathf.Max(downRemaining,p.knockdownDuration);stunRemaining=Mathf.Max(stunRemaining,p.stunDuration);
+   if(!earth)downRemaining=Mathf.Max(downRemaining,p.knockdownDuration);stunRemaining=Mathf.Max(stunRemaining,p.stunDuration);
    direction.y=0;if(direction.sqrMagnitude<.01f)direction=transform.forward;
-   if(p.knockbackSpeed>0)knockVelocity=direction.normalized*p.knockbackSpeed;
+   if(p.knockbackSpeed>0&&!earth)knockVelocity=direction.normalized*p.knockbackSpeed;
    RefreshVisuals();
   }
   public void ReceiveDamage(float amount){Damage(Mathf.Max(0,amount));}

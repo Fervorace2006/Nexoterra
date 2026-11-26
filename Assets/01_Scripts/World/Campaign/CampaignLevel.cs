@@ -36,8 +36,26 @@ namespace Nexoterra.World
   void Start(){
    player=FindAnyObjectByType<NexoterraThirdPerson>();inventory=player.GetComponent<SlugInventory>();
    for(int i=0;i<enemies.Length;i++){int slot=i;var e=enemies[i];if(!e)continue;var ai=e.GetComponent<EnemyShooter>();if(ai)ai.campaignMember=true;e.onDeath.AddListener(()=>Defeated(slot));}
+   if(index==4)ArrangeVolcanoOutpost();
+   RefreshReturnedVisual();
   }
-  void OnDestroy(){if(Current==this)Current=null;}
+  readonly List<Material> outpostMaterials=new List<Material>();
+  void ArrangeVolcanoOutpost(){
+   if(!trapGuard)return;
+   Vector3 p=new Vector3(72,0,4);if(Physics.Raycast(p+Vector3.up*80,Vector3.down,out var hit,160,SlugHop.WorldMask,QueryTriggerInteraction.Ignore))p.y=hit.point.y;
+   trapGuard.transform.position=p+Vector3.up*.1f;
+   var root=new GameObject("Avanzada volcánica de Sir Black");root.transform.position=p;
+   var mat=OutpostMaterial(new Color(.12f,.16f,.18f));var trim=OutpostMaterial(new Color(.52f,.25f,.09f));
+   AddBlock(root.transform,"Muro posterior",new Vector3(0,2.2f,6),new Vector3(18,4.4f,1),mat);
+   AddBlock(root.transform,"Muro lateral oeste",new Vector3(-8.5f,2.2f,0),new Vector3(1,4.4f,12),mat);
+   AddBlock(root.transform,"Muro lateral este",new Vector3(8.5f,2.2f,0),new Vector3(1,4.4f,12),mat);
+   AddBlock(root.transform,"Torre baja",new Vector3(-8.5f,5.2f,5),new Vector3(3,1.6f,3),trim);
+   AddBlock(root.transform,"Torre baja",new Vector3(8.5f,5.2f,5),new Vector3(3,1.6f,3),trim);
+   AddBlock(root.transform,"Plataforma de vigilancia",new Vector3(0,4.4f,6),new Vector3(20,.55f,3),trim);
+  }
+  Material OutpostMaterial(Color color){var shader=Shader.Find("Universal Render Pipeline/Lit");if(!shader)shader=Shader.Find("Standard");var m=new Material(shader);m.color=color;outpostMaterials.Add(m);return m;}
+  static void AddBlock(Transform parent,string name,Vector3 position,Vector3 scale,Material material){var go=GameObject.CreatePrimitive(PrimitiveType.Cube);go.name=name;go.transform.SetParent(parent,false);go.transform.localPosition=position;go.transform.localScale=scale;go.GetComponent<Renderer>().sharedMaterial=material;}
+  void OnDestroy(){if(Current==this)Current=null;foreach(var m in outpostMaterials)if(m)Destroy(m);outpostMaterials.Clear();}
   void Defeated(int slot){
    defeated.Add(slot);
    if(enemies[slot]==trapGuard&&ambushBoss){ambushBoss.gameObject.SetActive(true);player.Notify("¡Era una trampa! Sir Black tiene la elemental de fuego. Derrota al verdadero guardián.");introUntil=Time.unscaledTime+12;}
@@ -60,8 +78,28 @@ namespace Nexoterra.World
    if(Vector3.Distance(player.transform.position,exit.position)>3)return;
    if(!Cleared){player.Notify(Remaining>0?"Derrota a los "+Remaining+" enemigos restantes.":index==0?"Alimenta a Energía con F antes de continuar.":"Cura y domestica la elemental antes de continuar.");return;}
    transitioning=true;
-   if(index==Scenes.Length-1){GameSession.Current.SaveGame();FrontEndMenu.Load(FrontEndMenu.MenuScene);}
+   GameSession.Current.MarkLevelCompleted(index);
+   if(index==Scenes.Length-1){GameSession.Current.MarkCampaignComplete();GameSession.Current.SaveGame();FrontEndMenu.Load(FrontEndMenu.MenuScene);}
    else GameSession.Current.Travel(Scenes[index+1]);
+  }
+  public bool TryReturnElemental(){
+   if(!player||!GameSession.Current||!GameSession.Current.CampaignComplete||index>=GameSession.Current.ReturnedElementals.Length)return false;
+   string species=Rewards[index];if(string.IsNullOrEmpty(species)||GameSession.Current.HasReturnedElemental(index))return false;
+   if(!inventory||!inventory.HasSpecies(species))return false;
+   Vector3 site=ReturnSite();if(Vector3.Distance(player.transform.position,site)>3){return false;}
+   GameSession.Current.MarkElementalReturned(index);RefreshReturnedVisual();GameSession.Current.SaveGame();player.Notify("Elemental devuelta a su bioma. Conservas tu copia.");return true;
+  }
+  Vector3 ReturnSite(){var p=entrance?entrance.position+new Vector3(4,0,4):transform.position;if(Physics.Raycast(p+Vector3.up*12,Vector3.down,out var hit,24,SlugHop.WorldMask,QueryTriggerInteraction.Ignore))p.y=hit.point.y;return p;}
+  GameObject returnDisplay;
+  public void RefreshReturnedVisual(){
+   if(returnDisplay){Destroy(returnDisplay);returnDisplay=null;}
+   if(!GameSession.Current||!GameSession.Current.CampaignComplete||index>=5)return;
+   string id=Rewards[index];var def=catalog?catalog.Find(id):null;if(def==null||!def.normal)return;
+   returnDisplay=new GameObject("Elemental asentada · "+id);returnDisplay.transform.position=ReturnSite();
+   var basePart=GameObject.CreatePrimitive(PrimitiveType.Cylinder);basePart.name="Santuario de retorno";basePart.transform.SetParent(returnDisplay.transform,false);basePart.transform.localPosition=Vector3.zero;basePart.transform.localScale=new Vector3(1.25f,.12f,1.25f);Destroy(basePart.GetComponent<Collider>());
+   var marker=GameObject.CreatePrimitive(PrimitiveType.Sphere);marker.name="Luz del santuario";marker.transform.SetParent(returnDisplay.transform,false);marker.transform.localPosition=Vector3.up*.48f;marker.transform.localScale=Vector3.one*.24f;Destroy(marker.GetComponent<Collider>());var markerRenderer=marker.GetComponent<Renderer>();var markerBlock=new MaterialPropertyBlock();markerRenderer.GetPropertyBlock(markerBlock);markerBlock.SetColor("_Color",new Color(.2f,.9f,.86f));markerBlock.SetColor("_BaseColor",new Color(.2f,.9f,.86f));markerRenderer.SetPropertyBlock(markerBlock);
+   if(!GameSession.Current.HasReturnedElemental(index))return;
+   var body=Instantiate(def.normal,returnDisplay.transform);foreach(var c in body.GetComponentsInChildren<Collider>())Destroy(c);foreach(var b in body.GetComponentsInChildren<Rigidbody>()){b.isKinematic=true;b.detectCollisions=false;}foreach(var wild in body.GetComponentsInChildren<WildSlug>())wild.enabled=false;WildSlug.Fit(returnDisplay.transform,body.transform);body.transform.localPosition+=Vector3.up*.18f;
   }
   public bool IsReward(WildSlug slug)=>slug&&slug==reward;
   // Mission checklist (top-center): one line per objective, checked when done; the first open one is highlighted.
@@ -73,6 +111,7 @@ namespace Nexoterra.World
    if(guardian)checklist.Add(("Derrota a "+guardian.displayName,GuardianDefeated));
    if(ambushBoss&&ambushBoss.gameObject.activeInHierarchy)checklist.Add(("Derrota a "+ambushBoss.displayName,ambushBoss.IsDead));
    if(!string.IsNullOrEmpty(Rewards[index]))checklist.Add((index==0?"Alimenta a Energía con F":"Cura la elemental y aliméntala con F",inventory&&inventory.owned.Contains(Rewards[index])));
+   if(GameSession.Current&&GameSession.Current.CampaignComplete&&index<5)checklist.Add((GameSession.Current.HasReturnedElemental(index)?"Elemental devuelta":"Devuelve "+SlugCatalog.BaseSpecies(Rewards[index])+" a su bioma · acércate y pulsa F",GameSession.Current.HasReturnedElemental(index)));
    checklist.Add((index==Scenes.Length-1?"Regresa por el túnel":"Cruza el túnel al siguiente bioma",false));
   }
   void OnGUI(){
@@ -87,6 +126,7 @@ namespace Nexoterra.World
     if(done)NexoUi.DrawKit(new Rect(box.x-1,box.y-2,17,13),"Icon_Check");
     NexoUi.Write(new Rect(box.xMax+10,y,inner.width-50,row),text,13,done?NexoUi.Muted:active?Color.white:NexoUi.Muted,TextAnchor.MiddleLeft,active);
    }
+   if(returnDisplay&&GameSession.Current&&index<5&&!GameSession.Current.HasReturnedElemental(index)&&inventory.HasSpecies(Rewards[index])&&Vector3.Distance(player.transform.position,ReturnSite())<=4)NexoUi.Write(new Rect(410,535,460,34),"PULSA F PARA DEVOLVER LA ELEMENTAL A SU BIOMA · CONSERVAS TU COPIA",14,Color.white,TextAnchor.MiddleCenter,true);
    GUI.matrix=before;
   }
   public void DrawMap(GUIStyle label,GUIStyle title){

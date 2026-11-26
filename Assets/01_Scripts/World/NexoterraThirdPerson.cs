@@ -49,8 +49,7 @@ namespace Nexoterra.World
             if(capturing)
             {Cursor.lockState=CursorLockMode.Locked;Cursor.visible=false;}
             if(k.hKey.wasPressedThisFrame)help=!help;
-            // Biome map removed (keyboard and gamepad); the minimap replaces it.
-            map=false;
+            if(k.mKey.wasPressedThisFrame||NexoInput.Map)map=!map;
             if(inventoryOpen)map=false;
             if(k.vKey.wasPressedThisFrame){bool chooseFemale=!female.activeSelf;female.SetActive(chooseFemale);male.SetActive(!chooseFemale);Notify(chooseFemale?"Personaje: Comando":"Personaje: Jugador");}
             if(k.homeKey.wasPressedThisFrame||transform.position.y < -6)Teleport(spawn);
@@ -68,8 +67,8 @@ namespace Nexoterra.World
                     else if(k.dKey.wasPressedThisFrame||(ctrl&&k.dKey.isPressed))abilities.TryDodge(1,Quaternion.Euler(0,yaw,0)*Vector3.right);
                 }
                 if(k.eKey.wasPressedThisFrame)Collect();
-                if(k.fKey.wasPressedThisFrame)Feed();
-                if(NexoInput.Interact){Collect();Feed();}
+                if(k.fKey.wasPressedThisFrame){if(!CampaignLevel.Current||!CampaignLevel.Current.TryReturnElemental())Feed();}
+                if(NexoInput.Interact){bool returned=CampaignLevel.Current&&CampaignLevel.Current.TryReturnElemental();if(!returned){Collect();Feed();}}
                 if((k.rKey.wasPressedThisFrame||NexoInput.Reload)&&animationDriver)animationDriver.Reload();
                 if((m.leftButton.wasPressedThisFrame&&!capturing)||NexoInput.Shoot)Shoot();
             }
@@ -135,8 +134,8 @@ namespace Nexoterra.World
             if(!closest){Notify("Acércate a una babosa para alimentarla");return;}
             if(CampaignLevel.Current&&CampaignLevel.Current.IsReward(closest)&&closest.species.StartsWith("Malvada_")){Notify("Primero cura la elemental con Doc o Energía.");return;}
             if(food==0){Notify("Necesitas un hongo · recógelo con E");return;}
-            if(!inventory||!inventory.Add(closest.species)){Notify("No se pudo registrar esta especie.");return;}
-            food--;adopted=inventory.Count;var loot=closest.GetComponent<EnemySlugLoot>();if(loot&&CampaignLevel.Current)CampaignLevel.Current.CollectLoot(loot.key);closest.Adopt();if(CampaignLevel.Current)GameSession.RememberSpecies(closest.species);Notify(inventory.Status);
+            if(!inventory||!inventory.Add(closest.species,closest.golden)){Notify("No se pudo registrar esta especie.");return;}
+            food--;adopted=inventory.Count;var loot=closest.GetComponent<EnemySlugLoot>();if(loot&&CampaignLevel.Current)CampaignLevel.Current.CollectLoot(loot.key);closest.Adopt();if(CampaignLevel.Current)GameSession.RememberSpecies(closest.species,closest.golden);if(GameSession.Current)GameSession.Current.SaveInventory();Notify(inventory.Status);
         }
         public void Notify(string text){notice=text;noticeUntil=Time.time+4;}
         void OnDisable(){Release();}
@@ -160,10 +159,11 @@ namespace Nexoterra.World
             }
 
             if(Time.time<noticeUntil)GUI.Label(new Rect(cx-260,Screen.height-195,590,30),notice,label);
-            if(map)DrawMap();
+            if(map)DrawMap();else if(ArenaSession.Current)DrawArenaMinimap();
         }
         void DrawMap()
         {
+            if(ArenaSession.Current){DrawArenaMap();return;}
             float x=Screen.width*.5f-240,y=Screen.height*.5f-240;
             GUI.Box(new Rect(x-16,y-45,512,545),GUIContent.none);GUI.Label(new Rect(x,y-35,480,30),"CUATRO NODOS / seis biomas · M para cerrar",title);
             Color[] colors={new Color(.4f,.29f,.17f),new Color(.5f,.13f,.07f),new Color(.35f,.63f,.75f),new Color(.05f,.4f,.48f),new Color(.24f,.06f,.09f),new Color(.2f,.45f,.2f)};
@@ -171,6 +171,23 @@ namespace Nexoterra.World
             for(int i=0;i<6;i++){int row=i/2;float top=row==0?0:row==1?180:300;float height=row==1?120:180;var rect=new Rect(x+(i%2)*240,y+top,238,height-2);GUI.color=colors[i];GUI.DrawTexture(rect,Texture2D.whiteTexture);GUI.color=Color.white;GUI.Label(new Rect(rect.x+12,rect.y+12,220,30),names[i],label);}
             float px=x+Mathf.InverseLerp(-320,320,transform.position.x)*480,py=y+(1-Mathf.InverseLerp(-320,320,transform.position.z))*480;
             GUI.color=Color.yellow;GUI.DrawTexture(new Rect(px-4,py-4,8,8),Texture2D.whiteTexture);GUI.color=Color.white;
+        }
+        void DrawArenaMap()
+        {
+            float x=Screen.width*.5f-170,y=Screen.height*.5f-190,size=340;
+            GUI.Box(new Rect(x-14,y-40,size+28,size+54),GUIContent.none);GUI.Label(new Rect(x,y-32,size,24),"ARENA · RIVALES",title);
+            GUI.color=new Color(.08f,.13f,.16f,.96f);GUI.DrawTexture(new Rect(x,y,size,size),Texture2D.whiteTexture);GUI.color=Color.white;
+            float px=x+Mathf.InverseLerp(-125,125,transform.position.x)*size,py=y+(1-Mathf.InverseLerp(-125,125,transform.position.z))*size;
+            GUI.color=Color.cyan;GUI.DrawTexture(new Rect(px-5,py-5,10,10),Texture2D.whiteTexture);
+            var session=ArenaSession.Current;
+            if(session)foreach(var rival in session.RivalPositions()){var pos=rival.Value;float rx=x+Mathf.InverseLerp(-125,125,pos.x)*size,ry=y+(1-Mathf.InverseLerp(-125,125,pos.z))*size;GUI.color=new Color(1,.2f,.18f);GUI.DrawTexture(new Rect(rx-4,ry-4,8,8),Texture2D.whiteTexture);}
+            GUI.color=Color.white;
+        }
+        void DrawArenaMinimap()
+        {
+            const float size=154;float x=Screen.width-size-22,y=Screen.height-size-22;GUI.Box(new Rect(x-8,y-8,size+16,size+16),GUIContent.none);GUI.color=new Color(.055f,.12f,.15f,.96f);GUI.DrawTexture(new Rect(x,y,size,size),Texture2D.whiteTexture);GUI.color=Color.white;
+            float px=x+Mathf.InverseLerp(-125,125,transform.position.x)*size,py=y+(1-Mathf.InverseLerp(-125,125,transform.position.z))*size;GUI.color=Color.cyan;GUI.DrawTexture(new Rect(px-4,py-4,8,8),Texture2D.whiteTexture);
+            foreach(var rival in ArenaSession.Current.RivalPositions()){var pos=rival.Value;float rx=x+Mathf.InverseLerp(-125,125,pos.x)*size,ry=y+(1-Mathf.InverseLerp(-125,125,pos.z))*size;GUI.color=new Color(1,.2f,.18f);GUI.DrawTexture(new Rect(rx-4,ry-4,8,8),Texture2D.whiteTexture);}GUI.color=Color.white;
         }
         public static string BiomeAt(Vector3 p){if(CampaignLevel.Current)return CampaignLevel.Titles[CampaignLevel.Current.index];if(ArenaSession.Current)return "Arena multijugador";if(p.x>=0)return p.z>80?"Caldera volcánica":p.z>-80?"Galería acuática":"Jardines del Nexo";return p.z>80?"Tierras antiguas":p.z>-80?"Cavernas de hielo":"Ciénaga carmesí";}
     }

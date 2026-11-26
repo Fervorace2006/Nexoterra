@@ -8,9 +8,11 @@ namespace Nexoterra.World
         public string species;
         public float roamRadius=4,hopHeight=.32f,hopDuration=.55f,hopDistance=.85f;
         public bool adopted;
+        public bool golden;
         Rect habitat;
         bool freeRoaming;
         public void SetHabitat(Rect bounds,bool roam){habitat=bounds;freeRoaming=roam;}
+        public void SetGolden(bool value){golden=value;if(!golden)return;foreach(var r in GetComponentsInChildren<Renderer>(true)){var block=new MaterialPropertyBlock();r.GetPropertyBlock(block);var gold=new Color(1f,.67f,.12f,1);block.SetColor("_Color",gold);block.SetColor("_BaseColor",gold);block.SetColor("_EmissionColor",new Color(.18f,.075f,.006f,1));r.SetPropertyBlock(block);}}
         Vector3 home,target,hopStart,hopEnd,visualScale;
         float changeAt,pause,hopTime;
         Transform visual;
@@ -39,8 +41,8 @@ namespace Nexoterra.World
             visual.localScale*=k;
             visual.position+=root.position-(pivot+(bottom-pivot)*k);
         }
-        void OnEnable(){Active.Add(this);}
-        void OnDisable(){Active.Remove(this);}
+        void OnEnable(){Active.Add(this);SlugAmbientSoundManager.Register(transform);}
+        void OnDisable(){Active.Remove(this);SlugAmbientSoundManager.Unregister(transform);}
         void Update(){Advance(Time.deltaTime);}
         public void Advance(float dt)
         {

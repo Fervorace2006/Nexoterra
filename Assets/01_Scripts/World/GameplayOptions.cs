@@ -87,7 +87,7 @@ namespace Nexoterra.World
         // ---- Audio volumes (0..1), saved in PlayerPrefs ----
         const string MusicKey="Nexoterra.MusicVolume",SfxKey="Nexoterra.SfxVolume";
         public static float MusicVolume{get=>PlayerPrefs.GetFloat(MusicKey,.7f);set{PlayerPrefs.SetFloat(MusicKey,Mathf.Clamp01(value));}}
-        public static float SfxVolume{get=>PlayerPrefs.GetFloat(SfxKey,.9f);set{PlayerPrefs.SetFloat(SfxKey,Mathf.Clamp01(value));}}
+        public static float SfxVolume{get=>PlayerPrefs.GetFloat(SfxKey,.4f);set{PlayerPrefs.SetFloat(SfxKey,Mathf.Clamp01(value));}}
 
         // Graphics controls (preset, frame-rate cap, v-sync). Uses ~232 px of height.
         public static void DrawGraphics(Rect rect)
@@ -109,7 +109,9 @@ namespace Nexoterra.World
         public static bool DrawSettingsPage(Rect rect)
         {
             if(padPage){if(NexoInput.DrawPage(rect)){padPage=false;NexoUi.ResetFocus();}return false;}
-            NexoUi.Title(new Rect(rect.x,rect.y,rect.width,70),"CALIDAD GRÁFICA","Los cambios se aplican y guardan al instante.");
+            NexoUi.Write(new Rect(rect.x,rect.y,rect.width,18),"NOMBRE EN MULTIJUGADOR",12,NexoUi.Teal,TextAnchor.MiddleLeft,true);
+            string playerName=NexoHud.Field(new Rect(rect.x,rect.y+23,rect.width,40),ArenaSession.PlayerName,16);
+            if(playerName!=ArenaSession.PlayerName)ArenaSession.PlayerName=playerName;
             float y=rect.y+76;
             DrawGraphics(new Rect(rect.x,y,rect.width,232));y+=232;
             NexoUi.Section(new Rect(rect.x,y,rect.width,22),"AUDIO");y+=30;

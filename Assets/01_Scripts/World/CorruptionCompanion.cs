@@ -23,7 +23,7 @@ namespace Nexoterra.World {
    // Keep the player's horizontal position and place the slug on the ground at their feet.
    if(Physics.Raycast(point+Vector3.up*.25f,Vector3.down,out var ground,2f,SlugHop.WorldMask,QueryTriggerInteraction.Ignore))
     point.y=ground.point.y;
-   go.transform.position=point;var released=go.AddComponent<LooseSlug>();companions[index]=released;released.Initialize(inventory,index);player.Notify("G: llamar esta babosa · J: convertir con agua oscura");}
+   go.transform.position=point;var released=go.AddComponent<LooseSlug>();companions[index]=released;released.Initialize(inventory,index);SlugAmbientSoundManager.PlayOnRelease(released.transform);player.Notify("G: llamar esta babosa · J: convertir con agua oscura");}
   public void Recall(){
    if(!companion)return;
    if(Vector3.Distance(companion.transform.position,transform.position)<=1.1f){CompleteRecall(companion);return;}
@@ -55,7 +55,8 @@ namespace Nexoterra.World {
  public sealed class LooseSlug:MonoBehaviour {
   bool following;bool recalling;bool hopping;Vector3 hopStart,hopEnd;float hopProgress;public bool IsRecalling=>recalling;public void Recall(){recalling=true;}
   SlugInventory owner;int index;public int InventoryIndex=>index;GameObject model;public bool changing;public string Species=>owner&&index<owner.owned.Count?owner.owned[index]:"";
-  public void Initialize(SlugInventory inventory,int slot){owner=inventory;index=slot;gameObject.layer=2;var c=gameObject.AddComponent<SphereCollider>();c.radius=.3f;c.center=Vector3.up*.2f;Show();}
+  public void Initialize(SlugInventory inventory,int slot){owner=inventory;index=slot;gameObject.layer=2;var c=gameObject.AddComponent<SphereCollider>();c.radius=.3f;c.center=Vector3.up*.2f;Show();SlugAmbientSoundManager.Register(transform);}
+  void OnDestroy(){SlugAmbientSoundManager.Unregister(transform);}
   void Show(){if(model)Destroy(model);var d=owner.catalog.Find(Species);if(d==null)return;model=Instantiate(d.normal,transform);foreach(var c in model.GetComponentsInChildren<Collider>())Destroy(c);WildSlug.Fit(transform,model.transform);}
   public void Purify(){if(Species.StartsWith("Malvada_")&&!changing&&owner.catalog.Find(SlugCatalog.BaseSpecies(Species))!=null){changing=true;SlugPurification.Begin(gameObject,()=>{owner.owned[index]=SlugCatalog.BaseSpecies(Species);Show();},()=>changing=false);}}
   public void Change(string id){if(changing||!owner||owner.catalog.Find(id)==null)return;StartCoroutine(Transition(id));}

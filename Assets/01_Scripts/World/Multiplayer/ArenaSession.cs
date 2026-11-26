@@ -11,17 +11,17 @@ namespace Nexoterra.World
  {
   [Serializable] public sealed class Packet {
    public string kind,species; public ulong id,other;public Vector3 position,direction;public Quaternion rotation;
-   public string name;public bool female,transformed,evading;public float health,time0,time1,upper,eventTime;public int state0,state1; public string[] collection;
+   public string name;public bool female,transformed,evading,targeted,golden;public float health,time0,time1,upper,eventTime;public int state0,state1; public string[] collection,goldenCollection;
   }
   const string NameKey="Nexoterra.PlayerName";
-  public static string PlayerName{get{var n=PlayerPrefs.GetString(NameKey,"");return string.IsNullOrWhiteSpace(n)?"Lanzador":n;}set{PlayerPrefs.SetString(NameKey,(value??"").Trim().Length>16?(value??"").Trim().Substring(0,16):(value??"").Trim());PlayerPrefs.Save();}}
+  public static string PlayerName{get{var n=PlayerPrefs.GetString(NameKey,"");return string.IsNullOrWhiteSpace(n)?"Lanzador":n;}set{var n=(value??"").Trim();if(n.Length>16)n=n.Substring(0,16);PlayerPrefs.SetString(NameKey,n);PlayerPrefs.Save();}}
   static string Clean(string n){n=(n??"").Trim();if(n.Length>16)n=n.Substring(0,16);return n.Length==0?"Lanzador":n;}
   // One distinct colour per player for the name tags.
   static readonly Color[] TagColors={new Color(.3f,1,.95f),new Color(1,.62f,.15f),new Color(.55f,1,.3f),new Color(1,.4f,.9f),new Color(1,.95f,.3f),new Color(.55f,.65f,1f)};
   sealed class Peer {
    public string name="";
    public Vector3 velocity,lastPosePosition;public float lastPoseTime=-1,viewTime;   // for latency-compensated prediction
-   public string[] collection;public GameObject proxy;public Vector3 position;public Quaternion rotation;
+   public string[] collection,goldenCollection;public GameObject proxy;public Vector3 position;public Quaternion rotation;
    public float health=100,lastShot=-10,deadUntil,burnUntil,burnRate,lastMove;
    public bool female,visualFemale,evading;public Animator animator;
    // Remote view smoothing: last received pose, estimated velocity and animation states.
@@ -33,12 +33,18 @@ namespace Nexoterra.World
   NetworkManager network;
   NexoterraThirdPerson player;SlugInventory inventory;PlayerHealth health;
   float sendAt,helloAt;bool registered;
+  readonly List<Material> arenaMaterials=new List<Material>();
   SlugProjectile predictedHostShot;
   public bool IsServer=>network&&network.IsServer;
+  public ulong LocalClientId=>network?network.LocalClientId:ulong.MaxValue;
+  public bool TryGetRivalPosition(ulong id,out Vector3 position){if(peers.TryGetValue(id,out var peer)&&peer.proxy){position=peer.proxy.transform.position;return true;}position=default;return false;}
+  public IEnumerable<KeyValuePair<ulong,Vector3>> RivalPositions(){foreach(var pair in peers)if(pair.Key!=LocalClientId&&pair.Value.proxy)yield return new KeyValuePair<ulong,Vector3>(pair.Key,pair.Value.proxy.transform.position);}
+  public bool IsRivalEvading(ulong id)=>peers.TryGetValue(id,out var peer)&&peer.evading;
   void Awake(){Current=this;}
   System.Collections.IEnumerator Start(){
    player=FindAnyObjectByType<NexoterraThirdPerson>();inventory=player.GetComponent<SlugInventory>();health=player.GetComponent<PlayerHealth>();
    yield return null;
+   PrepareArenaEnvironment();
    var room=MultiplayerRoom.Current;
    if(!room||!room.Connected){FrontEndMenu.Load(FrontEndMenu.MenuScene);yield break;}
    network=room.Manager;
@@ -48,17 +54,35 @@ namespace Nexoterra.World
    GameSession.Data data=null;try{data=GameSession.ReadCollection();}catch(Exception e){Debug.LogWarning("Colección no disponible: "+e.Message);}
    if(data!=null){
     inventory.owned=data.owned.Where(id=>inventory.catalog.Find(id)!=null).ToList();
+    inventory.goldenOwned=new List<bool>();for(int i=0;i<inventory.owned.Count;i++)inventory.goldenOwned.Add(data.goldenOwned!=null&&i<data.goldenOwned.Length&&data.goldenOwned[i]);
     inventory.equipped=new[]{-1,-1,-1,-1,-1,-1};for(int i=0;i<Mathf.Min(6,inventory.owned.Count);i++)inventory.equipped[i]=i;
-   }else{inventory.owned.Clear();inventory.equipped=new[]{-1,-1,-1,-1,-1,-1};inventory.Add("Infierno");}
+   }else{inventory.owned.Clear();inventory.goldenOwned.Clear();inventory.equipped=new[]{-1,-1,-1,-1,-1,-1};inventory.Add("Infierno");}
    inventory.persist=false;
-   SendToServer(new Packet{kind="hello",name=PlayerName,collection=inventory.owned.Distinct().ToArray()});
+   SendToServer(new Packet{kind="hello",name=PlayerName,collection=inventory.owned.Distinct().ToArray(),goldenCollection=GoldenSpecies()});
    player.Teleport(Spawn(network.LocalClientId));health.Restore(health.maxHealth);
   }
   static Vector3 Spawn(ulong id){Vector3[] points={new Vector3(-85,.3f,-90),new Vector3(85,.3f,85),new Vector3(-85,.3f,85),new Vector3(85,.3f,-90)};return points[(int)(id%4)];}
   void OnDestroy(){
    if(registered&&network){network.CustomMessagingManager.UnregisterNamedMessageHandler("arena");network.OnClientDisconnectCallback-=RemovePeer;}
    foreach(var peer in peers.Values)if(peer.proxy)Destroy(peer.proxy);
+   foreach(var material in arenaMaterials)if(material)Destroy(material);arenaMaterials.Clear();
    if(Current==this)Current=null;
+  }
+  void PrepareArenaEnvironment(){
+   foreach(var t in FindObjectsByType<Transform>(FindObjectsSortMode.None))if(t&&t.parent==null&&(t.name.Contains("Santuario")||t.name.Contains("Elemental")||t.name.Contains("Recompensa del guardián")))Destroy(t.gameObject);
+   foreach(var r in FindObjectsByType<MeshRenderer>(FindObjectsSortMode.None))if(r.gameObject.name=="Suelo del bioma"){r.enabled=false;var c=r.GetComponent<Collider>();if(c)c.enabled=false;}
+   var floor=GameObject.CreatePrimitive(PrimitiveType.Plane);floor.name="Arena plana · suelo";floor.transform.position=new Vector3(0,-.15f,0);floor.transform.localScale=Vector3.one*25;SetArenaMaterial(floor,new Color(.18f,.24f,.25f));
+   Vector3[] sites={new Vector3(-42,0,-42),new Vector3(42,0,-42),new Vector3(-42,0,42),new Vector3(42,0,42)};
+   for(int i=0;i<sites.Length;i++)BuildArenaHouse("Casa de arena "+(i+1),sites[i],i);
+  }
+  Material ArenaMaterial(Color color){var shader=Shader.Find("Universal Render Pipeline/Lit");if(!shader)shader=Shader.Find("Standard");var m=new Material(shader);m.color=color;arenaMaterials.Add(m);return m;}
+  void SetArenaMaterial(GameObject go,Color color){var r=go.GetComponent<Renderer>();if(r)r.sharedMaterial=ArenaMaterial(color);}
+  void BuildArenaHouse(string name,Vector3 position,int style){
+   var root=new GameObject(name);root.transform.position=position;
+   var body=GameObject.CreatePrimitive(PrimitiveType.Cube);body.name="Muros";body.transform.SetParent(root.transform,false);body.transform.localPosition=Vector3.up*2;body.transform.localScale=new Vector3(12,4,9);SetArenaMaterial(body,new Color(.35f,.26f,.18f));
+   var roof=GameObject.CreatePrimitive(PrimitiveType.Cube);roof.name="Techo";roof.transform.SetParent(root.transform,false);roof.transform.localPosition=Vector3.up*4.5f;roof.transform.localScale=new Vector3(13,.8f,10);roof.transform.localRotation=Quaternion.Euler(0,style%2==0?0:90,0);SetArenaMaterial(roof,new Color(.12f,.19f,.22f));
+   var door=GameObject.CreatePrimitive(PrimitiveType.Cube);door.name="Puerta";door.transform.SetParent(root.transform,false);door.transform.localPosition=new Vector3(0,1.05f,-4.55f);door.transform.localScale=new Vector3(1.5f,2.1f,.12f);SetArenaMaterial(door,new Color(.1f,.14f,.15f));
+   foreach(float side in new[]{-3.5f,3.5f}){var window=GameObject.CreatePrimitive(PrimitiveType.Cube);window.name="Ventana";window.transform.SetParent(root.transform,false);window.transform.localPosition=new Vector3(side,2.4f,-4.56f);window.transform.localScale=new Vector3(1.7f,1.1f,.14f);SetArenaMaterial(window,new Color(.08f,.62f,.68f));}
   }
   void RemovePeer(ulong id){
    if(peers.TryGetValue(id,out var peer)){if(peer.proxy)Destroy(peer.proxy);peers.Remove(id);}
@@ -80,7 +104,7 @@ namespace Nexoterra.World
    if(packet.kind=="hello"){
     if(peers.ContainsKey(sender)){Send(sender,new Packet{kind="join",name=peers[sender].name,id=sender,position=peers[sender].position,health=peers[sender].health});return;}
     var owned=(packet.collection??Array.Empty<string>()).Where(id=>inventory.catalog.Find(id)!=null).Distinct().Take(64).ToArray();
-    peers[sender]=new Peer{name=Clean(packet.name),collection=owned,position=Spawn(sender),rotation=Quaternion.identity,lastMove=Time.unscaledTime};
+    peers[sender]=new Peer{name=Clean(packet.name),collection=owned,goldenCollection=packet.goldenCollection??Array.Empty<string>(),position=Spawn(sender),rotation=Quaternion.identity,lastMove=Time.unscaledTime};
     foreach(var pair in peers)Send(sender,new Packet{kind="join",name=pair.Value.name,id=pair.Key,position=pair.Value.position,rotation=pair.Value.rotation,health=pair.Value.health});
     Broadcast(new Packet{kind="join",name=peers[sender].name,id=sender,position=Spawn(sender),rotation=Quaternion.identity,health=100});return;
    }
@@ -100,6 +124,8 @@ namespace Nexoterra.World
     var definition=inventory.catalog.Find(packet.species);if(definition==null)return;
     peer.lastShot=Time.unscaledTime;peer.busyUntil[packet.species]=Time.unscaledTime+1.4f;
     packet.id=sender;packet.direction.Normalize();packet.eventTime=Mathf.Clamp(packet.eventTime,(float)network.ServerTime.TimeAsFloat-1f,(float)network.ServerTime.TimeAsFloat);
+    if(!packet.targeted||packet.other==sender||!peers.ContainsKey(packet.other))packet.targeted=false;
+    packet.golden=packet.golden&&peer.goldenCollection!=null&&peer.goldenCollection.Contains(packet.species);
     if(!Finite(packet.position)||Vector3.Distance(packet.position,peer.position)>3)packet.position=peer.position+Vector3.up*1.3f;
     if(definition.id=="Gon_Doc"||definition.id=="Elemental_Energia")peer.health=Mathf.Min(100,peer.health+(definition.id=="Gon_Doc"?25:32));
     if(definition.id.StartsWith("Malvada_"))peer.health=Mathf.Max(1,peer.health-5);
@@ -150,9 +176,9 @@ namespace Nexoterra.World
    }
    if(packet.kind=="shot"){if(!IsServer&&packet.id!=network.LocalClientId)Launch(packet,false);return;}
    if(packet.kind=="hit"){
-    if(peers.TryGetValue(packet.id,out var peer)){peer.health=packet.health;var effect=inventory.catalog.Find(packet.species);if(peer.proxy&&effect!=null&&packet.transformed){peer.proxy.GetComponent<EnemyControlEffects>().Apply(effect.id,packet.direction);if(effect.Combat.burnDuration>0){var fire=ImportedSlugVfx.BurningCharacter(peer.proxy.transform);if(fire)Destroy(fire,effect.Combat.burnDuration);}}}
+    if(peers.TryGetValue(packet.id,out var peer)){peer.health=packet.health;var effect=inventory.catalog.Find(packet.species);if(peer.proxy&&effect!=null&&packet.transformed){var controls=peer.proxy.GetComponent<EnemyControlEffects>();if(SlugCatalog.BaseSpecies(effect.id)!="Elemental_Tierra")controls.CancelStone();controls.Apply(effect.id,packet.direction);if(effect.Combat.burnDuration>0){var fire=ImportedSlugVfx.BurningCharacter(peer.proxy.transform);if(fire)Destroy(fire,effect.Combat.burnDuration);}}}
     if(packet.id==network.LocalClientId){
-     var def=inventory.catalog.Find(packet.species);if(def!=null)health.ReceiveSlug(def,packet.transformed,packet.direction);
+     var def=inventory.catalog.Find(packet.species);if(def!=null)health.ReceiveSlug(def,packet.transformed,packet.direction,packet.golden);
      health.ApplyArenaHealth(packet.health);
     }return;
    }
@@ -176,27 +202,29 @@ namespace Nexoterra.World
    var definition=inventory.catalog.Find(packet.species);if(definition==null)return;
    var go=new GameObject("Babosa de arena");go.layer=2;go.transform.position=packet.position;
    var shot=go.AddComponent<SlugProjectile>();shot.speed=inventory.projectileSpeed;shot.transformDistance=inventory.transformationDistance;
-   shot.arenaShot=true;shot.arenaAuthority=authority;shot.arenaOwner=packet.id;shot.Launch(definition,packet.direction);
+   shot.arenaShot=true;shot.arenaAuthority=authority;shot.arenaOwner=packet.id;shot.Launch(definition,packet.direction);shot.SetGolden(packet.golden);
+   if(packet.targeted&&peers.TryGetValue(packet.other,out var target)&&target.proxy)shot.HomingTarget=target.proxy.transform;
    float age=Mathf.Clamp((float)network.ServerTime.TimeAsFloat-packet.eventTime,0,2.5f);
    if(age>.01f)shot.Advance(age);
   }
   public void SubmitShot(SlugDefinition definition,Vector3 origin,Vector3 direction,SlugProjectile localShot){
    localShot.arenaShot=true;localShot.arenaAuthority=false;localShot.arenaOwner=network.LocalClientId;
    predictedHostShot=localShot;
-   SendToServer(new Packet{kind="shot",species=definition.id,position=origin,direction=direction,eventTime=(float)network.ServerTime.TimeAsFloat},NetworkDelivery.Reliable);
+   var target=localShot.HomingTarget?localShot.HomingTarget.GetComponentInParent<ArenaTarget>():null;
+   SendToServer(new Packet{kind="shot",species=definition.id,position=origin,direction=direction,eventTime=(float)network.ServerTime.TimeAsFloat,targeted=target,other=target?target.clientId:0,golden=localShot.IsGolden},NetworkDelivery.Reliable);
    predictedHostShot=null;
   }
-  public void Hit(ulong id,SlugDefinition definition,bool transformed,Vector3 direction){
+  public void Hit(ulong id,SlugDefinition definition,bool transformed,Vector3 direction,bool golden=false){
    if(!IsServer||!peers.TryGetValue(id,out var peer)||peer.health<=0||peer.evading)return;
-   var combat=definition.Combat;peer.health=Mathf.Max(0,peer.health-(transformed?combat.impactDamage:definition.id.StartsWith("Malvada_")?3.15f:3));
+   var combat=definition.Combat.WithDamageMultiplier(golden?1.1f:1f);peer.health=Mathf.Max(0,peer.health-(transformed?combat.impactDamage:(definition.id.StartsWith("Malvada_")?3.15f:3)*(golden?1.1f:1f)));
    if(transformed){peer.burnUntil=Time.unscaledTime+combat.burnDuration;peer.burnRate=combat.burnDamagePerSecond;}
    if(peer.health<=0)peer.deadUntil=Time.unscaledTime+3;
-   Broadcast(new Packet{kind="hit",id=id,species=definition.id,transformed=transformed,health=peer.health,direction=direction});
+   Broadcast(new Packet{kind="hit",id=id,species=definition.id,transformed=transformed,golden=golden,health=peer.health,direction=direction});
   }
   void Update(){
    if(!registered||!network||!network.IsListening)return;
    SmoothRemotePlayers();
-   if(!peers.ContainsKey(network.LocalClientId)&&Time.unscaledTime>=helloAt){helloAt=Time.unscaledTime+1;SendToServer(new Packet{kind="hello",name=PlayerName,collection=inventory.owned.Distinct().ToArray()});}
+   if(!peers.ContainsKey(network.LocalClientId)&&Time.unscaledTime>=helloAt){helloAt=Time.unscaledTime+1;SendToServer(new Packet{kind="hello",name=PlayerName,collection=inventory.owned.Distinct().ToArray(),goldenCollection=GoldenSpecies()});}
    if(Time.unscaledTime>=sendAt){
     sendAt=Time.unscaledTime+1f/50f;
     var a=(player.female.activeSelf?player.female:player.male).GetComponentInChildren<Animator>();var baseState=a.GetCurrentAnimatorStateInfo(0);var upper=a.layerCount>1?a.GetCurrentAnimatorStateInfo(1):default;
@@ -208,13 +236,14 @@ namespace Nexoterra.World
     if(peer.health<=0&&Time.unscaledTime>=peer.deadUntil){peer.health=100;peer.burnUntil=0;peer.position=Spawn(pair.Key);Broadcast(new Packet{kind="respawn",id=pair.Key,position=peer.position,health=100});}
    }
   }
+  string[] GoldenSpecies(){var result=new List<string>();for(int i=0;i<Mathf.Min(inventory.owned.Count,inventory.goldenOwned.Count);i++)if(inventory.goldenOwned[i])result.Add(inventory.owned[i]);return result.Distinct().ToArray();}
   static GUIStyle tagStyle;float copiedUntil;
   // Names over the other players' heads, each in its own colour (screen space, behind-camera ones skipped).
   void DrawNameTags()
   {
    if(Event.current.type!=EventType.Repaint)return;var cam=Camera.main;if(!cam)return;
    if(tagStyle==null)tagStyle=new GUIStyle(GUI.skin.label){alignment=TextAnchor.MiddleCenter,fontStyle=FontStyle.Bold,wordWrap=false};
-   tagStyle.fontSize=Mathf.RoundToInt(15*Screen.height/720f);
+   tagStyle.fontSize=Mathf.Clamp(Mathf.RoundToInt(15*Screen.height/720f),13,18);
    foreach(var pair in peers)
    {
     if(pair.Key==network.LocalClientId||!pair.Value.proxy)continue;

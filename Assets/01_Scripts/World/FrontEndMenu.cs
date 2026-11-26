@@ -7,6 +7,7 @@ namespace Nexoterra.World
  {
   public const string MenuScene="Nexoterra_Menu",WorldScene="Nexoterra_Jardines";
   static FrontEndMenu loader;bool multiplayer,direct,settings;string ip="127.0.0.1",port="7777";string joinCode="";bool loading;float progress;string error;Texture2D artwork,logo,logoCutout,menuBackground;
+  bool selectingLevel;
   void Awake(){artwork=Resources.Load<Texture2D>("Nexoterra/Loading");logo=Resources.Load<Texture2D>("Nexoterra/UI/Logo");logoCutout=Resources.Load<Texture2D>("Nexoterra/UI/Logo_Cutout");menuBackground=Resources.Load<Texture2D>("Nexoterra/UI/MenuBackground");Time.timeScale=1;Cursor.lockState=CursorLockMode.None;Cursor.visible=true;}
   public static void Load(string scene)
   {
@@ -48,11 +49,6 @@ namespace Nexoterra.World
     var panel=new Rect(312,48,656,624);NexoUi.Panel(panel);
     float x=panel.x+40,w=panel.width-80,y=panel.y+28;
     NexoUi.Title(new Rect(x,y,w,70),"MULTIJUGADOR","Duelo de lanzadores · hasta 4 jugadores");y+=80;
-    // Player name: saved for good (PlayerPrefs) and shown over your head to the others.
-    NexoUi.Write(new Rect(x,y,120,40),"TU NOMBRE",12,NexoUi.Teal,TextAnchor.MiddleLeft,true);
-    GUI.enabled=!room.Busy&&!room.Connected;
-    string typed=NexoHud.Field(new Rect(x+120,y,w-120,40),ArenaSession.PlayerName,16);if(typed!=ArenaSession.PlayerName)ArenaSession.PlayerName=typed;
-    GUI.enabled=true;y+=54;
     GUI.enabled=!room.Busy&&!room.Connected;
     int mode=NexoUi.Segmented(new Rect(x,y,w,44),new[]{"INTERNET · CÓDIGO","LOCAL · IP"},direct?1:0);direct=mode==1;y+=62;
     float half=(w-16)/2;
@@ -76,6 +72,15 @@ namespace Nexoterra.World
     if(NexoHud.Button(new Rect(x,panel.yMax-28-50,w,50),room.Busy?"CANCELAR CONEXIÓN":"VOLVER")||(NexoUi.BackPressed&&!room.Busy)){room.Cancel();multiplayer=false;NexoUi.ResetFocus();}
     NexoUi.EndNav();
    }
+   else if(selectingLevel)
+   {
+    NexoHud.Backdrop(null);NexoHud.Scale();NexoUi.BeginNav();var panel=new Rect(390,110,500,500);NexoUi.Panel(panel);
+    NexoUi.Title(new Rect(panel.x+32,panel.y+24,panel.width-64,64),"SELECCIONAR NIVEL","Solo puedes repetir biomas que ya completaste.");
+    bool[] completed=GameSession.CompletedLevelSnapshot();
+    for(int i=0;i<CampaignLevel.Scenes.Length;i++){int col=i%2,row=i/2;var rect=new Rect(panel.x+32+col*220,panel.y+112+row*92,204,72);bool unlocked=i<completed.Length&&completed[i];GUI.enabled=unlocked;bool choose=NexoHud.Button(rect,(i+1)+" · "+CampaignLevel.Titles[i]);GUI.enabled=true;if(choose)GameSession.BeginLevel(i);NexoUi.Write(new Rect(rect.x,rect.yMax,rect.width,16),unlocked?"COMPLETADO":"BLOQUEADO",10,unlocked?NexoUi.Teal:NexoUi.Muted,TextAnchor.MiddleCenter,true);}
+    if(NexoHud.Button(new Rect(panel.x+32,panel.yMax-68,panel.width-64,44),"VOLVER")){selectingLevel=false;NexoUi.ResetFocus();}
+    NexoUi.EndNav();
+   }
    else
    {
     // Start screen: map backdrop, logo, framed green button stack, square icon buttons in the top corners.
@@ -91,10 +96,12 @@ namespace Nexoterra.World
      Application.Quit();
 #endif
     }
-    var stack=new Rect(470,300,340,268);NexoUi.Panel(stack);
-    float x=stack.x+16,w=stack.width-32,h=66,gap=16,y=stack.y+16;
-    if(NexoHud.Button(new Rect(x,y,w,h),"HISTORIA"))GameSession.BeginNew();y+=h;NexoHud.Fill(new Rect(x+8,y+6,w-16,4),new Color(0,0,0,.85f));y+=gap;
-    GUI.enabled=GameSession.SavedGameExists;if(NexoHud.Button(new Rect(x,y,w,h),"CONTINUAR")){if(!GameSession.BeginSaved(out error))Debug.LogWarning(error);}GUI.enabled=true;y+=h;NexoHud.Fill(new Rect(x+8,y+6,w-16,4),new Color(0,0,0,.85f));y+=gap;
+    var stack=new Rect(470,265,340,370);NexoUi.Panel(stack);
+    float x=stack.x+16,w=stack.width-32,h=66,gap=12,y=stack.y+16;
+    bool hasSave=GameSession.SavedGameExists;
+    if(!hasSave){if(NexoHud.Button(new Rect(x,y,w,h),"NUEVA PARTIDA"))GameSession.BeginNew();y+=h+gap;}
+    GUI.enabled=hasSave;if(NexoHud.Button(new Rect(x,y,w,h),"CONTINUAR")){if(!GameSession.BeginSaved(out error))Debug.LogWarning(error);}GUI.enabled=true;y+=h+gap;
+    if(NexoHud.Button(new Rect(x,y,w,h),"SELECCIONAR NIVEL")){selectingLevel=true;NexoUi.ResetFocus();}y+=h+gap;
     if(NexoHud.Button(new Rect(x,y,w,h),"MULTIJUGADOR")){multiplayer=true;NexoUi.ResetFocus();}
     if(error!=null)NexoUi.Write(new Rect(340,stack.yMax+16,600,22),error,13,NexoUi.Danger,TextAnchor.MiddleCenter);
     NexoUi.EndNav();

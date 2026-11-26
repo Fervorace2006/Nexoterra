@@ -7,9 +7,9 @@ namespace Nexoterra.World
   public float Health {get;private set;}
   public bool IsDead=>Health<=0;
   public bool CanMove=>!IsDead&&(!GetComponent<EnemyControlEffects>()||GetComponent<EnemyControlEffects>().CanMove);
-  public void ReceiveSlug(SlugDefinition slug,bool transformed,Vector3 direction=default){if(IsDead||TechShield.Protects(transform)||(GetComponent<PlayerAbilities>()&&GetComponent<PlayerAbilities>().Evading))return;ReceiveDamage(transformed?slug.Combat.impactDamage:slug.id.StartsWith("Malvada_")?3.15f:3);
-   if(!IsDead&&EnemyControlEffects.CausesKnockdown(slug.id)){var effects=GetComponent<EnemyControlEffects>();if(!effects)effects=gameObject.AddComponent<EnemyControlEffects>();effects.BeginKnockdown();}
-   if(!IsDead&&transformed){var control=GetComponent<EnemyControlEffects>();if(!control)control=gameObject.AddComponent<EnemyControlEffects>();control.Apply(slug.id,direction);if(slug.Combat.burnDuration>0){corruptedBurn=slug.id.StartsWith("Malvada_");burnRemaining=Mathf.Max(burnRemaining,slug.Combat.burnDuration);burnRate=slug.Combat.burnDamagePerSecond;}}}
+  public void ReceiveSlug(SlugDefinition slug,bool transformed,Vector3 direction=default,bool golden=false){if(IsDead||TechShield.Protects(transform)||(GetComponent<PlayerAbilities>()&&GetComponent<PlayerAbilities>().Evading))return;var activeControl=GetComponent<EnemyControlEffects>();if(activeControl&&SlugCatalog.BaseSpecies(slug.id)!="Elemental_Tierra")activeControl.CancelStone();var combat=golden?slug.Combat.WithDamageMultiplier(1.1f):slug.Combat;ReceiveDamage(transformed?combat.impactDamage:(slug.id.StartsWith("Malvada_")?3.15f:3)*(golden?1.1f:1f));
+   if(!IsDead&&EnemyControlEffects.CausesKnockdown(slug.id)&&SlugCatalog.BaseSpecies(slug.id)!="Elemental_Tierra"){var effects=GetComponent<EnemyControlEffects>();if(!effects)effects=gameObject.AddComponent<EnemyControlEffects>();effects.BeginKnockdown();}
+   if(!IsDead&&transformed){var control=GetComponent<EnemyControlEffects>();if(!control)control=gameObject.AddComponent<EnemyControlEffects>();control.Apply(slug.id,direction);if(combat.burnDuration>0){corruptedBurn=slug.id.StartsWith("Malvada_");burnRemaining=Mathf.Max(burnRemaining,combat.burnDuration);burnRate=combat.burnDamagePerSecond;}}}
   bool corruptedBurn;float burnRemaining,burnRate;GameObject burnVisual;
   float recovery;
   NexoterraThirdPerson player;
