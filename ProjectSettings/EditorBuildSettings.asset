@@ -30,6 +30,9 @@ EditorBuildSettings:
     path: Assets/00_Scenes/Campaign/Nexoterra_Carmesi.unity
     guid: 6432599e6b2d9f64ea1fea95c9e560f1
   - enabled: 1
+    path: Assets/00_Scenes/Campaign/Nexoterra_Final.unity
+    guid: 190eeb2b90297a243922c6da7fbead57
+  - enabled: 1
     path: Assets/00_Scenes/Campaign/Nexoterra_Arena.unity
     guid: c9d4877dfab4e1640908b116aea87bcf
   m_configObjects:

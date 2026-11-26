@@ -74,8 +74,8 @@ namespace Nexoterra.World
    }
    else if(selectingLevel)
    {
-    NexoHud.Backdrop(null);NexoHud.Scale();NexoUi.BeginNav();var panel=new Rect(390,110,500,500);NexoUi.Panel(panel);
-    NexoUi.Title(new Rect(panel.x+32,panel.y+24,panel.width-64,64),"SELECCIONAR NIVEL","Solo puedes repetir biomas que ya completaste.");
+    NexoHud.Backdrop(null);NexoHud.Scale();NexoUi.BeginNav();var panel=new Rect(390,65,500,590);NexoUi.Panel(panel);
+    NexoUi.Title(new Rect(panel.x+32,panel.y+24,panel.width-64,64),"SELECCIONAR NIVEL","Solo puedes elegir episodios que ya completaste.");
     bool[] completed=GameSession.CompletedLevelSnapshot();
     for(int i=0;i<CampaignLevel.Scenes.Length;i++){int col=i%2,row=i/2;var rect=new Rect(panel.x+32+col*220,panel.y+112+row*92,204,72);bool unlocked=i<completed.Length&&completed[i];GUI.enabled=unlocked;bool choose=NexoHud.Button(rect,(i+1)+" · "+CampaignLevel.Titles[i]);GUI.enabled=true;if(choose)GameSession.BeginLevel(i);NexoUi.Write(new Rect(rect.x,rect.yMax,rect.width,16),unlocked?"COMPLETADO":"BLOQUEADO",10,unlocked?NexoUi.Teal:NexoUi.Muted,TextAnchor.MiddleCenter,true);}
     if(NexoHud.Button(new Rect(panel.x+32,panel.yMax-68,panel.width-64,44),"VOLVER")){selectingLevel=false;NexoUi.ResetFocus();}

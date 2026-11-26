@@ -7,10 +7,10 @@ namespace Nexoterra.World
  public sealed class CampaignLevel : MonoBehaviour
  {
   public static CampaignLevel Current {get;private set;}
-  public const int Revision=2;
-  public static readonly string[] Scenes={"Nexoterra_Jardines","Nexoterra_Hielo","Nexoterra_Agua","Nexoterra_Tierra","Nexoterra_Volcan","Nexoterra_Carmesi"};
-  public static readonly string[] Titles={"Jardines del Nexo","Cavernas de hielo","Galería acuática","Tierras antiguas","Caldera volcánica","Ciénaga carmesí"};
-  public static readonly string[] Rewards={"Elemental_Energia","Elemental_Aire","Elemental_Agua","Elemental_Tierra","Elemental_Fuego",""};
+  public const int Revision=3;
+  public static readonly string[] Scenes={"Nexoterra_Jardines","Nexoterra_Hielo","Nexoterra_Agua","Nexoterra_Tierra","Nexoterra_Volcan","Nexoterra_Carmesi","Nexoterra_Final"};
+  public static readonly string[] Titles={"Jardines del Nexo","Cavernas de hielo","Galería acuática","Tierras antiguas","Caldera volcánica","Ciénaga carmesí","Nexoterra Final"};
+  public static readonly string[] Rewards={"Elemental_Energia","Elemental_Aire","Elemental_Agua","Elemental_Tierra","Elemental_Fuego","",""};
   public int index;
   public Transform entrance,exit,rewardPoint;
   public EnemyCombatant[] enemies;

@@ -256,17 +256,6 @@ Transform:
   - {fileID: 1251329714}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &10137395 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 7829254513603235822, guid: 0423281af6918e845b8856087d5e33cf, type: 3}
-  m_PrefabInstance: {fileID: 1442498696}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1e5ecf3f8755e3f4392d575754e9bb38, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Nexoterra.World.EnemyCombatant
 --- !u!1 &13101580
 GameObject:
   m_ObjectHideFlags: 0
@@ -1662,6 +1651,7 @@ MonoBehaviour:
   unique: 0
   activeDistance: 135
   respawnSeconds: 75
+  goldenChance: 0.004
   editorPreview: {fileID: 0}
 --- !u!4 &59282876
 Transform:
@@ -1858,6 +1848,86 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 69334944}
   m_Mesh: {fileID: 4300000, guid: 59b4c2fc9b7dd954abf1d6608b462f51, type: 2}
+--- !u!1001 &71648681
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 4199071729118023410, guid: 1c81839d39732864e895769499b72243, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 90
+      objectReference: {fileID: 0}
+    - target: {fileID: 4199071729118023410, guid: 1c81839d39732864e895769499b72243, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0.1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4199071729118023410, guid: 1c81839d39732864e895769499b72243, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 103
+      objectReference: {fileID: 0}
+    - target: {fileID: 4199071729118023410, guid: 1c81839d39732864e895769499b72243, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4199071729118023410, guid: 1c81839d39732864e895769499b72243, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4199071729118023410, guid: 1c81839d39732864e895769499b72243, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4199071729118023410, guid: 1c81839d39732864e895769499b72243, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4199071729118023410, guid: 1c81839d39732864e895769499b72243, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4199071729118023410, guid: 1c81839d39732864e895769499b72243, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4199071729118023410, guid: 1c81839d39732864e895769499b72243, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4890198406336530319, guid: 1c81839d39732864e895769499b72243, type: 3}
+      propertyPath: maxHealth
+      value: 600
+      objectReference: {fileID: 0}
+    - target: {fileID: 4890198406336530319, guid: 1c81839d39732864e895769499b72243, type: 3}
+      propertyPath: displayName
+      value: Sir Black
+      objectReference: {fileID: 0}
+    - target: {fileID: 6421377251470371842, guid: 1c81839d39732864e895769499b72243, type: 3}
+      propertyPath: m_Name
+      value: Sir Black
+      objectReference: {fileID: 0}
+    - target: {fileID: 6964840523831329963, guid: 1c81839d39732864e895769499b72243, type: 3}
+      propertyPath: equippedElemental
+      value: 
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 1c81839d39732864e895769499b72243, type: 3}
+--- !u!114 &71648682 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 4890198406336530319, guid: 1c81839d39732864e895769499b72243, type: 3}
+  m_PrefabInstance: {fileID: 71648681}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1e5ecf3f8755e3f4392d575754e9bb38, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Nexoterra.World.EnemyCombatant
 --- !u!1 &73654102
 GameObject:
   m_ObjectHideFlags: 0
@@ -5795,6 +5865,7 @@ MonoBehaviour:
   unique: 0
   activeDistance: 135
   respawnSeconds: 75
+  goldenChance: 0.004
   editorPreview: {fileID: 0}
 --- !u!4 &217360585
 Transform:
@@ -12768,6 +12839,7 @@ MonoBehaviour:
   unique: 0
   activeDistance: 135
   respawnSeconds: 75
+  goldenChance: 0.004
   editorPreview: {fileID: 0}
 --- !u!4 &473702567
 Transform:
@@ -18879,6 +18951,7 @@ MonoBehaviour:
   unique: 0
   activeDistance: 135
   respawnSeconds: 75
+  goldenChance: 0.004
   editorPreview: {fileID: 0}
 --- !u!4 &705931166
 Transform:
@@ -19501,6 +19574,7 @@ MonoBehaviour:
   unique: 0
   activeDistance: 135
   respawnSeconds: 75
+  goldenChance: 0.004
   editorPreview: {fileID: 0}
 --- !u!4 &723803131
 Transform:
@@ -22452,6 +22526,7 @@ MonoBehaviour:
   unique: 0
   activeDistance: 135
   respawnSeconds: 75
+  goldenChance: 0.004
   editorPreview: {fileID: 0}
 --- !u!4 &901322767
 Transform:
@@ -34065,6 +34140,7 @@ MonoBehaviour:
   unique: 0
   activeDistance: 135
   respawnSeconds: 75
+  goldenChance: 0.004
   editorPreview: {fileID: 0}
 --- !u!4 &1392236497
 Transform:
@@ -35217,67 +35293,6 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1439403871}
   m_Mesh: {fileID: 4300000, guid: a16b9f639f157f345ae971b19d1173b5, type: 2}
---- !u!1001 &1442498696
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 0}
-    m_Modifications:
-    - target: {fileID: 50360552292299343, guid: 0423281af6918e845b8856087d5e33cf, type: 3}
-      propertyPath: m_Name
-      value: Sir Black 2
-      objectReference: {fileID: 0}
-    - target: {fileID: 2032780274249383988, guid: 0423281af6918e845b8856087d5e33cf, type: 3}
-      propertyPath: 'slugSlots.Array.data[2]'
-      value: Malvada_Goon
-      objectReference: {fileID: 0}
-    - target: {fileID: 8275473703737176928, guid: 0423281af6918e845b8856087d5e33cf, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 90
-      objectReference: {fileID: 0}
-    - target: {fileID: 8275473703737176928, guid: 0423281af6918e845b8856087d5e33cf, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 0.1
-      objectReference: {fileID: 0}
-    - target: {fileID: 8275473703737176928, guid: 0423281af6918e845b8856087d5e33cf, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 103
-      objectReference: {fileID: 0}
-    - target: {fileID: 8275473703737176928, guid: 0423281af6918e845b8856087d5e33cf, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 8275473703737176928, guid: 0423281af6918e845b8856087d5e33cf, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8275473703737176928, guid: 0423281af6918e845b8856087d5e33cf, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8275473703737176928, guid: 0423281af6918e845b8856087d5e33cf, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8275473703737176928, guid: 0423281af6918e845b8856087d5e33cf, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8275473703737176928, guid: 0423281af6918e845b8856087d5e33cf, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8275473703737176928, guid: 0423281af6918e845b8856087d5e33cf, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 0423281af6918e845b8856087d5e33cf, type: 3}
 --- !u!1 &1451118329
 GameObject:
   m_ObjectHideFlags: 0
@@ -35766,6 +35781,7 @@ MonoBehaviour:
   unique: 0
   activeDistance: 135
   respawnSeconds: 75
+  goldenChance: 0.004
   editorPreview: {fileID: 0}
 --- !u!4 &1461173157
 Transform:
@@ -38637,6 +38653,7 @@ MonoBehaviour:
   unique: 0
   activeDistance: 135
   respawnSeconds: 75
+  goldenChance: 0.004
   editorPreview: {fileID: 0}
 --- !u!4 &1541294883
 Transform:
@@ -48199,6 +48216,7 @@ MonoBehaviour:
   unique: 0
   activeDistance: 135
   respawnSeconds: 75
+  goldenChance: 0.004
   editorPreview: {fileID: 0}
 --- !u!4 &1995762370
 Transform:
@@ -51931,8 +51949,8 @@ MonoBehaviour:
   - {fileID: 1593551696}
   - {fileID: 1204881717}
   - {fileID: 1063405701}
-  - {fileID: 10137395}
-  guardian: {fileID: 10137395}
+  - {fileID: 71648682}
+  guardian: {fileID: 71648682}
   trapGuard: {fileID: 0}
   ambushBoss: {fileID: 0}
   catalog: {fileID: 11400000, guid: 53caeb6650327c0479cd0e2b3796952d, type: 2}
@@ -52732,9 +52750,9 @@ SceneRoots:
   - {fileID: 1933262300}
   - {fileID: 433700564}
   - {fileID: 75184593}
-  - {fileID: 1442498696}
   - {fileID: 2095075872}
   - {fileID: 600337287}
   - {fileID: 1421513475}
   - {fileID: 345628021}
   - {fileID: 1155887492}
+  - {fileID: 71648681}

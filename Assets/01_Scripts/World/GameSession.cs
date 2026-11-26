@@ -14,7 +14,7 @@ namespace Nexoterra.World
   [Serializable] public sealed class Data
   {
    public int version=2; public int campaignRevision; public string[] collectedLoot; public string scene; public int[] defeated; public List<string> owned=new List<string>(); public bool[] goldenOwned; public int[] equipped={-1,-1,-1,-1,-1,-1};
-   public int selected,food,boss,darkWater; public Vector3 position; public float health=100; public bool female,campaignComplete; public bool[] returnedElementals=new bool[5],completedLevels=new bool[6];
+   public int selected,food,boss,darkWater; public Vector3 position; public float health=100; public bool female,campaignComplete; public bool[] returnedElementals=new bool[5],completedLevels=new bool[7];
   }
   public static GameSession Current {get;private set;}
   public static bool Blocked=>Current&&Current.menu;
@@ -22,7 +22,7 @@ namespace Nexoterra.World
   public bool Ready {get;private set;}
   public bool CampaignComplete{get;private set;}
   public bool[] ReturnedElementals{get;private set;}=new bool[5];
-  public bool[] CompletedLevels{get;private set;}=new bool[6];
+  public bool[] CompletedLevels{get;private set;}=new bool[7];
   public bool menu=true; bool started,confirmNew,graphics; string message="El punto de historia se guarda con GUARDAR; el inventario se actualiza al cambiarlo.";
   SlugInventory inventory; NexoterraThirdPerson player; PlayerHealth health;
   public string SavePath=>Path.Combine(Application.persistentDataPath,"nexoterra-save-v2.json");
@@ -50,11 +50,16 @@ namespace Nexoterra.World
   static void ReloadScene(){FrontEndMenu.Load(FrontEndMenu.WorldScene);}
   public static bool SavedGameExists=>File.Exists(Path.Combine(Application.persistentDataPath,"nexoterra-save-v2.json"));
   static bool[] CopyCompletedLevels(bool[] source){var copy=new bool[CampaignLevel.Scenes.Length];if(source!=null)Array.Copy(source,copy,Math.Min(source.Length,copy.Length));return copy;}
-  static bool IsLevelCompleted(Data data,int index)=>data!=null&&index>=0&&index<CampaignLevel.Scenes.Length&&(data.campaignComplete||data.completedLevels!=null&&index<data.completedLevels.Length&&data.completedLevels[index]);
+  static bool IsLevelCompleted(Data data,int index)=>data!=null&&index>=0&&index<CampaignLevel.Scenes.Length&&((data.campaignComplete&&(data.campaignRevision>=CampaignLevel.Revision||index<CampaignLevel.Scenes.Length-1))||data.completedLevels!=null&&index<data.completedLevels.Length&&data.completedLevels[index]);
+  static void ApplyCampaignCompletion(Data data,bool[] levels){
+   if(data==null||!data.campaignComplete)return;
+   int count=data.campaignRevision<CampaignLevel.Revision?CampaignLevel.Scenes.Length-1:CampaignLevel.Scenes.Length;
+   for(int i=0;i<Mathf.Min(levels.Length,count);i++)levels[i]=true;
+  }
   public static bool[] CompletedLevelSnapshot(){
    if(Current)return CopyCompletedLevels(Current.CompletedLevels);
    var levels=new bool[CampaignLevel.Scenes.Length];if(!SavedGameExists)return levels;
-   try{var data=ReadSave(Path.Combine(Application.persistentDataPath,"nexoterra-save-v2.json"));levels=CopyCompletedLevels(data.completedLevels);if(data.campaignComplete)for(int i=0;i<levels.Length;i++)levels[i]=true;}catch{}
+   try{var data=ReadSave(Path.Combine(Application.persistentDataPath,"nexoterra-save-v2.json"));levels=CopyCompletedLevels(data.completedLevels);ApplyCampaignCompletion(data,levels);}catch{}
    return levels;
   }
   public static bool IsLevelCompleted(int index){
@@ -66,7 +71,7 @@ namespace Nexoterra.World
   public static void BeginNew(){pending=null;pendingEntrance=false;startNew=true;FrontEndMenu.Load(FrontEndMenu.WorldScene);}
   public static bool BeginSaved(out string error)
   {
-   try {var data=ReadSave(Path.Combine(Application.persistentDataPath,"nexoterra-save-v2.json"));if(data.scene=="Nexoterra_Final")data.scene="Nexoterra_Carmesi";pending=data;startNew=false;FrontEndMenu.Load(string.IsNullOrEmpty(data.scene)?"Nexoterra_CuatroNodos":data.scene);error=null;return true;}
+   try {var data=ReadSave(Path.Combine(Application.persistentDataPath,"nexoterra-save-v2.json"));pending=data;startNew=false;FrontEndMenu.Load(string.IsNullOrEmpty(data.scene)?"Nexoterra_CuatroNodos":data.scene);error=null;return true;}
    catch(Exception e){error="No se pudo cargar: "+e.Message;return false;}
   }
   public static void BeginLevel(int index){
@@ -83,11 +88,16 @@ namespace Nexoterra.World
   {
    string json=File.ReadAllText(path);var data=JsonUtility.FromJson<Data>(json);if(data==null||data.version!=2||data.owned==null||!float.IsFinite(data.position.x)||!float.IsFinite(data.position.y)||!float.IsFinite(data.position.z))throw new InvalidDataException("Archivo no válido");
    if(json.IndexOf("\"completedLevels\"",StringComparison.Ordinal)<0)data.completedLevels=InferCompletedLevels(data);
+   if(data.campaignRevision<CampaignLevel.Revision){
+    data.completedLevels=CopyCompletedLevels(data.completedLevels);
+    if(data.campaignComplete){for(int i=0;i<CampaignLevel.Scenes.Length-1;i++)data.completedLevels[i]=true;data.completedLevels[CampaignLevel.Scenes.Length-1]=false;data.campaignComplete=false;}
+    data.campaignRevision=CampaignLevel.Revision;
+   }
    return data;
   }
   static bool[] InferCompletedLevels(Data data){
    var completed=new bool[CampaignLevel.Scenes.Length];if(data==null)return completed;
-   if(data.campaignComplete){for(int i=0;i<completed.Length;i++)completed[i]=true;return completed;}
+   if(data.campaignComplete){ApplyCampaignCompletion(data,completed);return completed;}
    if(data.owned==null)return completed;
    for(int i=0;i<Mathf.Min(completed.Length,CampaignLevel.Rewards.Length);i++){string reward=CampaignLevel.Rewards[i];if(!string.IsNullOrEmpty(reward)&&data.owned.Any(id=>!string.IsNullOrEmpty(id)&&SlugCatalog.BaseSpecies(id)==reward))completed[i]=true;}
    return completed;
@@ -100,7 +110,7 @@ namespace Nexoterra.World
   public void Apply(Data data)
   {
    CampaignComplete=data.campaignComplete;ReturnedElementals=data.returnedElementals!=null&&data.returnedElementals.Length==5?(bool[])data.returnedElementals.Clone():new bool[5];
-   CompletedLevels=CopyCompletedLevels(data.completedLevels);if(CampaignComplete)for(int i=0;i<CompletedLevels.Length;i++)CompletedLevels[i]=true;
+   CompletedLevels=CopyCompletedLevels(data.completedLevels);ApplyCampaignCompletion(data,CompletedLevels);
    inventory.darkWater=Mathf.Max(0,data.darkWater);inventory.owned.Clear();var remap=new Dictionary<int,int>();var unique=new HashSet<string>();
    inventory.goldenOwned.Clear();for(int i=0;i<data.owned.Count;i++){string id=SlugCatalog.Canonical(data.owned[i]);var definition=inventory.catalog.Find(id);if(definition==null||(definition.unique&&!unique.Add(SlugCatalog.BaseSpecies(id))))continue;remap[i]=inventory.owned.Count;inventory.owned.Add(id);inventory.goldenOwned.Add(data.goldenOwned!=null&&i<data.goldenOwned.Length&&data.goldenOwned[i]);}
    inventory.equipped=new[]{-1,-1,-1,-1,-1,-1};var used=new HashSet<int>();
@@ -172,7 +182,7 @@ namespace Nexoterra.World
    var left=new Rect(72,56,500,608);NexoUi.Panel(left);
    var logo=Resources.Load<Texture2D>("Nexoterra/UI/Logo");if(logo)GUI.DrawTexture(new Rect(left.x+40,left.y+24,left.width-80,104),logo,ScaleMode.ScaleToFit);
    NexoUi.Write(new Rect(left.x+32,left.y+140,left.width-64,22),started?"EXPLORACIÓN EN PAUSA":"CRÓNICAS DEL SUBSUELO",14,NexoUi.Teal,TextAnchor.MiddleLeft,true);
-   NexoUi.Write(new Rect(left.x+32,left.y+164,left.width-64,44),"Seis biomas. Criaturas únicas. Tu colección comienza explorando.",15,NexoUi.Text,TextAnchor.UpperLeft);
+   NexoUi.Write(new Rect(left.x+32,left.y+164,left.width-64,44),"Siete episodios. Criaturas únicas. Tu colección comienza explorando.",15,NexoUi.Text,TextAnchor.UpperLeft);
    NexoUi.Section(new Rect(left.x+32,left.y+222,left.width-64,22),"CONTROLES");
    {float l=left.x+32,r=left.x+262,y0=left.y+256,step=36;
     NexoHud.ControlRow(l,y0,"caminar","W","A","S","D");NexoHud.ControlRow(l,y0+step,"correr","Mayús");

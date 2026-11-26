@@ -38,7 +38,7 @@ namespace Nexoterra.World
   int ReadySlot(){for(int i=0;i<slugSlots.Length;i++){int slot=(volley+i)%slugSlots.Length;if(!travelling[slot])return slot;}return -1;}
   int patrolPoint;
   Vector3 home,modelOrigin;float fireAt,vertical,deadTime,recoil;
-  float flankSide,nextFlankChange,stuckTime,groundCheckAt;
+  float flankSide,nextFlankChange,stuckTime,groundCheckAt,movementBlockedUntil;
   public float Recoil=>recoil;
   public bool IsPursuing {get;private set;}
   public bool IsAiming {get;private set;}
@@ -82,7 +82,7 @@ namespace Nexoterra.World
    // Unstick: if trying to move but not going anywhere, change tactic; if sunk below the ground, pop back up.
    float wanted=new Vector2(move.x,move.z).magnitude*Time.deltaTime,got=Vector3.ProjectOnPlane(transform.position-before,Vector3.up).magnitude;
    stuckTime=wanted>.01f&&got<wanted*.15f?stuckTime+Time.deltaTime:0;
-   if(stuckTime>.6f){stuckTime=0;tacticUntil=0;flankSide=-flankSide;}
+   if(stuckTime>.6f){stuckTime=0;tacticUntil=Time.time+.45f;movementBlockedUntil=Time.time+.3f;flankSide=-flankSide;}
    if(Time.time>=groundCheckAt){groundCheckAt=Time.time+.25f;SnapToGround();}
    MotionVelocity=move.sqrMagnitude>0 && Time.deltaTime>0?Vector3.ProjectOnPlane(transform.position-before,Vector3.up)/Time.deltaTime:Vector3.zero;
    recoil=Mathf.MoveTowards(recoil,0,Time.deltaTime*3);if(model&&pose){model.localPosition=modelOrigin+Vector3.up*(Mathf.Sin(Time.time*10)*.035f*Mathf.Clamp01(MotionSpeed))+Vector3.back*(recoil*.12f);}
@@ -136,13 +136,14 @@ namespace Nexoterra.World
   }
   Vector3 PatrolVelocity()
   {
+   if(Time.time<movementBlockedUntil)return Vector3.zero;
    Vector3 goal=home+Quaternion.Euler(0,patrolPoint*90f,0)*Vector3.forward*5f;
    Vector3 offset=Vector3.ProjectOnPlane(goal-transform.position,Vector3.up);
    if(offset.sqrMagnitude<.16f){patrolPoint=(patrolPoint+1)%4;return Vector3.zero;}
    Quaternion facing=Quaternion.LookRotation(offset);
    transform.rotation=Quaternion.RotateTowards(transform.rotation,facing,240f*Time.deltaTime);
    if(Quaternion.Angle(transform.rotation,facing)>2f)return Vector3.zero;
-   if(!CanStep(transform.forward)){patrolPoint=(patrolPoint+1)%4;return Vector3.zero;}
+   if(!CanStep(transform.forward)){patrolPoint=(patrolPoint+1)%4;movementBlockedUntil=Time.time+.35f;return Vector3.zero;}
    return transform.forward*Mathf.Min(speed*health.SpeedMultiplier,offset.magnitude/Mathf.Max(.001f,Time.deltaTime));
   }
 
@@ -168,6 +169,7 @@ namespace Nexoterra.World
   }
   Vector3 CombatDirection(Vector3 toward,float distance)
   {
+   if(Time.time<movementBlockedUntil)return Vector3.zero;
    if(Time.time>=tacticUntil)PickTactic(toward,distance);
    Vector3 lateral=Vector3.Cross(Vector3.up,toward)*flankSide,desired;
    float preferred=attackRange*.6f;
@@ -177,12 +179,12 @@ namespace Nexoterra.World
     case Tactic.Chase:desired=toward+lateral*.6f;break;
     case Tactic.Retreat:desired=-toward+lateral*.6f;break;
     case Tactic.Strafe:desired=lateral+toward*Mathf.Clamp((distance-preferred)/preferred,-.5f,.5f);break;
-    case Tactic.Reposition:{var to=Vector3.ProjectOnPlane(repositionGoal-transform.position,Vector3.up);if(to.magnitude<1.5f){tacticUntil=0;return Vector3.zero;}desired=to;break;}
+    case Tactic.Reposition:{var to=Vector3.ProjectOnPlane(repositionGoal-transform.position,Vector3.up);if(to.magnitude<1.5f){tacticUntil=Time.time+.35f;return Vector3.zero;}desired=to;break;}
     default:return Vector3.zero;   // Hold: plant feet and aim
    }
    desired=Vector3.ProjectOnPlane(desired,Vector3.up).normalized;
    foreach(float a in new[]{0f,35f,-35f,70f,-70f,110f,-110f}){var d=Quaternion.Euler(0,a,0)*desired;if(CanStep(d))return d;}
-   tacticUntil=0;flankSide=-flankSide;return Vector3.zero;
+   tacticUntil=Time.time+.45f;movementBlockedUntil=Time.time+.3f;flankSide=-flankSide;return Vector3.zero;
   }
 
   bool CanStep(Vector3 direction)

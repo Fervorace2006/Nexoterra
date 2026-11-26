@@ -32,7 +32,7 @@ public static class CampaignEnemyInstaller
   foreach(string role in new[]{"Enemy2","Secuaz_Sir_Black","Sir_Black_2"})CreateEnemy(role,report);
   var active=SceneManager.GetActiveScene();
   string backup="Library/CampaignEnemiesBackup/"+DateTime.Now.ToString("yyyyMMdd_HHmmss");Directory.CreateDirectory(backup);
-  for(int i=0;i<CampaignLevel.Scenes.Length;i++){
+  for(int i=0;i<Mathf.Min(6,CampaignLevel.Scenes.Length);i++){
    string path="Assets/00_Scenes/Campaign/"+CampaignLevel.Scenes[i]+".unity";File.Copy(path,backup+"/"+CampaignLevel.Scenes[i]+".unity");
    var scene=SceneManager.GetSceneByPath(path);bool opened=!scene.isLoaded;if(opened)scene=EditorSceneManager.OpenScene(path,OpenSceneMode.Additive);
    if(!opened&&scene.isDirty)throw new Exception("La escena tiene cambios sin guardar: "+path);
@@ -101,14 +101,14 @@ public static class CampaignEnemyInstaller
   EnemyCombatant Spawn(string role,string name,Vector3 position,float hp,int seed,string elemental=null){
    var root=(GameObject)PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>(Combat+role+".prefab"));root.name=name;root.transform.position=position;
    var ai=root.GetComponent<EnemyShooter>();ai.campaignMember=true;ai.dropSlugsOnDeath=true;ai.catalog=info.catalog;ai.equippedElemental=elemental??"";ai.slugSlots=Slots(seed,elemental);
-   var h=root.GetComponent<EnemyCombatant>();h.displayName=name;return h;
+   var h=root.GetComponent<EnemyCombatant>();h.displayName=name;h.maxHealth=hp;return h;
   }
   var foes=new List<EnemyCombatant>();Vector3[] positions={new Vector3(-55,.1f,-50),new Vector3(35,.1f,-65),new Vector3(82,.1f,-20),new Vector3(-90,.1f,25),new Vector3(8,.1f,28),new Vector3(-50,.1f,78),new Vector3(75,.1f,35)};
   foreach(var p in positions)foes.Add(Spawn(level==5?"Enemy2":"Enemy1",(level==5?"Enemy2":"Enemy1")+" · "+(foes.Count+1),p,level==5?180:160,foes.Count));
   var minion=Spawn("Secuaz_Sir_Black","Secuaz de Sir Black",new Vector3(66,.1f,88),220,1,level<4?CampaignLevel.Rewards[level]:null);foes.Add(minion);info.guardian=minion;info.trapGuard=info.ambushBoss=null;
-  if(level>=4){var boss=Spawn(level==4?"SirBlack":"Sir_Black_2",level==4?"Sir Black 1":"Sir Black 2",new Vector3(90,.1f,103),level==4?500:750,2,level==4?CampaignLevel.Rewards[level]:null);foes.Add(boss);info.guardian=boss;if(level==4){info.trapGuard=minion;info.ambushBoss=boss;boss.gameObject.SetActive(false);}}
+  if(level>=4){var boss=Spawn("SirBlack",level==5?"Sir Black":"Sir Black 1",new Vector3(90,.1f,103),level==5?600:500,2,level==4?CampaignLevel.Rewards[level]:null);foes.Add(boss);info.guardian=boss;if(level==4){info.trapGuard=minion;info.ambushBoss=boss;boss.gameObject.SetActive(false);}}
   info.enemies=foes.ToArray();info.rewardPoint.position=info.guardian.transform.position;
-  info.introduction=level==0?"Llegaste a Nexoterra. Recoge hongos con E y alimenta a Doc con F. El secuaz guarda la Energía: derrótalo y alimenta a Energía con F; no necesita curación. M abre el mapa.":level==4?"El secuaz asegura que lleva la elemental de fuego. Derrótalo para descubrir qué oculta.":level==5?"El agua oscura alimenta al ejército de Enemy2. Derrota al único secuaz y a Sir Black 2 para liberar Nexoterra.":"El secuaz lleva la elemental de este bioma. Vence a su patrulla, recupera la elemental malvada, cúrala y busca el túnel.";
+  info.introduction=level==0?"Llegaste a Nexoterra. Recoge hongos con E y alimenta a Doc con F. El secuaz guarda la Energía: derrótalo y alimenta a Energía con F; no necesita curación. M abre el mapa.":level==4?"El secuaz asegura que lleva la elemental de fuego. Derrótalo para descubrir qué oculta.":level==5?"El agua oscura alimenta al ejército de Enemy2. Derrota al único secuaz y a Sir Black para liberar Nexoterra.":"El secuaz lleva la elemental de este bioma. Vence a su patrulla, recupera la elemental malvada, cúrala y busca el túnel.";
  }
 }
 

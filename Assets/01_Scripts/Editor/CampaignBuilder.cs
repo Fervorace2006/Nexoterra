@@ -76,7 +76,7 @@ public static class CampaignBuilder
   var roof=AssetDatabase.LoadAssetAtPath<Material>("Assets/NexoterraWorld/MapRepair/Techo_cafe_claro.mat");
   var black=Mat("TunnelDark",new Color(.004f,.004f,.006f));
   var generated=new List<string>();
-  for(int level=0;level<CampaignLevel.Scenes.Length;level++){
+  for(int level=0;level<Mathf.Min(6,CampaignLevel.Scenes.Length);level++){
    int biome=new[]{0,1,4,2,3,5}[level];
    var scene=EditorSceneManager.NewScene(NewSceneSetup.EmptyScene,NewSceneMode.Additive);SceneManager.SetActiveScene(scene);
    try{
@@ -148,7 +148,11 @@ public static class CampaignBuilder
     string path="Assets/00_Scenes/Campaign/"+CampaignLevel.Scenes[level]+".unity";EditorSceneManager.SaveScene(scene,path);generated.Add(path);
    }finally{EditorSceneManager.CloseScene(scene,true);}
   }
-  CampaignWaterZones.Build();BuildArena(generated[0]);generated.Add("Assets/00_Scenes/Campaign/Nexoterra_Arena.unity");
+  CampaignWaterZones.Build();
+  generated.Add("Assets/00_Scenes/Campaign/Nexoterra_Final.unity");
+  const string arenaPath="Assets/00_Scenes/Campaign/Nexoterra_Arena.unity";
+  if(!File.Exists(arenaPath))BuildArena(generated[0]);
+  generated.Add(arenaPath);
   var builds=new List<EditorBuildSettingsScene>{new EditorBuildSettingsScene("Assets/00_Scenes/Nexoterra_Menu.unity",true),new EditorBuildSettingsScene(Source,true)};
   builds.AddRange(generated.Select(p=>new EditorBuildSettingsScene(p,true)));EditorBuildSettings.scenes=builds.ToArray();
   AssetDatabase.SaveAssets();if(originalActive.IsValid()&&originalActive.isLoaded)SceneManager.SetActiveScene(originalActive);if(opened)EditorSceneManager.CloseScene(source,true);

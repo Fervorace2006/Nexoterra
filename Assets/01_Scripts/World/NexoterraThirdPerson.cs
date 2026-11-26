@@ -159,13 +159,13 @@ namespace Nexoterra.World
             }
 
             if(Time.time<noticeUntil)GUI.Label(new Rect(cx-260,Screen.height-195,590,30),notice,label);
-            if(map)DrawMap();else if(ArenaSession.Current)DrawArenaMinimap();
+            if(map)DrawMap();
         }
         void DrawMap()
         {
             if(ArenaSession.Current){DrawArenaMap();return;}
             float x=Screen.width*.5f-240,y=Screen.height*.5f-240;
-            GUI.Box(new Rect(x-16,y-45,512,545),GUIContent.none);GUI.Label(new Rect(x,y-35,480,30),"CUATRO NODOS / seis biomas · M para cerrar",title);
+            GUI.Box(new Rect(x-16,y-45,512,545),GUIContent.none);GUI.Label(new Rect(x,y-35,480,30),"CUATRO NODOS / seis biomas · siete episodios · M para cerrar",title);
             Color[] colors={new Color(.4f,.29f,.17f),new Color(.5f,.13f,.07f),new Color(.35f,.63f,.75f),new Color(.05f,.4f,.48f),new Color(.24f,.06f,.09f),new Color(.2f,.45f,.2f)};
             string[] names={"TIERRA","VOLCÁN","HIELO","ACUÁTICA","FINAL CARMESÍ","INICIO VERDE"};
             for(int i=0;i<6;i++){int row=i/2;float top=row==0?0:row==1?180:300;float height=row==1?120:180;var rect=new Rect(x+(i%2)*240,y+top,238,height-2);GUI.color=colors[i];GUI.DrawTexture(rect,Texture2D.whiteTexture);GUI.color=Color.white;GUI.Label(new Rect(rect.x+12,rect.y+12,220,30),names[i],label);}
@@ -182,12 +182,6 @@ namespace Nexoterra.World
             var session=ArenaSession.Current;
             if(session)foreach(var rival in session.RivalPositions()){var pos=rival.Value;float rx=x+Mathf.InverseLerp(-125,125,pos.x)*size,ry=y+(1-Mathf.InverseLerp(-125,125,pos.z))*size;GUI.color=new Color(1,.2f,.18f);GUI.DrawTexture(new Rect(rx-4,ry-4,8,8),Texture2D.whiteTexture);}
             GUI.color=Color.white;
-        }
-        void DrawArenaMinimap()
-        {
-            const float size=154;float x=Screen.width-size-22,y=Screen.height-size-22;GUI.Box(new Rect(x-8,y-8,size+16,size+16),GUIContent.none);GUI.color=new Color(.055f,.12f,.15f,.96f);GUI.DrawTexture(new Rect(x,y,size,size),Texture2D.whiteTexture);GUI.color=Color.white;
-            float px=x+Mathf.InverseLerp(-125,125,transform.position.x)*size,py=y+(1-Mathf.InverseLerp(-125,125,transform.position.z))*size;GUI.color=Color.cyan;GUI.DrawTexture(new Rect(px-4,py-4,8,8),Texture2D.whiteTexture);
-            foreach(var rival in ArenaSession.Current.RivalPositions()){var pos=rival.Value;float rx=x+Mathf.InverseLerp(-125,125,pos.x)*size,ry=y+(1-Mathf.InverseLerp(-125,125,pos.z))*size;GUI.color=new Color(1,.2f,.18f);GUI.DrawTexture(new Rect(rx-4,ry-4,8,8),Texture2D.whiteTexture);}GUI.color=Color.white;
         }
         public static string BiomeAt(Vector3 p){if(CampaignLevel.Current)return CampaignLevel.Titles[CampaignLevel.Current.index];if(ArenaSession.Current)return "Arena multijugador";if(p.x>=0)return p.z>80?"Caldera volcánica":p.z>-80?"Galería acuática":"Jardines del Nexo";return p.z>80?"Tierras antiguas":p.z>-80?"Cavernas de hielo":"Ciénaga carmesí";}
     }

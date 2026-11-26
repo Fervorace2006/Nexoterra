@@ -111,6 +111,13 @@ namespace Nexoterra.World
     Draw(dot,new Rect(p.x-s/2-1,p.y-s/2-1,s+2,s+2),new Color(0,0,0,.6f));
     Draw(dot,new Rect(p.x-s/2,p.y-s/2,s,s),boss?new Color(1,.45f,.1f):new Color(1,.15f,.12f));
    }
+   var arena=ArenaSession.Current;int rivalCount=0;
+   if(arena)foreach(var rival in arena.RivalPositions())
+   {
+    rivalCount++;var p=ToMap(rival.Value,out bool edge);float s=edge?8:11;
+    Draw(dot,new Rect(p.x-s/2-2,p.y-s/2-2,s+4,s+4),new Color(0,0,0,.8f));
+    Draw(dot,new Rect(p.x-s/2,p.y-s/2,s,s),new Color(1,.12f,.16f));
+   }
    var level=CampaignLevel.Current;
    if(level&&level.exit){var p=ToMap(level.exit.position,out _);Draw(dot,new Rect(p.x-6,p.y-6,12,12),new Color(0,0,0,.6f));Draw(dot,new Rect(p.x-5,p.y-5,10,10),new Color(.35f,1,.45f));}
    // compass letters
@@ -127,7 +134,8 @@ namespace Nexoterra.World
    Draw(heading,new Rect(pr.x-3,pr.y-3,pr.width+6,pr.height+6),new Color(0,0,0,.8f));Draw(heading,pr,new Color(.35f,1,1));
    GUI.matrix=saved;
    NexoHud.Brackets(new Rect(r.x-3,r.y-3,r.width+6,r.height+6),NexoHud.Orange,18,4);
-   NexoHud.Shadowed(new Rect(r.x,r.yMax+3,r.width,16),enemies.Count>0?"ENEMIGOS: "+enemies.Count:"ZONA DESPEJADA",11,enemies.Count>0?new Color(1,.6f,.55f):new Color(.5f,1,.6f),TextAnchor.UpperCenter);
+   int tracked=arena?rivalCount:enemies.Count;string status=arena?"JUGADORES: "+rivalCount:tracked>0?"ENEMIGOS: "+tracked:"ZONA DESPEJADA";
+   NexoHud.Shadowed(new Rect(r.x,r.yMax+3,r.width,16),status,11,tracked>0?new Color(1,.6f,.55f):new Color(.5f,1,.6f),TextAnchor.UpperCenter);
   }
   static void Draw(Texture2D tex,Rect r,Color c){var o=GUI.color;GUI.color=c;GUI.DrawTexture(r,tex,ScaleMode.StretchToFill,true);GUI.color=o;}
   static void EnsureTextures()
