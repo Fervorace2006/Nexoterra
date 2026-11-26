@@ -8,7 +8,7 @@ namespace Nexoterra.World
   public bool copyPlayerGrip=true;
   Transform weaponSocket,hips,spine;
   bool backpedalling;
-  float strideYaw;
+  float strideYaw,animationMotionSpeed;
   EnemyShooter ai;EnemyCombatant health;CharacterController motor;string state;float dodge,ready,reloadRemaining;Vector3 direction;
   public bool IsDodging=>dodge>0;
   string pending;float pendingSince;float nextThreatScan;
@@ -36,11 +36,14 @@ namespace Nexoterra.World
        direction=side;dodge=PlayerAbilities.QuickRollDuration;ready=Time.time+10f;if((name.Contains("Sir Black")||name.Contains("Sir_Black"))&&!name.Contains("Secuaz"))TechShield.Activate(transform,1.4f,1.1f);break;}}}
    }
    if(dodge>0){motor.Move(direction*(3.675f*Mathf.Min(Time.deltaTime,dodge)/PlayerAbilities.QuickRollDuration));dodge=Mathf.Max(0,dodge-Time.deltaTime);}
+   // Smooth the controller's frame-to-frame velocity noise before choosing and pacing locomotion.
+   // CharacterController contact and tactical stops can otherwise flicker Idle/Walk and jerk the gait.
+   animationMotionSpeed=Mathf.MoveTowards(animationMotionSpeed,ai.MotionSpeed,Mathf.Max(.1f,walkReferenceSpeed*8f)*Time.deltaTime);
    bool incapacitated=health.IsKnockedDown||health.IsStunned;
    bool resistingWind=health.Controls&&health.Controls.WindRemaining>0&&ai.IsPursuing;
-   string movement=resistingWind?"Run":ai.MotionSpeed<=.1f?"Idle":ai.IsPursuing && health.SpeedMultiplier>=.99f?"Run":"Walk";
+   string movement=resistingWind?"Run":animationMotionSpeed<=.12f?"Idle":ai.IsPursuing && health.SpeedMultiplier>=.99f?"Run":"Walk";
    float desiredYaw=0;
-   if(ai.IsPursuing && !resistingWind && ai.MotionSpeed>.1f)
+   if(ai.IsPursuing && !resistingWind && animationMotionSpeed>.12f)
    {
     Vector3 local=transform.InverseTransformDirection(ai.MotionVelocity.normalized);
     if(local.z<-.32f)backpedalling=true;
@@ -61,7 +64,7 @@ namespace Nexoterra.World
    if(next!=pending){pending=next;pendingSince=Time.time;}
    bool settle=!(loco&&locoNow)||Time.time-pendingSince>=.18f;
    if(next!=state&&settle){animator.CrossFadeInFixedTime(next,.15f);state=next;}
-   animator.speed=knockdown!=null?1:health.Controls&&health.Controls.FreezeRemaining>0?0:next.StartsWith("Roll")?(40f/30f)/PlayerAbilities.QuickRollDuration:reloadRemaining>0?1:(state=="Walk"||state=="WalkBack")?Mathf.Clamp(ai.MotionSpeed/Mathf.Max(.1f,walkReferenceSpeed),.25f,1.8f):1;
+   animator.speed=knockdown!=null?1:health.Controls&&health.Controls.FreezeRemaining>0?0:next.StartsWith("Roll")?(40f/30f)/PlayerAbilities.QuickRollDuration:reloadRemaining>0?1:(state=="Walk"||state=="WalkBack")?Mathf.Clamp(animationMotionSpeed/Mathf.Max(.1f,walkReferenceSpeed),.25f,1.8f):1;
   }
   void LateUpdate()
   {

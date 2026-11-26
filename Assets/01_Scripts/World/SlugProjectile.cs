@@ -48,8 +48,9 @@ namespace Nexoterra.World
         }
         public void LaunchEnemy(SlugDefinition slug,Vector3 direction,EnemyShooter enemy,int slot){enemyOwner=enemy;enemySlot=slot;LaunchHostile(slug,direction,enemy.transform);}
         public void LaunchHostile(SlugDefinition slug,Vector3 direction,Transform source=null){hostile=true;shooter=source;Launch(slug,direction);}
-        void Show(GameObject prefab,float height)
+        bool Show(GameObject prefab,float height)
         {
+            if(!prefab)return false;
             if(model){model.SetActive(false);Destroy(model);}
             model=Instantiate(prefab,transform);model.transform.localPosition=Vector3.zero;
             model.transform.localRotation=Quaternion.identity;model.transform.localScale=Vector3.one;
@@ -69,6 +70,7 @@ namespace Nexoterra.World
             }
             if(IsTransformed)ElementalAura.Create(model.transform,definition.id,.72f/Mathf.Max(.0001f,model.transform.localScale.x),-model.transform.localPosition/Mathf.Max(.0001f,model.transform.localScale.x));
             transform.rotation=rotation;modelBase=model.transform.localPosition;modelScale=model.transform.localScale;ApplyGoldenVisual();
+            return model&&renderers.Length>0;
         }
         public void SetGolden(bool value){golden=value;ApplyGoldenVisual();}
         void ApplyGoldenVisual(){if(!golden||!model)return;foreach(var r in model.GetComponentsInChildren<Renderer>(true)){var block=new MaterialPropertyBlock();r.GetPropertyBlock(block);var gold=new Color(1f,.67f,.12f,1);block.SetColor("_Color",gold);block.SetColor("_BaseColor",gold);block.SetColor("_EmissionColor",new Color(.18f,.075f,.006f,1));r.SetPropertyBlock(block);}}
@@ -142,7 +144,15 @@ namespace Nexoterra.World
                 if(collided)
                 {transform.position=hit.point+hit.normal*.23f;if(IceWall.TryHit(hit.collider)){if(effects){effects.End(true,hit.point);effects=null;}BeginReturn();return;}IceGround(hit);ArenaHit(hit.collider);DemoledoraImpact(hit.point);HealArea(hit.point);Purify(hit.collider);var enemy=hit.collider.GetComponentInParent<EnemyCombatant>();if(enemy&&!hostile)enemy.ReceiveSlug(definition,Direction,IsTransformed,golden);var player=hit.collider.GetComponentInParent<PlayerHealth>();if(player&&hostile)player.ReceiveSlug(definition,IsTransformed,Direction,golden);var prop=hit.collider.GetComponentInParent<WorldDestructible>();if(prop)prop.Hit(definition.id,IsTransformed);if(effects){effects.End(true,hit.point);effects=null;}BeginReturn();return;}
                 if(IsReturning)return;transform.position+=Direction*step;Travelled+=step;remaining-=step;
-                if(!IsTransformed&&Travelled>=transformDistance-.0001f){IsTransformed=true;TransformSound();Show(definition.transformed,1.8f);effects=SlugFlightEffects.Create(transform,definition.id);effects.transform.localScale=Vector3.one*.7f;effects.transform.localPosition*=.7f;}
+                if(!IsTransformed&&Travelled>=transformDistance-.0001f&&definition!=null&&definition.transformed)
+                {
+                    IsTransformed=true;
+                    if(Show(definition.transformed,1.8f))
+                    {
+                        TransformSound();effects=SlugFlightEffects.Create(transform,definition.id);effects.transform.localScale=Vector3.one*.7f;effects.transform.localPosition*=.7f;
+                    }
+                    else IsTransformed=false;
+                }
             }
             if(Travelled>=maxDistance-.001f||flightTime>=8)BeginReturn();
         }

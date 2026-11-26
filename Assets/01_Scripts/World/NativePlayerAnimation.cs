@@ -28,7 +28,16 @@ namespace Nexoterra.World
   bool wasAirborne;float landRemaining,airTime,jumpWeight;string jumpState;
   string state,upperState;Animator current;float reloadRemaining,shootRemaining;
   void Awake(){if(!GetComponent<PlayerEmotes>())gameObject.AddComponent<PlayerEmotes>();player=GetComponent<NexoterraThirdPerson>();motor=GetComponent<CharacterController>();health=GetComponent<PlayerHealth>();abilities=GetComponent<PlayerAbilities>();if(!waterSensor)waterSensor=GetComponent<WaterAnimationSensor>();if(weapon)weaponScale=weapon.lossyScale;}
-  public void BeginReload(float duration){if(IsReloading||IsLoaded)return;var inventory=GetComponent<SlugInventory>();var selected=inventory?inventory.SelectedDefinition():null;if(selected==null||inventory.IsBusy(selected.id))return;loadedSpecies=selected.id;loaded=false;reloadRemaining=Mathf.Max(.1f,duration);shootRemaining=0;}
+  public void BeginReload(float duration)
+  {
+   if(IsReloading||IsLoaded)return;
+   var inventory=GetComponent<SlugInventory>();var selected=inventory?inventory.SelectedDefinition():null;
+   if(selected==null||inventory.IsBusy(selected.id))return;
+   loadedSpecies=selected.id;loaded=false;reloadRemaining=Mathf.Max(.1f,duration);shootRemaining=0;
+   // Manual and automatic reloads share this validated entry point, so the sound plays once
+   // regardless of whether the player is standing, walking, or running.
+   upperState=null;NexoAudio.Play("slug_reload",.85f,.025f);
+  }
   public bool TryAutoReload(bool enabled)
   {
    if(!enabled||GameSession.Blocked||IsReloading||IsLoaded||!current)return false;

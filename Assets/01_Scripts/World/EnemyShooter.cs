@@ -130,7 +130,9 @@ namespace Nexoterra.World
    if(!Physics.Raycast(new Vector3(transform.position.x,feet+1.2f,transform.position.z),Vector3.down,out var floor,3.5f,Physics.DefaultRaycastLayers,QueryTriggerInteraction.Ignore)||floor.transform.IsChildOf(transform)||floor.collider.GetComponentInParent<EnemyCombatant>()||floor.normal.y<.45f)return;
    float targetFeet=floor.point.y+motor.skinWidth+.02f,delta=targetFeet-feet;
    if(Mathf.Abs(delta)<.08f||delta<0&&!health.IsDead&&!motor.isGrounded)return;
-   motor.enabled=false;transform.position+=Vector3.up*delta;motor.enabled=true;vertical=0;
+   // Correct the feet in place without toggling the CharacterController. Disabling it here
+   // resets grounded/contact state every few frames and makes both movement and walk animation hitch.
+   motor.Move(Vector3.up*delta);vertical=0;
   }
   Vector3 PatrolVelocity()
   {
