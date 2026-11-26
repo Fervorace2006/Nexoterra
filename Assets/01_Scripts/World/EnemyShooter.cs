@@ -150,7 +150,7 @@ namespace Nexoterra.World
    if(!catalog||IsDead)return false;EnsureSlots();int slot=ReadySlot();if(slot<0)return false;var baseSlug=catalog.Find(slugSlots[slot]);if(baseSlug==null)return false;
    SlugDefinition slug=baseSlug;
    if(boss&&string.IsNullOrEmpty(equippedElemental)){var combat=SlugCombatProfile.Default(SlugCatalog.BaseSpecies(baseSlug.id));combat.impactDamage*=1.35f;combat.burnDamagePerSecond*=1.35f;slug=new SlugDefinition{id="Malvada_"+SlugCatalog.BaseSpecies(baseSlug.id),normal=baseSlug.normal,transformed=baseSlug.transformed,combat=combat,combatConfigured=true,usePrefabCombat=false};}
-   var shot=new GameObject(boss?"Babosa malvada":"Babosa enemiga").AddComponent<SlugProjectile>();shot.transform.position=origin;shot.speed=boss?22:18;shot.transformDistance=5;shot.maxDistance=60;NexoAudio.PlayAt(slug.id.StartsWith("Malvada_")?"slug_launch_malvada":"slug_launch",origin,.85f);travelling[slot]=shot;shot.LaunchEnemy(slug,(aim-origin).normalized,this,slot);volley=(slot+1)%slugSlots.Length;recoil=1;return true;
+   var shot=new GameObject(boss?"Babosa malvada":"Babosa enemiga").AddComponent<SlugProjectile>();shot.transform.position=origin;shot.speed=boss?22:18;shot.transformDistance=5;shot.maxDistance=60;travelling[slot]=shot;shot.LaunchEnemy(slug,(aim-origin).normalized,this,slot);volley=(slot+1)%slugSlots.Length;recoil=1;return true;
   }
   void DropSlugs(){
    foreach(var shot in travelling)if(shot)Destroy(shot.gameObject);

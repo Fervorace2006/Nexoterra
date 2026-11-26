@@ -104,7 +104,7 @@ namespace Nexoterra.World
                 if(collided)
                 {transform.position=hit.point+hit.normal*.23f;if(IceWall.TryHit(hit.collider)){if(effects){effects.End(true,hit.point);effects=null;}BeginReturn();return;}IceGround(hit);ArenaHit(hit.collider);DemoledoraImpact(hit.point);HealArea(hit.point);Purify(hit.collider);var enemy=hit.collider.GetComponentInParent<EnemyCombatant>();if(enemy&&!hostile)enemy.ReceiveSlug(definition,Direction,IsTransformed);var player=hit.collider.GetComponentInParent<PlayerHealth>();if(player&&hostile)player.ReceiveSlug(definition,IsTransformed,Direction);var prop=hit.collider.GetComponentInParent<WorldDestructible>();if(prop)prop.Hit(definition.id,IsTransformed);if(effects){effects.End(true,hit.point);effects=null;}BeginReturn();return;}
                 if(IsReturning)return;transform.position+=Direction*step;Travelled+=step;remaining-=step;
-                if(!IsTransformed&&Travelled>=transformDistance-.0001f){IsTransformed=true;Show(definition.transformed,1.8f);effects=SlugFlightEffects.Create(transform,definition.id);effects.transform.localScale=Vector3.one*.7f;effects.transform.localPosition*=.7f;}
+                if(!IsTransformed&&Travelled>=transformDistance-.0001f){IsTransformed=true;TransformSound();Show(definition.transformed,1.8f);effects=SlugFlightEffects.Create(transform,definition.id);effects.transform.localScale=Vector3.one*.7f;effects.transform.localPosition*=.7f;}
             }
             if(Travelled>=maxDistance-.001f||flightTime>=8)BeginReturn();
         }
@@ -114,6 +114,12 @@ namespace Nexoterra.World
             if(hostile||definition==null||SlugCatalog.BaseSpecies(definition.id)!="ice"||hit.normal.y<.6f)return;
             if(hit.collider.GetComponentInParent<EnemyCombatant>()||hit.collider.GetComponentInParent<PlayerHealth>())return;
             IceWall.Raise(hit.point,Direction,definition.id.StartsWith("Malvada_"));
+        }
+        // The launch sound plays only once the slug has actually changed to its T form.
+        void TransformSound()
+        {
+            string clip=definition!=null&&definition.id.StartsWith("Malvada_")?"slug_launch_malvada":"slug_launch";
+            if(hostile)NexoAudio.PlayAt(clip,transform.position,.85f);else NexoAudio.Play(clip,.9f,.04f);
         }
         void HealArea(Vector3 point){if(CanCorrupt){CorruptArea(point);return;}if(healedArea||!CanPurify)return;healedArea=true;var inventory=owner?owner:FindAnyObjectByType<SlugInventory>();HealingRadiusVisual.Burst(point,docHealingRadius);foreach(var wild in FindObjectsByType<WildSlug>(FindObjectsSortMode.None))if(!wild.adopted&&Vector3.Distance(wild.transform.position,point)<=docHealingRadius)PurifyWild(wild,inventory);foreach(var loose in FindObjectsByType<LooseSlug>(FindObjectsSortMode.None))if(Vector3.Distance(loose.transform.position,point)<=docHealingRadius)loose.Purify();}
         void Purify(Collider collider){if(CanCorrupt){CorruptTarget(collider);return;}if(!CanPurify)return;var loose=collider.GetComponentInParent<LooseSlug>();if(loose)loose.Purify();PurifyWild(collider.GetComponentInParent<WildSlug>(),owner?owner:FindAnyObjectByType<SlugInventory>());}

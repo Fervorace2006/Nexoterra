@@ -23,7 +23,8 @@ namespace Nexoterra.World
   {return TryDodge(side,right,false);}
   public bool TryDodge(int side,Vector3 axis,bool longitudinal)
   {
-   var cc=GetComponent<CharacterController>();if(longitudinal)return false; // only side rollsif(GameSession.Blocked||!health.CanMove||IsDodging||Time.time<readyAt||!cc.isGrounded)return false;
+   var cc=GetComponent<CharacterController>();if(longitudinal)return false;   // only side rolls
+   if(GameSession.Blocked||!health.CanMove||IsDodging||Time.time<readyAt||!cc.isGrounded)return false;
    DodgeLeft=side<0;DodgeAxis=longitudinal?(side<0?-1:1):0;axis.y=0;DodgeDirection=axis.normalized*(DodgeLeft?-1:1);dodgeRemaining=dodgeDuration;readyAt=Time.time+dodgeDuration+dodgeCooldown;if(PerfectDodge())TechShield.Activate(transform);return true;
   }
   // Perfect evasion: an enemy slug was about to hit (close and flying straight at us).
