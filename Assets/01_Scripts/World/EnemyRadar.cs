@@ -66,9 +66,9 @@ namespace Nexoterra.World
     bool onScreen=p.z>0&&p.x>20&&p.x<Screen.width-20&&p.y>20&&p.y<Screen.height-20;
     if(onScreen)
     {
-     float size=Mathf.Clamp(900f/dist,16,boss?42:32)*(Screen.height/720f);
+     float size=Mathf.Clamp(480f/dist,9,boss?20:15)*(Screen.height/720f);
      float bob=Mathf.Sin(t*4+e.GetHashCode())*size*.15f;
-     var r=new Rect(p.x-size/2,Screen.height-p.y-size+bob-6,size,size);
+     var r=new Rect(p.x-size/2,Screen.height-p.y-size+bob-3,size,size);
      Draw(arrow,r,red);
     }
     else
@@ -79,7 +79,7 @@ namespace Nexoterra.World
      d.Normalize();float mx=Screen.width/2f-40,my=Screen.height/2f-40;
      float k=Mathf.Min(mx/Mathf.Max(.001f,Mathf.Abs(d.x)),my/Mathf.Max(.001f,Mathf.Abs(d.y)));
      Vector2 pos=c+d*k;pos.y=Screen.height-pos.y;
-     float size=26*(Screen.height/720f);var r=new Rect(pos.x-size/2,pos.y-size/2,size,size);
+     float size=15*(Screen.height/720f);var r=new Rect(pos.x-size/2,pos.y-size/2,size,size);
      float angle=Mathf.Atan2(-d.y,d.x)*Mathf.Rad2Deg-90;   // arrow texture points down
      var m=GUI.matrix;GUIUtility.RotateAroundPivot(angle,pos);Draw(arrow,r,new Color(1,.12f,.1f,.9f));GUI.matrix=m;
     }
