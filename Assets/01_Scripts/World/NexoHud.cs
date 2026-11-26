@@ -9,7 +9,7 @@ namespace Nexoterra.World
   public static readonly Color Cyan=new Color(.1f,.85f,.9f),Gold=new Color(.95f,.57f,.12f),Ink=new Color(.015f,.045f,.06f,.95f);
   PlayerHealth health;NexoterraThirdPerson player;BossEncounters boss;float shown=1,trail=1,damageHold;
   void Update(){if(!health)return;float target=health.Health/health.maxHealth;if(target<shown-.01f)damageHold=Time.unscaledTime+.5f;shown=Mathf.MoveTowards(shown,target,Time.unscaledDeltaTime*2.5f);if(target>=trail)trail=target;else if(Time.unscaledTime>damageHold)trail=Mathf.MoveTowards(trail,target,Time.unscaledDeltaTime*.55f);}
-  void Start(){health=GetComponent<PlayerHealth>();player=GetComponent<NexoterraThirdPerson>();boss=FindAnyObjectByType<BossEncounters>();}
+  void Start(){if(!GetComponent<EnemyRadar>())gameObject.AddComponent<EnemyRadar>();health=GetComponent<PlayerHealth>();player=GetComponent<NexoterraThirdPerson>();boss=FindAnyObjectByType<BossEncounters>();}
   public static void Scale(){float s=Mathf.Min(Screen.width/1280f,Screen.height/720f);GUI.matrix=Matrix4x4.TRS(new Vector3((Screen.width-1280*s)*.5f,(Screen.height-720*s)*.5f,0),Quaternion.identity,new Vector3(s,s,1));}
   public static void Fill(Rect r,Color c){var old=GUI.color;GUI.color=c;GUI.DrawTexture(r,Texture2D.whiteTexture);GUI.color=old;}
   public static void Panel(Rect r)=>NexoUi.Panel(r);

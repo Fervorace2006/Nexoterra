@@ -43,7 +43,7 @@ namespace Nexoterra.World
   void Awake(){Controls=GetComponent<EnemyControlEffects>();if(!Controls)Controls=gameObject.AddComponent<EnemyControlEffects>();Health=maxHealth;upright=visualRoot?visualRoot.localRotation:Quaternion.identity;}
   public void ReceiveSlug(SlugDefinition slug,Vector3 direction,bool transformed)
   {
-   if(IsDead||slug==null)return;
+   if(IsDead||slug==null||TechShield.Protects(transform))return;
    if(EnemyControlEffects.CausesKnockdown(slug.id))Controls.BeginKnockdown();
    if(!transformed){Damage(slug.id.StartsWith("Malvada_")?3.15f:3);return;}
    Controls.Apply(slug.id,direction);var p=slug.Combat;Damage(Mathf.Max(0,p.impactDamage));if(IsDead)return;
@@ -57,7 +57,7 @@ namespace Nexoterra.World
   public void ReceiveDamage(float amount){Damage(Mathf.Max(0,amount));}
   void Damage(float amount)
   {
-   if(IsDead)return;if(amount>0)LastDamageTime=Time.time;Health=Mathf.Max(0,Health-amount);
+   if(IsDead||TechShield.Protects(transform))return;if(amount>0)LastDamageTime=Time.time;Health=Mathf.Max(0,Health-amount);
    if(IsDead){diedAt=Time.time;burnRemaining=slowRemaining=downRemaining=stunRemaining=0;knockVelocity=Vector3.zero;RefreshVisuals();onDeath.Invoke();}
   }
   public void Advance(float dt)

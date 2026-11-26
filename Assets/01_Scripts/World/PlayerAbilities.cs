@@ -24,7 +24,18 @@ namespace Nexoterra.World
   public bool TryDodge(int side,Vector3 axis,bool longitudinal)
   {
    var cc=GetComponent<CharacterController>();if(longitudinal)return false; // only side rollsif(GameSession.Blocked||!health.CanMove||IsDodging||Time.time<readyAt||!cc.isGrounded)return false;
-   DodgeLeft=side<0;DodgeAxis=longitudinal?(side<0?-1:1):0;axis.y=0;DodgeDirection=axis.normalized*(DodgeLeft?-1:1);dodgeRemaining=dodgeDuration;readyAt=Time.time+dodgeDuration+dodgeCooldown;return true;
+   DodgeLeft=side<0;DodgeAxis=longitudinal?(side<0?-1:1):0;axis.y=0;DodgeDirection=axis.normalized*(DodgeLeft?-1:1);dodgeRemaining=dodgeDuration;readyAt=Time.time+dodgeDuration+dodgeCooldown;if(PerfectDodge())TechShield.Activate(transform);return true;
+  }
+  // Perfect evasion: an enemy slug was about to hit (close and flying straight at us).
+  bool PerfectDodge()
+  {
+   var body=transform.position+Vector3.up;
+   foreach(var shot in FindObjectsByType<SlugProjectile>(FindObjectsSortMode.None))
+   {
+    if(!shot||!shot.Hostile||shot.IsReturning)continue;var to=body-shot.transform.position;
+    if(to.magnitude<5.5f&&Vector3.Dot(shot.Direction,to.normalized)>.8f)return true;
+   }
+   return false;
   }
   public void OnSlugLaunched(string id)
   {
