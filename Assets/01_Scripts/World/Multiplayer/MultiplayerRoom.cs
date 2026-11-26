@@ -30,7 +30,7 @@ namespace Nexoterra.World
    Manager=node.AddComponent<NetworkManager>();Manager.NetworkConfig=new NetworkConfig();
    var transport=node.AddComponent<UnityTransport>();
    Manager.NetworkConfig.NetworkTransport=transport;Manager.NetworkConfig.EnableSceneManagement=false;
-   Manager.NetworkConfig.ForceSamePrefabs=false;Manager.NetworkConfig.ConnectionApproval=true;Manager.NetworkConfig.ProtocolVersion=1;
+   Manager.NetworkConfig.ForceSamePrefabs=false;Manager.NetworkConfig.ConnectionApproval=true;Manager.NetworkConfig.ProtocolVersion=1;Manager.NetworkConfig.TickRate=60;   // messages flush every tick: 60 Hz halves the send delay
    Manager.ConnectionApprovalCallback=(request,response)=>{response.Approved=Manager&&Manager.ConnectedClientsIds.Count<4;response.CreatePlayerObject=false;response.Pending=false;response.Reason=response.Approved?"":"Sala completa (4 jugadores).";};
    Manager.OnClientConnectedCallback+=ConnectedClient;Manager.OnClientDisconnectCallback+=DisconnectedClient;
   }

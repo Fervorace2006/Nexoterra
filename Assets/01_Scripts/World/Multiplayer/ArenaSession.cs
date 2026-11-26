@@ -14,6 +14,7 @@ namespace Nexoterra.World
    public bool female,transformed,evading;public float health,time0,time1,upper,eventTime;public int state0,state1; public string[] collection;
   }
   sealed class Peer {
+   public Vector3 velocity,lastPosePosition;public float lastPoseTime=-1,viewTime;   // for latency-compensated prediction
    public string[] collection;public GameObject proxy;public Vector3 position;public Quaternion rotation;
    public float health=100,lastShot=-10,deadUntil,burnUntil,burnRate,lastMove;
    public bool female,visualFemale,evading;public Animator animator;
@@ -102,13 +103,16 @@ namespace Nexoterra.World
   static bool Finite(Vector3 p)=>float.IsFinite(p.x)&&float.IsFinite(p.y)&&float.IsFinite(p.z);
   // Every frame: interpolate remote players toward their newest server-authoritative pose.
   void SmoothRemotePlayers(){
-   float k=1-Mathf.Exp(-28f*Time.unscaledDeltaTime);
+   float k=1-Mathf.Exp(-22f*Time.unscaledDeltaTime);
    foreach(var pair in peers){
     var peer=pair.Value;if(pair.Key==network.LocalClientId||!peer.proxy||peer.lastView<0)continue;
     var t=peer.proxy.transform;
     // Never extrapolate a dodge past the newest authoritative pose: that made the
     // proxy lurch ahead and then visibly correct backwards when the roll ended.
-    t.position=(t.position-peer.viewTarget).sqrMagnitude>100?peer.viewTarget:Vector3.Lerp(t.position,peer.viewTarget,k);
+    // Show where the peer is *now*: newest pose + velocity × packet age (capped, and zero while rolling).
+    float age=Mathf.Clamp((float)network.ServerTime.TimeAsFloat-peer.viewTime,0,.15f);
+    var target=peer.viewTarget+peer.velocity*age;
+    t.position=(t.position-target).sqrMagnitude>100?target:Vector3.Lerp(t.position,target,k);
     t.rotation=Quaternion.Slerp(t.rotation,peer.viewRotation,k);
    }
   }
@@ -123,6 +127,12 @@ namespace Nexoterra.World
     float now=Time.unscaledTime;
     if(peer.lastView<=0){peer.proxy.transform.position=packet.position;peer.proxy.transform.rotation=packet.rotation;}
     if(packet.kind=="join")peer.proxy.transform.position=packet.position;
+    if(packet.kind=="pose"){
+     float dt=packet.eventTime-peer.lastPoseTime;
+     if(peer.lastPoseTime>0&&dt>.005f&&dt<.5f&&!packet.evading){var v=(packet.position-peer.lastPosePosition)/dt;v.y=0;if(v.magnitude>12)v=v.normalized*12;peer.velocity=Vector3.Lerp(peer.velocity,v,.6f);}
+     else if(packet.evading||dt>=.5f)peer.velocity=Vector3.zero;
+     peer.lastPosePosition=packet.position;peer.lastPoseTime=packet.eventTime;peer.viewTime=packet.eventTime;
+    }else{peer.velocity=Vector3.zero;peer.viewTime=(float)network.ServerTime.TimeAsFloat;}
     peer.viewTarget=packet.position;peer.viewRotation=packet.rotation;peer.lastView=now;
     if(packet.kind=="pose"&&peer.animator){
      if(peer.visualFemale!=packet.female){Destroy(peer.proxy);peer.proxy=null;peer.female=packet.female;peer.evading=packet.evading;CreateProxy(packet.id,peer);}
@@ -140,7 +150,7 @@ namespace Nexoterra.World
     }return;
    }
    if(packet.kind=="respawn"){
-    if(peers.TryGetValue(packet.id,out var peer)){peer.health=100;peer.position=peer.viewTarget=packet.position;peer.lastView=Time.unscaledTime;if(peer.proxy){peer.proxy.transform.position=packet.position;peer.proxy.transform.rotation=packet.rotation;}}
+    if(peers.TryGetValue(packet.id,out var peer)){peer.health=100;peer.position=peer.viewTarget=packet.position;peer.lastView=Time.unscaledTime;peer.velocity=Vector3.zero;peer.viewTime=(float)network.ServerTime.TimeAsFloat;if(peer.proxy){peer.proxy.transform.position=packet.position;peer.proxy.transform.rotation=packet.rotation;}}
     if(packet.id==network.LocalClientId){health.Restore(health.maxHealth);var effects=player.GetComponent<EnemyControlEffects>();if(effects)effects.ResetEffects();player.Teleport(packet.position);}
    }
   }
@@ -183,7 +193,7 @@ namespace Nexoterra.World
    if(Time.unscaledTime>=sendAt){
     sendAt=Time.unscaledTime+1f/50f;
     var a=(player.female.activeSelf?player.female:player.male).GetComponentInChildren<Animator>();var baseState=a.GetCurrentAnimatorStateInfo(0);var upper=a.layerCount>1?a.GetCurrentAnimatorStateInfo(1):default;
-    SendToServer(new Packet{kind="pose",evading=player.GetComponent<PlayerAbilities>()&&player.GetComponent<PlayerAbilities>().Evading,position=player.transform.position,rotation=player.visuals.rotation,female=player.female.activeSelf,state0=baseState.fullPathHash,time0=baseState.normalizedTime,state1=upper.fullPathHash,time1=upper.normalizedTime,upper=a.layerCount>1?a.GetLayerWeight(1):0},NetworkDelivery.UnreliableSequenced);
+    SendToServer(new Packet{kind="pose",eventTime=(float)network.ServerTime.TimeAsFloat,evading=player.GetComponent<PlayerAbilities>()&&player.GetComponent<PlayerAbilities>().Evading,position=player.transform.position,rotation=player.visuals.rotation,female=player.female.activeSelf,state0=baseState.fullPathHash,time0=baseState.normalizedTime,state1=upper.fullPathHash,time1=upper.normalizedTime,upper=a.layerCount>1?a.GetLayerWeight(1):0},NetworkDelivery.UnreliableSequenced);
    }
    if(IsServer)foreach(var pair in peers.ToArray()){
     var peer=pair.Value;

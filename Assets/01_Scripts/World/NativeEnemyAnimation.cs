@@ -10,7 +10,8 @@ namespace Nexoterra.World
   bool backpedalling;
   float strideYaw;
   EnemyShooter ai;EnemyCombatant health;CharacterController motor;string state;float dodge,ready,reloadRemaining;Vector3 direction;
-  public bool IsDodging=>dodge>0;float nextThreatScan;
+  public bool IsDodging=>dodge>0;
+  string pending;float pendingSince;float nextThreatScan;
   void Start()
   {
    ai=GetComponent<EnemyShooter>();health=GetComponent<EnemyCombatant>();motor=GetComponent<CharacterController>();
@@ -53,8 +54,14 @@ namespace Nexoterra.World
    bool stepping=next=="Walk"||next=="WalkBack"||next=="Run";
    strideYaw=ai.IsPursuing&&stepping?Mathf.MoveTowardsAngle(strideYaw,desiredYaw,540f*Time.deltaTime):0;
    aimWeight=Mathf.MoveTowards(aimWeight,ai.IsAiming&&!health.IsDead&&!incapacitated&&!IsDodging?1:0,Time.deltaTime/.2f);int aimLayer=animator.GetLayerIndex("AimUpperBody");if(aimLayer>=0)animator.SetLayerWeight(aimLayer,incapacitated?0:Mathf.Max(aimWeight,reloadRemaining>0?1:0));
-   if(next!=state){animator.CrossFadeInFixedTime(next,.12f);state=next;}
-   animator.speed=knockdown!=null?1:health.Controls&&health.Controls.FreezeRemaining>0?0:next.StartsWith("Roll")?(40f/30f)/PlayerAbilities.QuickRollDuration:reloadRemaining>0?1:(next=="Walk"||next=="WalkBack")?Mathf.Clamp(ai.MotionSpeed/Mathf.Max(.1f,walkReferenceSpeed),.25f,1.8f):1;
+   // Hysteresis: Idle/Walk/Run/WalkBack must hold for 0.18 s before switching, so speed noise
+   // (steering, slopes) does not restart the clip every few frames and make the walk stutter.
+   bool loco=next=="Idle"||next=="Walk"||next=="Run"||next=="WalkBack";
+   bool locoNow=state=="Idle"||state=="Walk"||state=="Run"||state=="WalkBack";
+   if(next!=pending){pending=next;pendingSince=Time.time;}
+   bool settle=!(loco&&locoNow)||Time.time-pendingSince>=.18f;
+   if(next!=state&&settle){animator.CrossFadeInFixedTime(next,.15f);state=next;}
+   animator.speed=knockdown!=null?1:health.Controls&&health.Controls.FreezeRemaining>0?0:next.StartsWith("Roll")?(40f/30f)/PlayerAbilities.QuickRollDuration:reloadRemaining>0?1:(state=="Walk"||state=="WalkBack")?Mathf.Clamp(ai.MotionSpeed/Mathf.Max(.1f,walkReferenceSpeed),.25f,1.8f):1;
   }
   void LateUpdate()
   {
