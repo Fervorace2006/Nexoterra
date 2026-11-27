@@ -16,14 +16,14 @@ namespace Nexoterra.World
         SlugInventory inventory;
         PlayerEmotes emotes;
         Vector2 moveOrigin, moveValue, lookDelta, uiPosition, uiDragDelta, uiTapPosition;
-        bool aimHeld, shootPressed, dodgePressed, interactPressed, companionPressed, mapPressed, pausePressed;
+        bool aimEnabled, shootPressed, dodgePressed, interactPressed, companionPressed, mapPressed, pausePressed;
         bool uiPointerHeld, uiTapPending, uiTapConsumed;
         int uiTapFrame = -1;
 
         public static bool IsEnabled => Application.isMobilePlatform && current;
         public static Vector2 Move => IsEnabled ? current.moveValue : Vector2.zero;
         public static Vector2 LookDelta => IsEnabled ? current.lookDelta : Vector2.zero;
-        public static bool Aim => IsEnabled && current.aimHeld;
+        public static bool Aim => IsEnabled && current.aimEnabled;
         public static bool Sprint => IsEnabled && current.moveValue.sqrMagnitude >= .60f;
         public static bool ShootPressed => IsEnabled && current.shootPressed;
         public static bool DodgePressed => IsEnabled && current.dodgePressed;
@@ -40,11 +40,11 @@ namespace Nexoterra.World
                 return false;
             }
         }
-        public static bool HasGameplayActivity => IsEnabled && (current.moveValue.sqrMagnitude > .01f || current.lookDelta.sqrMagnitude > .1f || current.aimHeld || current.shootPressed || current.dodgePressed || current.interactPressed || current.companionPressed || current.mapPressed || current.pausePressed);
+        public static bool HasGameplayActivity => IsEnabled && (current.moveValue.sqrMagnitude > .01f || current.lookDelta.sqrMagnitude > .1f || current.aimEnabled || current.shootPressed || current.dodgePressed || current.interactPressed || current.companionPressed || current.mapPressed || current.pausePressed);
         public static Vector2 UiDragDelta => IsEnabled ? current.uiDragDelta : Vector2.zero;
 
         static Texture2D disc;
-        static Texture2D blasterIcon, bootIcon;
+        static Texture2D blasterIcon, bootIcon, slugIcon, interactIcon, aimIcon, mapIcon, pauseIcon;
         static GUIStyle buttonLabel, hintLabel;
         static readonly Color Teal = new Color(.22f, .9f, .9f, .78f);
         static readonly Color Orange = new Color(1f, .58f, .16f, .78f);
@@ -91,7 +91,6 @@ namespace Nexoterra.World
             if (uiTapFrame != Time.frameCount) { uiTapPending = false; uiTapConsumed = false; }
             lookDelta = uiDragDelta = Vector2.zero;
             shootPressed = dodgePressed = interactPressed = companionPressed = mapPressed = pausePressed = false;
-            aimHeld = false;
 
             var screen = Touchscreen.current;
             if (screen == null)
@@ -112,6 +111,7 @@ namespace Nexoterra.World
                     fingers[id] = role;
                     if (role == Control.Move) moveOrigin = position;
                     if (role == Control.Ui) { uiPosition = position; uiPointerHeld = true; }
+                    if (role == Control.Aim) aimEnabled = !aimEnabled;
                     if (role == Control.Shoot) shootPressed = true;
                     if (role == Control.Dodge) dodgePressed = true;
                     if (role == Control.Interact) interactPressed = true;
@@ -125,7 +125,6 @@ namespace Nexoterra.World
                     moveValue = Vector2.ClampMagnitude((position - moveOrigin) / (76f * UiScale), 1f);
                 else if (control == Control.Look && phase != UnityEngine.InputSystem.TouchPhase.Ended && phase != UnityEngine.InputSystem.TouchPhase.Canceled)
                     lookDelta += touch.delta.ReadValue();
-                else if (control == Control.Aim) aimHeld = phase != UnityEngine.InputSystem.TouchPhase.Ended && phase != UnityEngine.InputSystem.TouchPhase.Canceled;
                 else if (control == Control.Ui)
                 {
                     uiPosition = position;
@@ -185,8 +184,8 @@ namespace Nexoterra.World
                 Control.Aim => new Vector2(safe.xMax - safe.width * .18f, safe.yMin + safe.height * .46f),
                 Control.Dodge => new Vector2(safe.xMax - safe.width * .075f, safe.yMin + safe.height * .46f),
                 Control.Companion => new Vector2(safe.xMax - safe.width * .285f, safe.yMin + safe.height * .30f),
-                Control.Map => new Vector2(safe.xMin + safe.width * .44f, safe.yMax - 36f * s),
-                Control.Pause => new Vector2(safe.xMin + safe.width * .56f, safe.yMax - 36f * s),
+                Control.Map => new Vector2(safe.xMin + safe.width * .80f, safe.yMax - 36f * s),
+                Control.Pause => new Vector2(safe.xMin + safe.width * .90f, safe.yMax - 36f * s),
                 _ => Vector2.zero
             };
             return new Rect(center.x - d * .5f, center.y - d * .5f, d, d);
@@ -243,10 +242,10 @@ namespace Nexoterra.World
             DrawButton(Control.Companion, "COMP", companionPressed);
             DrawButton(Control.Interact, "USAR", interactPressed);
             DrawButton(Control.Shoot, "DISPARAR", shootPressed);
-            DrawButton(Control.Aim, "APUNTAR", aimHeld);
+            DrawButton(Control.Aim, aimEnabled ? "APUNTADO" : "APUNTAR", aimEnabled);
             DrawButton(Control.Dodge, "ESQUIVA", dodgePressed);
             DrawButton(Control.Map, "MAPA", mapPressed);
-            DrawButton(Control.Pause, "Ⅱ", pausePressed);
+            DrawButton(Control.Pause, "PAUSA", pausePressed);
             var safe = Screen.safeArea;
             Vector2 stick = new Vector2(safe.xMin + safe.width * .15f, safe.yMin + safe.height * .27f);
             GUI.color = new Color(.75f, .94f, .98f, .55f);
@@ -279,21 +278,33 @@ namespace Nexoterra.World
         {
             var r = ButtonRect(action);
             Vector2 center = new Vector2(r.center.x, r.center.y);
-            DrawDisc(center, r.width, active ? new Color(.04f, .38f, .3f, .88f) : new Color(.015f, .065f, .08f, .68f), active ? new Color(.35f, 1f, .62f, .95f) : action == Control.Shoot ? Orange : Teal);
-            Texture2D icon = action == Control.Shoot ? blasterIcon : action == Control.Dodge ? bootIcon : null;
+            Color rim = action == Control.Shoot ? new Color(1f, .58f, .16f, .96f) : new Color(.22f, .9f, .9f, .94f);
+            DrawDisc(center, r.width, active ? new Color(.04f, .38f, .3f, .94f) : new Color(.015f, .055f, .07f, .86f), active ? new Color(.35f, 1f, .62f, 1f) : rim);
+            Texture2D icon = action switch
+            {
+                Control.Companion => slugIcon,
+                Control.Interact => interactIcon,
+                Control.Shoot => blasterIcon,
+                Control.Aim => aimIcon,
+                Control.Dodge => bootIcon,
+                Control.Map => mapIcon,
+                Control.Pause => pauseIcon,
+                _ => null
+            };
+            var guiRect = new Rect(r.x, Screen.height - r.yMax, r.width, r.height);
             if (icon)
             {
                 float scale = UiScale;
-                float iconSize = r.width * .54f;
+                float iconSize = Mathf.Min(guiRect.width * .52f, guiRect.height - 25f * scale);
                 GUI.color = Color.white;
-                GUI.DrawTexture(new Rect(center.x - iconSize * .5f, r.y + 4f * scale, iconSize, iconSize), icon, ScaleMode.ScaleToFit, true);
-                buttonLabel.fontSize = Mathf.RoundToInt(8.5f * scale);
-                GUI.Label(new Rect(r.x - 2f * scale, r.yMax - 20f * scale, r.width + 4f * scale, 15f * scale), title, buttonLabel);
+                GUI.DrawTexture(new Rect(center.x - iconSize * .5f, guiRect.y + 3f * scale, iconSize, iconSize), icon, ScaleMode.ScaleToFit, true);
+                buttonLabel.fontSize = Mathf.RoundToInt((action == Control.Map || action == Control.Pause ? 7.5f : 8.5f) * scale);
+                GUI.Label(new Rect(guiRect.x - 4f * scale, guiRect.yMax - 16f * scale, guiRect.width + 8f * scale, 13f * scale), title, buttonLabel);
                 return;
             }
             buttonLabel.fontSize = Mathf.RoundToInt((action == Control.Pause ? 25f : 10.5f) * UiScale);
             GUI.color = Color.white;
-            GUI.Label(new Rect(r.x - r.width * .2f, r.y, r.width * 1.4f, r.height), title, buttonLabel);
+            GUI.Label(new Rect(guiRect.x - guiRect.width * .2f, guiRect.y, guiRect.width * 1.4f, guiRect.height), title, buttonLabel);
         }
 
         static void EnsureStyles()
@@ -301,6 +312,11 @@ namespace Nexoterra.World
             if (buttonLabel != null) return;
             blasterIcon = Resources.Load<Texture2D>("Nexoterra/UI/Kit/Icon_Blaster");
             bootIcon = Resources.Load<Texture2D>("Nexoterra/UI/Kit/Icon_Boot");
+            slugIcon = Resources.Load<Texture2D>("Nexoterra/UI/Kit/Icon_Slug");
+            interactIcon = Resources.Load<Texture2D>("Nexoterra/UI/Kit/Icon_Interact");
+            aimIcon = Resources.Load<Texture2D>("Nexoterra/UI/Kit/Icon_Aim");
+            mapIcon = Resources.Load<Texture2D>("Nexoterra/UI/Kit/Icon_Map");
+            pauseIcon = Resources.Load<Texture2D>("Nexoterra/UI/Kit/Icon_Pause");
             buttonLabel = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter, fontStyle = FontStyle.Bold, wordWrap = true, clipping = TextClipping.Clip, padding = new RectOffset(2, 2, 1, 1) };
             buttonLabel.normal.textColor = Color.white;
             hintLabel = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleLeft, fontSize = 11, fontStyle = FontStyle.Bold };
