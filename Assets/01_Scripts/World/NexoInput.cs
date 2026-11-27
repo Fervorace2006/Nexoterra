@@ -16,6 +16,8 @@ namespace Nexoterra.World
   // Buttons that can be assigned (sticks' directions, D-pad and Options stay fixed).
   public static readonly GamepadButton[] Assignable={GamepadButton.South,GamepadButton.East,GamepadButton.West,GamepadButton.North,GamepadButton.LeftShoulder,GamepadButton.RightShoulder,GamepadButton.LeftTrigger,GamepadButton.RightTrigger,GamepadButton.LeftStick,GamepadButton.RightStick,GamepadButton.Select};
   static GamepadButton[] binds;
+  static bool gamepadScheme,schemeInitialized;
+  static NexoInput(){InputSystem.onDeviceChange+=OnDeviceChange;InputSystem.onAfterUpdate+=RefreshScheme;}
   static string Key(Act a)=>"Nexoterra.Pad."+a;
   public static GamepadButton Binding(Act a){Load();return binds[(int)a];}
   public static void SetBinding(Act a,GamepadButton b)
@@ -37,7 +39,49 @@ namespace Nexoterra.World
   // Returns the assignable button pressed this frame, or null.
   public static GamepadButton? AnyAssignablePressed(){var p=Pad;if(p==null)return null;foreach(var b in Assignable)if(p[b].wasPressedThisFrame)return b;return null;}
 
-  public static Gamepad Pad=>Gamepad.current;
+  public static Gamepad Pad
+  {
+   get
+   {
+    var current=Gamepad.current;if(current!=null&&current.added)return current;
+    foreach(var candidate in Gamepad.all)if(candidate!=null&&candidate.added)return candidate;
+    return null;
+   }
+  }
+  public static bool UsingGamepad=>Pad!=null&&gamepadScheme;
+  public static bool UsingTouch=>MobileTouchControls.IsEnabled&&!UsingGamepad;
+  public static string ActiveDeviceLabel
+  {
+   get
+   {
+    if(UsingGamepad){string name=Pad.displayName??"";return name.IndexOf("DualSense",System.StringComparison.OrdinalIgnoreCase)>=0||name.IndexOf("DualShock",System.StringComparison.OrdinalIgnoreCase)>=0?"DUALSENSE":"MANDO";}
+    return UsingTouch?"TÁCTIL":"TECLADO + RATÓN";
+   }
+  }
+  static void OnDeviceChange(InputDevice device,InputDeviceChange change)
+  {
+   if(!(device is Gamepad))return;
+   if(change==InputDeviceChange.Added){gamepadScheme=true;schemeInitialized=true;}
+   else if(change==InputDeviceChange.Removed&&Pad==null)gamepadScheme=false;
+  }
+  static bool HasGamepadActivity(Gamepad p)
+  {
+   return p.leftStick.ReadValue().sqrMagnitude>.04f||p.rightStick.ReadValue().sqrMagnitude>.04f||p.dpad.ReadValue().sqrMagnitude>.04f||
+    p.buttonSouth.wasPressedThisFrame||p.buttonEast.wasPressedThisFrame||p.buttonWest.wasPressedThisFrame||p.buttonNorth.wasPressedThisFrame||
+    p.leftShoulder.wasPressedThisFrame||p.rightShoulder.wasPressedThisFrame||p.leftStickButton.wasPressedThisFrame||p.rightStickButton.wasPressedThisFrame||
+    p.startButton.wasPressedThisFrame||p.selectButton.wasPressedThisFrame||p.leftTrigger.isPressed||p.rightTrigger.isPressed;
+  }
+  static void RefreshScheme()
+  {
+   var pad=Pad;
+   if(!schemeInitialized){gamepadScheme=pad!=null;schemeInitialized=true;}
+   if(pad==null){gamepadScheme=false;return;}
+   if(HasGamepadActivity(pad))gamepadScheme=true;
+   var keyboard=Keyboard.current;if(keyboard!=null&&keyboard.anyKey.wasPressedThisFrame)gamepadScheme=false;
+   var mouse=Mouse.current;
+   if(mouse!=null&&(mouse.leftButton.wasPressedThisFrame||mouse.rightButton.wasPressedThisFrame||mouse.middleButton.wasPressedThisFrame||mouse.delta.ReadValue().sqrMagnitude>36f))gamepadScheme=false;
+   if(MobileTouchControls.HasTouchActivity)gamepadScheme=false;
+  }
   static bool Down(ButtonControl b)=>b!=null&&b.wasPressedThisFrame;
   static bool Held(ButtonControl b)=>b!=null&&b.isPressed;
   public static Vector2 Move{get{var touch=MobileTouchControls.Move;if(touch.sqrMagnitude>.01f)return touch;var p=Pad;if(p==null)return Vector2.zero;var v=p.leftStick.ReadValue();return v.magnitude<.15f?Vector2.zero:v;}}
@@ -60,7 +104,38 @@ namespace Nexoterra.World
   public static Vector2Int NavStep{get{var p=Pad;if(p==null)return Vector2Int.zero;int x=(Down(p.dpad.right)||Down(p.leftStick.right)?1:0)-(Down(p.dpad.left)||Down(p.leftStick.left)?1:0);int y=(Down(p.dpad.down)||Down(p.leftStick.down)?1:0)-(Down(p.dpad.up)||Down(p.leftStick.up)?1:0);return new Vector2Int(x,y);}}
   public static bool Confirm=>Pad!=null&&Down(Pad.buttonSouth);
   public static bool Cancel=>Pad!=null&&Down(Pad.buttonEast);
-  public static bool AnyActivity{get{var p=Pad;return MobileTouchControls.HasGameplayActivity||Move!=Vector2.zero||Look!=Vector2.zero||p!=null&&(p.rightTrigger.isPressed||p.leftTrigger.isPressed||p.buttonSouth.isPressed||p.buttonWest.isPressed||p.buttonEast.isPressed);}}
+  public static bool AnyActivity{get{var p=Pad;return MobileTouchControls.HasGameplayActivity||Move!=Vector2.zero||Look!=Vector2.zero||p!=null&&HasGamepadActivity(p);}}
+
+  public static void DrawGameplayControls(float left,float right,float y,float step)
+  {
+   if(UsingGamepad)
+   {
+    NexoHud.ControlRow(left,y,"caminar","L-Stick");NexoHud.ControlRow(left,y+step,"correr",ButtonName(Binding(Act.Sprint)));
+    NexoHud.ControlRow(left,y+step*2,"voltereta",ButtonName(Binding(Act.Dodge)));NexoHud.ControlRow(left,y+step*3,"recoger",ButtonName(Binding(Act.Interact)));
+    NexoHud.ControlRow(left,y+step*4,"alimentar",ButtonName(Binding(Act.Interact)));NexoHud.ControlRow(left,y+step*5,"gestos","L1","+","↓");
+    NexoHud.ControlRow(right,y,"apuntar",ButtonName(Binding(Act.Aim)));NexoHud.ControlRow(right,y+step,"lanzar",ButtonName(Binding(Act.Shoot)));
+    NexoHud.ControlRow(right,y+step*2,"recargar",ButtonName(Binding(Act.Reload)));NexoHud.ControlRow(right,y+step*3,"mochila",ButtonName(Binding(Act.Backpack)));
+    NexoHud.ControlRow(right,y+step*4,"compañera",ButtonName(Binding(Act.Companion)));NexoHud.ControlRow(right,y+step*5,"menú",ButtonName(GamepadButton.Start));
+   }
+   else if(UsingTouch)
+   {
+    NexoHud.ControlRow(left,y,"caminar","Joystick");NexoHud.ControlRow(left,y+step,"correr","Correr");
+    NexoHud.ControlRow(left,y+step*2,"voltereta","Esquiva");NexoHud.ControlRow(left,y+step*3,"recoger","Usar");
+    NexoHud.ControlRow(left,y+step*4,"alimentar","Usar");NexoHud.ControlRow(left,y+step*5,"gestos","—");
+    NexoHud.ControlRow(right,y,"apuntar","Apuntar");NexoHud.ControlRow(right,y+step,"lanzar","Lanzar");
+    NexoHud.ControlRow(right,y+step*2,"recargar","Recarga");NexoHud.ControlRow(right,y+step*3,"mochila","HUD");
+    NexoHud.ControlRow(right,y+step*4,"compañera","COMP");NexoHud.ControlRow(right,y+step*5,"menú","Ⅱ");
+   }
+   else
+   {
+    NexoHud.ControlRow(left,y,"caminar","W","A","S","D");NexoHud.ControlRow(left,y+step,"correr","Mayús");
+    NexoHud.ControlRow(left,y+step*2,"voltereta","Ctrl","+","A","/","D");NexoHud.ControlRow(left,y+step*3,"recoger","E");
+    NexoHud.ControlRow(left,y+step*4,"alimentar","F");NexoHud.ControlRow(left,y+step*5,"gestos","B");
+    NexoHud.ControlRow(right,y,"apuntar","Clic der");NexoHud.ControlRow(right,y+step,"lanzar","Clic izq");
+    NexoHud.ControlRow(right,y+step*2,"recargar","R");NexoHud.ControlRow(right,y+step*3,"mochila","Alt");
+    NexoHud.ControlRow(right,y+step*4,"compañera","G");NexoHud.ControlRow(right,y+step*5,"menú","Esc");
+   }
+  }
 
   // ---- Settings page for remapping ----
   static int listening=-1,listenFrame;

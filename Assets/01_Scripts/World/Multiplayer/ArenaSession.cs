@@ -210,7 +210,7 @@ namespace Nexoterra.World
   void Update(){
    if(!registered||!network||!network.IsListening)return;
    var keyboard=UnityEngine.InputSystem.Keyboard.current;
-   if(!GameSession.Current&&(MobileTouchControls.PausePressed||keyboard!=null&&keyboard.escapeKey.wasPressedThisFrame))LocalPaused=!LocalPaused;
+   if(!GameSession.Current&&(NexoInput.Pause||keyboard!=null&&keyboard.escapeKey.wasPressedThisFrame))LocalPaused=!LocalPaused;
    SmoothRemotePlayers();
    if(!peers.ContainsKey(network.LocalClientId)&&Time.unscaledTime>=helloAt){helloAt=Time.unscaledTime+1;SendToServer(new Packet{kind="hello",name=PlayerName,collection=inventory.owned.Distinct().ToArray(),goldenCollection=GoldenSpecies()});}
    if(Time.unscaledTime>=sendAt){

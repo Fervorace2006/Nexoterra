@@ -74,7 +74,7 @@ namespace Nexoterra.World
    if(e.type==EventType.Layout&&navFrame!=Time.frameCount)
    {
     navFrame=Time.frameCount;BackPressed=false;
-    var pad=Gamepad.current;
+    var pad=NexoInput.Pad;
     if(pad!=null)
     {
      if(pad.dpad.down.wasPressedThisFrame||pad.leftStick.down.wasPressedThisFrame||pad.dpad.right.wasPressedThisFrame)Move(1);

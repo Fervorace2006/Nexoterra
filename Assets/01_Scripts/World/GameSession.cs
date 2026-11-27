@@ -183,12 +183,8 @@ namespace Nexoterra.World
    var logo=Resources.Load<Texture2D>("Nexoterra/UI/Logo");if(logo)GUI.DrawTexture(new Rect(left.x+40,left.y+24,left.width-80,104),logo,ScaleMode.ScaleToFit);
    NexoUi.Write(new Rect(left.x+32,left.y+140,left.width-64,22),started?"EXPLORACIÓN EN PAUSA":"CRÓNICAS DEL SUBSUELO",14,NexoUi.Teal,TextAnchor.MiddleLeft,true);
    NexoUi.Write(new Rect(left.x+32,left.y+164,left.width-64,44),"Siete episodios. Criaturas únicas. Tu colección comienza explorando.",15,NexoUi.Text,TextAnchor.UpperLeft);
-   NexoUi.Section(new Rect(left.x+32,left.y+222,left.width-64,22),"CONTROLES");
-   {float l=left.x+32,r=left.x+262,y0=left.y+256,step=36;
-    NexoHud.ControlRow(l,y0,"caminar","W","A","S","D");NexoHud.ControlRow(l,y0+step,"correr","Mayús");
-    NexoHud.ControlRow(l,y0+step*2,"voltereta","Ctrl","+","A","/","D");NexoHud.ControlRow(l,y0+step*3,"recoger","E");NexoHud.ControlRow(l,y0+step*4,"alimentar","F");NexoHud.ControlRow(l,y0+step*5,"gestos","B");
-    NexoHud.ControlRow(r,y0,"apuntar","Clic der");NexoHud.ControlRow(r,y0+step,"lanzar","Clic izq");NexoHud.ControlRow(r,y0+step*2,"recargar","R");
-    NexoHud.ControlRow(r,y0+step*3,"mochila","Alt");NexoHud.ControlRow(r,y0+step*4,"compañera","G");NexoHud.ControlRow(r,y0+step*5,"menú","Esc");}
+   NexoUi.Section(new Rect(left.x+32,left.y+222,left.width-64,22),"CONTROLES · "+NexoInput.ActiveDeviceLabel);
+   {float l=left.x+32,r=left.x+262,y0=left.y+256,step=36;NexoInput.DrawGameplayControls(l,r,y0,step);}
    // Right: actions, or one of its sub-pages.
    var right=new Rect(616,56,592,608);NexoUi.Panel(right);
    var content=new Rect(right.x+40,right.y+28,right.width-80,right.height-56);

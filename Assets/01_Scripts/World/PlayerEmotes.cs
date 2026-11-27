@@ -23,11 +23,11 @@ namespace Nexoterra.World
         }
         void Update()
         {
-            var k=Keyboard.current;var mouse=Mouse.current;if(k==null)return;
-            bool move=k.wKey.isPressed||k.aKey.isPressed||k.sKey.isPressed||k.dKey.isPressed||k.spaceKey.isPressed||NexoInput.Move!=Vector2.zero;
-            bool action=k.rKey.wasPressedThisFrame||k.vKey.wasPressedThisFrame||k.mKey.wasPressedThisFrame||k.tKey.wasPressedThisFrame||k.escapeKey.wasPressedThisFrame||(mouse!=null&&(mouse.rightButton.isPressed||(!IsOpen&&mouse.leftButton.wasPressedThisFrame)));
+            var k=Keyboard.current;var mouse=Mouse.current;
+            bool move=NexoInput.Move!=Vector2.zero||k!=null&&(k.wKey.isPressed||k.aKey.isPressed||k.sKey.isPressed||k.dKey.isPressed||k.spaceKey.isPressed);
+            bool action=k!=null&&(k.rKey.wasPressedThisFrame||k.vKey.wasPressedThisFrame||k.mKey.wasPressedThisFrame||k.tKey.wasPressedThisFrame||k.escapeKey.wasPressedThisFrame)||(mouse!=null&&(mouse.rightButton.isPressed||(!IsOpen&&mouse.leftButton.wasPressedThisFrame)));
             if(GameSession.Blocked||(inventory&&inventory.IsOpen)||move||action){Cancel();return;}
-            if(k.bKey.wasPressedThisFrame||NexoInput.Emotes){
+            if(k!=null&&k.bKey.wasPressedThisFrame||NexoInput.Emotes){
                 if(IsOpen){Close();return;}
                 if(IsDancing){IsDancing=false;return;}
                 restoreCursor=Cursor.lockState==CursorLockMode.Locked;IsOpen=true;Cursor.lockState=CursorLockMode.None;Cursor.visible=true;

@@ -31,6 +31,15 @@ namespace Nexoterra.World
         public static bool InteractPressed => IsEnabled && current.interactPressed;
         public static bool CompanionPressed => IsEnabled && current.companionPressed;
         public static bool PausePressed => IsEnabled && current.pausePressed;
+        public static bool HasTouchActivity
+        {
+            get
+            {
+                if(!IsEnabled||Touchscreen.current==null)return false;
+                foreach(var touch in Touchscreen.current.touches)if(touch.press.isPressed)return true;
+                return false;
+            }
+        }
         public static bool HasGameplayActivity => IsEnabled && (current.moveValue.sqrMagnitude > .01f || current.lookDelta.sqrMagnitude > .1f || current.aimHeld || current.sprintHeld || current.shootPressed || current.dodgePressed || current.reloadPressed || current.interactPressed || current.companionPressed || current.pausePressed);
         public static Vector2 UiDragDelta => IsEnabled ? current.uiDragDelta : Vector2.zero;
 
@@ -73,7 +82,7 @@ namespace Nexoterra.World
             emotes = player ? player.GetComponent<PlayerEmotes>() : null;
         }
 
-        bool WorldControlsVisible => player && !GameSession.Blocked && !(inventory && inventory.IsOpen) && !(emotes && emotes.IsOpen);
+        bool WorldControlsVisible => player && !GameSession.Blocked && !(inventory && inventory.IsOpen) && !(emotes && emotes.IsOpen) && !NexoInput.UsingGamepad;
 
         void Update()
         {

@@ -104,6 +104,7 @@ namespace Nexoterra.EditorTools
             PlayerSettings.companyName = "Nexoterra";
             PlayerSettings.productName = "Nexoterra";
             PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Standalone, "com.nexoterra.game");
+            PlayerSettings.windowsGamepadBackendHint = WindowsGamepadBackendHint.WindowsGamepadBackendHintWindowsGamingInput;
 
             var scenes = EditorBuildSettings.scenes.Where(scene => scene.enabled).Select(scene => scene.path).ToArray();
             if (scenes.Length == 0) throw new InvalidOperationException("No hay escenas habilitadas en EditorBuildSettings.");
