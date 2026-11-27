@@ -18,7 +18,7 @@ namespace Nexoterra.EditorTools
         const string ResultPath = "Library/NexoterraAndroidBuild.result";
         const string WindowsRequestPath = "Library/NexoterraWindowsBuild.request";
         const string WindowsResultPath = "Library/NexoterraWindowsBuild.result";
-        const string OutputPath = "Build/Android/Nexoterra.apk";
+        const string OutputPath = @"C:\Users\johnn\Downloads\APK_NEXOTERRA\Nexoterra.apk";
         const string WindowsOutputPath = @"C:\Users\johnn\Downloads\NEXOTERRA\Nexoterra.exe";
 
         static AndroidApkBuilder() => EditorApplication.update += PollRequest;
@@ -46,10 +46,8 @@ namespace Nexoterra.EditorTools
                 File.Delete(RequestPath);
                 try
                 {
-                    int houses = EmbedArenaHouses();
-                    int enemies = DisperseFinalEnemies();
                     var report = Build();
-                    File.WriteAllText(ResultPath, "PASS " + OutputPath + " · " + report.summary.totalSize + " bytes · casas " + houses + " · enemigos " + enemies);
+                    File.WriteAllText(ResultPath, "PASS " + OutputPath + " · " + report.summary.totalSize + " bytes · escenas conservadas");
                 }
                 catch (Exception exception)
                 {

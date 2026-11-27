@@ -20,6 +20,8 @@ namespace Nexoterra.World
         PlayerHealth health;
         PlayerAnimationDriver animationDriver;
         PlayerAbilities abilities;
+        Transform mobileAimTarget;
+        readonly RaycastHit[] mobileAimHits = new RaycastHit[32];
         float yaw=-35,pitch=12,vertical,tracerUntil;
         bool help=false,map;
         string notice="Haz clic para explorar";
@@ -45,12 +47,22 @@ namespace Nexoterra.World
             if(k!=null&&k.vKey.wasPressedThisFrame){bool chooseFemale=!female.activeSelf;female.SetActive(chooseFemale);male.SetActive(!chooseFemale);Notify(chooseFemale?"Personaje: Comando":"Personaje: Jugador");}
             if(k!=null&&k.homeKey.wasPressedThisFrame||transform.position.y < -6)Teleport(spawn);
             if(!CampaignLevel.Current&&k!=null&&k.tKey.wasPressedThisFrame&&travelPoints.Length>0){travelIndex=(travelIndex+1)%travelPoints.Length;Teleport(travelPoints[travelIndex].position);Notify("Visita de prueba: "+travelPoints[travelIndex].name);}
+            Vector2 touchLook=MobileTouchControls.IsEnabled?MobileTouchControls.LookDelta:Vector2.zero;
+            bool touchLookMoved=touchLook.sqrMagnitude>.1f;
+            bool otherCameraInput=NexoInput.Look.sqrMagnitude>.01f||m!=null&&m.delta.ReadValue().sqrMagnitude>1f;
+            if(!MobileTouchControls.IsEnabled||map||inventoryOpen||emoteMenu||otherCameraInput)mobileAimTarget=null;
+            else if(touchLookMoved)mobileAimTarget=null;
             Vector2 input=Vector2.zero;
             if((Cursor.lockState==CursorLockMode.Locked||MobileTouchControls.IsEnabled)&&!map&&!inventoryOpen&&!emoteMenu)
             {
                 Vector2 mouse=m!=null?m.delta.ReadValue()*.09f:Vector2.zero;
-                if(MobileTouchControls.IsEnabled)mouse+=MobileTouchControls.LookDelta*.12f;
+                if(MobileTouchControls.IsEnabled)mouse+=touchLook*.12f;
                 Vector2 stick=NexoInput.Look*Time.deltaTime*(NexoInput.Aim?110:200);mouse+=new Vector2(stick.x,stick.y*.7f);yaw+=mouse.x;pitch=Mathf.Clamp(pitch-mouse.y,-30,65);
+                if(MobileTouchControls.IsEnabled)
+                {
+                    if(touchLookMoved)mobileAimTarget=AcquireMobileAimTarget();
+                    else if(mobileAimTarget)TrackMobileAimTarget();
+                }
                 if(k!=null)input=new Vector2((k.dKey.isPressed?1:0)-(k.aKey.isPressed?1:0),(k.wKey.isPressed?1:0)-(k.sKey.isPressed?1:0));
                 Vector2 padMove=NexoInput.Move;if(padMove!=Vector2.zero)input=padMove;
                 if(abilities&&NexoInput.Dodge){int side=Mathf.Abs(input.x)>.3f?(input.x>0?1:-1):1;abilities.TryDodge(side,Quaternion.Euler(0,yaw,0)*Vector3.right);}
@@ -75,9 +87,9 @@ namespace Nexoterra.World
             if(abilities&&abilities.IsDodging){movement=abilities.DodgeDirection;moveSpeed=abilities.DodgeSpeed;}
             if(health&&!health.CanMove)movement=Vector3.zero;
             motor.Move((movement*moveSpeed+Vector3.up*vertical)*Time.deltaTime);
-            if(movement.sqrMagnitude>.01f||(((m!=null&&m.rightButton.isPressed)||NexoInput.Aim)&&!inventoryOpen))
+            if(movement.sqrMagnitude>.01f||(((m!=null&&m.rightButton.isPressed)||NexoInput.Aim||mobileAimTarget)&&!inventoryOpen))
             {
-                float facing=((m!=null&&m.rightButton.isPressed)||NexoInput.Aim||(abilities&&abilities.IsDodging))?yaw:Mathf.Atan2(movement.x,movement.z)*Mathf.Rad2Deg;
+                float facing=((m!=null&&m.rightButton.isPressed)||NexoInput.Aim||mobileAimTarget||(abilities&&abilities.IsDodging))?yaw:Mathf.Atan2(movement.x,movement.z)*Mathf.Rad2Deg;
                 visuals.rotation=Quaternion.Slerp(visuals.rotation,Quaternion.Euler(0,facing,0),1-Mathf.Exp(-15*Time.deltaTime));
             }
             if(tracer)tracer.enabled=Time.time<tracerUntil;
@@ -94,19 +106,67 @@ namespace Nexoterra.World
             view.transform.position=target;view.transform.rotation=rotation;
             view.fieldOfView=Mathf.Lerp(view.fieldOfView,aim?48:68,1-Mathf.Exp(-12*Time.deltaTime));
         }
+        Transform AcquireMobileAimTarget()
+        {
+            if(!view)return null;
+            Quaternion rotation=Quaternion.Euler(pitch,yaw,0);
+            Vector3 direction=rotation*Vector3.forward;
+            int count=Physics.SphereCastNonAlloc(view.transform.position,.65f,direction,mobileAimHits,55f,~(1<<2),QueryTriggerInteraction.Ignore);
+            Collider nearest=null;float nearestDistance=float.PositiveInfinity;
+            for(int i=0;i<count;i++)
+            {
+                var hit=mobileAimHits[i];var collider=hit.collider;
+                if(!collider||collider.transform.IsChildOf(transform)||hit.distance>=nearestDistance)continue;
+                nearest=collider;nearestDistance=hit.distance;
+            }
+            if(!nearest)return null;
+            var enemy=nearest.GetComponentInParent<EnemyCombatant>();
+            if(enemy&&!enemy.IsDead)
+            {
+                var animation=enemy.GetComponent<NativeEnemyAnimation>();
+                return animation&&animation.IsDodging?null:enemy.transform;
+            }
+            var rival=nearest.GetComponentInParent<ArenaTarget>();
+            if(rival&&ArenaSession.Current&&rival.clientId!=ArenaSession.Current.LocalClientId&&!ArenaSession.Current.IsRivalEvading(rival.clientId))return rival.transform;
+            return null;
+        }
+        void TrackMobileAimTarget()
+        {
+            if(!view||!IsValidMobileAimTarget(mobileAimTarget)){mobileAimTarget=null;return;}
+            Vector3 direction=(MobileAimPoint(mobileAimTarget)-view.transform.position).normalized;
+            if(direction.sqrMagnitude<.01f)return;
+            float targetYaw=Mathf.Atan2(direction.x,direction.z)*Mathf.Rad2Deg;
+            float targetPitch=Mathf.Clamp(-Mathf.Asin(Mathf.Clamp(direction.y,-1f,1f))*Mathf.Rad2Deg,-30f,65f);
+            float blend=1-Mathf.Exp(-10f*Time.deltaTime);
+            yaw=Mathf.LerpAngle(yaw,targetYaw,blend);pitch=Mathf.Lerp(pitch,targetPitch,blend);
+        }
+        static bool IsValidMobileAimTarget(Transform target)
+        {
+            if(!target)return false;
+            var enemy=target.GetComponentInParent<EnemyCombatant>();
+            if(enemy){var animation=enemy.GetComponent<NativeEnemyAnimation>();return !enemy.IsDead&&(!animation||!animation.IsDodging);}
+            var rival=target.GetComponentInParent<ArenaTarget>();
+            return rival&&ArenaSession.Current&&rival.clientId!=ArenaSession.Current.LocalClientId&&!ArenaSession.Current.IsRivalEvading(rival.clientId);
+        }
+        static Vector3 MobileAimPoint(Transform target)
+        {
+            var enemy=target.GetComponentInParent<EnemyCombatant>();
+            var body=enemy?enemy.GetComponent<CharacterController>():target.GetComponentInParent<CharacterController>();
+            return body?body.bounds.center+Vector3.up*.2f:target.position+Vector3.up*1.1f;
+        }
         public void Teleport(Vector3 p){motor.enabled=false;transform.position=p;motor.enabled=true;vertical=0;}
         void Shoot()
         {
             if((abilities&&abilities.IsDodging)||!inventory||!muzzle||!view||(health&&health.IsDead)||(animationDriver&&animationDriver.IsReloading))return;
             var controls=GetComponent<EnemyControlEffects>();if(controls&&!controls.CanShoot)return;
             var nativeAnimation=GetComponent<NativePlayerAnimation>();
-            if(!nativeAnimation||!nativeAnimation.IsLoaded){Notify("Pulsa R para recargar antes de disparar");return;}
+            if(!nativeAnimation||!nativeAnimation.IsLoaded){Notify(MobileTouchControls.IsEnabled?"Espera a que se recargue la babosa":"Pulsa R para recargar antes de disparar");return;}
             // Keep the body upright while the projectile follows the crosshair in 3D.
             Vector3 facing=Quaternion.Euler(0,yaw,0)*Vector3.forward;
             visuals.rotation=Quaternion.LookRotation(facing);
             LateUpdate();
             Ray aim=view.ViewportPointToRay(new Vector3(.5f,.5f,0));
-            Vector3 target=Physics.Raycast(aim,out var hit,100,SlugHop.WorldMask,QueryTriggerInteraction.Collide)?hit.point:aim.GetPoint(100);
+            Vector3 target=IsValidMobileAimTarget(mobileAimTarget)?MobileAimPoint(mobileAimTarget):Physics.Raycast(aim,out var hit,100,SlugHop.WorldMask,QueryTriggerInteraction.Collide)?hit.point:aim.GetPoint(100);
             Vector3 direction=(target-muzzle.position).normalized;
             if(direction.sqrMagnitude<.001f)direction=aim.direction;
             if(!inventory.Fire(muzzle,direction))Notify(inventory.Status);else if(animationDriver)animationDriver.Shot();

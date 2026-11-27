@@ -16,8 +16,8 @@ namespace Nexoterra.World
         static readonly string[] frameRateNames={"30","60","90","120","SIN LÍMITE"};
         public static bool AutoReload
         {
-            get=>PlayerPrefs.GetInt(AutoReloadKey,0)==1;
-            set{PlayerPrefs.SetInt(AutoReloadKey,value?1:0);PlayerPrefs.Save();}
+            get=>Application.isMobilePlatform||PlayerPrefs.GetInt(AutoReloadKey,0)==1;
+            set{if(Application.isMobilePlatform)value=true;PlayerPrefs.SetInt(AutoReloadKey,value?1:0);PlayerPrefs.Save();}
         }
         public static void DrawAutoReload(Rect rect)
         {
@@ -119,8 +119,13 @@ namespace Nexoterra.World
             float m=MusicVolume,mn=NexoUi.Slider(new Rect(rect.x,y,half,44),"Música",m);if(!Mathf.Approximately(m,mn)){MusicVolume=mn;PlayerPrefs.Save();}
             float f=SfxVolume,fn=NexoUi.Slider(new Rect(rect.x+half+16,y,half,44),"Efectos",f);if(!Mathf.Approximately(f,fn)){SfxVolume=fn;PlayerPrefs.Save();}
             y+=54;
-            bool auto=AutoReload,next=NexoUi.Toggle(new Rect(rect.x,y,rect.width,50),"Recarga automática","Carga la babosa seleccionada cuando esté disponible.",auto);
-            if(next!=auto)AutoReload=next;
+            if(Application.isMobilePlatform)
+                NexoUi.Write(new Rect(rect.x,y,rect.width,50),"RECARGA AUTOMÁTICA · ACTIVA EN MÓVIL",13,NexoUi.Teal,TextAnchor.MiddleLeft,true);
+            else
+            {
+                bool auto=AutoReload,next=NexoUi.Toggle(new Rect(rect.x,y,rect.width,50),"Recarga automática","Carga la babosa seleccionada cuando esté disponible.",auto);
+                if(next!=auto)AutoReload=next;
+            }
             float bw=(rect.width-16)/2;
             if(NexoUi.Button(new Rect(rect.x,rect.yMax-50,bw,50),"MANDO")){padPage=true;NexoUi.ResetFocus();}
             bool back=NexoHud.Button(new Rect(rect.x+bw+16,rect.yMax-50,bw,50),"VOLVER");

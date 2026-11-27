@@ -89,7 +89,7 @@ namespace Nexoterra.World
   public static bool Sprint=>MobileTouchControls.Sprint||Pad!=null&&(HeldAct(Act.Sprint)||Pad.leftStick.ReadValue().magnitude>.92f);
   public static bool Aim=>MobileTouchControls.Aim||HeldAct(Act.Aim);
   public static bool Shoot=>MobileTouchControls.ShootPressed||Pressed(Act.Shoot);
-  public static bool Reload=>MobileTouchControls.ReloadPressed||Pressed(Act.Reload);
+  public static bool Reload=>Pressed(Act.Reload);
   public static bool Interact=>MobileTouchControls.InteractPressed||Pressed(Act.Interact);
   public static bool Dodge=>MobileTouchControls.DodgePressed||Pressed(Act.Dodge);
   public static bool Backpack=>Pressed(Act.Backpack);
@@ -119,11 +119,11 @@ namespace Nexoterra.World
    }
    else if(UsingTouch)
    {
-    NexoHud.ControlRow(left,y,"caminar","Joystick");NexoHud.ControlRow(left,y+step,"correr","Correr");
-    NexoHud.ControlRow(left,y+step*2,"voltereta","Esquiva");NexoHud.ControlRow(left,y+step*3,"recoger","Usar");
+    NexoHud.ControlRow(left,y,"caminar · joystick leve");NexoHud.ControlRow(left,y+step,"correr al empujar fuerte");
+    NexoHud.ControlRow(left,y+step*2,"voltereta","Icono bota");NexoHud.ControlRow(left,y+step*3,"recoger","Usar");
     NexoHud.ControlRow(left,y+step*4,"alimentar","Usar");NexoHud.ControlRow(left,y+step*5,"gestos","—");
-    NexoHud.ControlRow(right,y,"apuntar","Apuntar");NexoHud.ControlRow(right,y+step,"lanzar","Lanzar");
-    NexoHud.ControlRow(right,y+step*2,"recargar","Recarga");NexoHud.ControlRow(right,y+step*3,"mochila","HUD");
+    NexoHud.ControlRow(right,y,"autoapunta al centrar");NexoHud.ControlRow(right,y+step,"disparo manual · lanzadora");
+    NexoHud.ControlRow(right,y+step*2,"recargar","Automática");NexoHud.ControlRow(right,y+step*3,"mochila","HUD");
     NexoHud.ControlRow(right,y+step*4,"compañera","COMP");NexoHud.ControlRow(right,y+step*5,"menú","Ⅱ");
    }
    else
