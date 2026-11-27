@@ -93,7 +93,7 @@ namespace Nexoterra.World
   public static bool Interact=>MobileTouchControls.InteractPressed||Pressed(Act.Interact);
   public static bool Dodge=>MobileTouchControls.DodgePressed||Pressed(Act.Dodge);
   public static bool Backpack=>Pressed(Act.Backpack);
-  public static bool Map=>Pressed(Act.Map);
+  public static bool Map=>MobileTouchControls.MapPressed||Pressed(Act.Map);
   public static bool Companion=>MobileTouchControls.CompanionPressed||Pressed(Act.Companion);
   public static bool Pause=>MobileTouchControls.PausePressed||Pad!=null&&Down(Pad.startButton);
   public static bool Emotes=>Pad!=null&&Held(Pad.leftShoulder)&&Down(Pad.dpad.down);
@@ -121,7 +121,7 @@ namespace Nexoterra.World
    {
     NexoHud.ControlRow(left,y,"caminar · joystick leve");NexoHud.ControlRow(left,y+step,"correr al empujar fuerte");
     NexoHud.ControlRow(left,y+step*2,"voltereta","Icono bota");NexoHud.ControlRow(left,y+step*3,"recoger","Usar");
-    NexoHud.ControlRow(left,y+step*4,"alimentar","Usar");NexoHud.ControlRow(left,y+step*5,"gestos","—");
+    NexoHud.ControlRow(left,y+step*4,"alimentar","Usar");NexoHud.ControlRow(left,y+step*5,"mapa · botón superior");
     NexoHud.ControlRow(right,y,"autoapunta al centrar");NexoHud.ControlRow(right,y+step,"disparo manual · lanzadora");
     NexoHud.ControlRow(right,y+step*2,"recargar","Automática");NexoHud.ControlRow(right,y+step*3,"mochila","HUD");
     NexoHud.ControlRow(right,y+step*4,"compañera","COMP");NexoHud.ControlRow(right,y+step*5,"menú","Ⅱ");

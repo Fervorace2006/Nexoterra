@@ -8,7 +8,7 @@ namespace Nexoterra.World
     [DefaultExecutionOrder(-1000)]
     public sealed class MobileTouchControls : MonoBehaviour
     {
-        enum Control { Ui, Move, Look, Shoot, Aim, Dodge, Interact, Companion, Pause }
+        enum Control { Ui, Move, Look, Shoot, Aim, Dodge, Interact, Companion, Map, Pause }
 
         static MobileTouchControls current;
         readonly Dictionary<int, Control> fingers = new Dictionary<int, Control>();
@@ -16,7 +16,7 @@ namespace Nexoterra.World
         SlugInventory inventory;
         PlayerEmotes emotes;
         Vector2 moveOrigin, moveValue, lookDelta, uiPosition, uiDragDelta, uiTapPosition;
-        bool aimHeld, shootPressed, dodgePressed, interactPressed, companionPressed, pausePressed;
+        bool aimHeld, shootPressed, dodgePressed, interactPressed, companionPressed, mapPressed, pausePressed;
         bool uiPointerHeld, uiTapPending, uiTapConsumed;
         int uiTapFrame = -1;
 
@@ -29,6 +29,7 @@ namespace Nexoterra.World
         public static bool DodgePressed => IsEnabled && current.dodgePressed;
         public static bool InteractPressed => IsEnabled && current.interactPressed;
         public static bool CompanionPressed => IsEnabled && current.companionPressed;
+        public static bool MapPressed => IsEnabled && current.mapPressed;
         public static bool PausePressed => IsEnabled && current.pausePressed;
         public static bool HasTouchActivity
         {
@@ -39,7 +40,7 @@ namespace Nexoterra.World
                 return false;
             }
         }
-        public static bool HasGameplayActivity => IsEnabled && (current.moveValue.sqrMagnitude > .01f || current.lookDelta.sqrMagnitude > .1f || current.aimHeld || current.shootPressed || current.dodgePressed || current.interactPressed || current.companionPressed || current.pausePressed);
+        public static bool HasGameplayActivity => IsEnabled && (current.moveValue.sqrMagnitude > .01f || current.lookDelta.sqrMagnitude > .1f || current.aimHeld || current.shootPressed || current.dodgePressed || current.interactPressed || current.companionPressed || current.mapPressed || current.pausePressed);
         public static Vector2 UiDragDelta => IsEnabled ? current.uiDragDelta : Vector2.zero;
 
         static Texture2D disc;
@@ -89,7 +90,7 @@ namespace Nexoterra.World
             if (!IsEnabled) return;
             if (uiTapFrame != Time.frameCount) { uiTapPending = false; uiTapConsumed = false; }
             lookDelta = uiDragDelta = Vector2.zero;
-            shootPressed = dodgePressed = interactPressed = companionPressed = pausePressed = false;
+            shootPressed = dodgePressed = interactPressed = companionPressed = mapPressed = pausePressed = false;
             aimHeld = false;
 
             var screen = Touchscreen.current;
@@ -115,6 +116,7 @@ namespace Nexoterra.World
                     if (role == Control.Dodge) dodgePressed = true;
                     if (role == Control.Interact) interactPressed = true;
                     if (role == Control.Companion) companionPressed = true;
+                    if (role == Control.Map) mapPressed = true;
                     if (role == Control.Pause) pausePressed = true;
                 }
 
@@ -153,6 +155,7 @@ namespace Nexoterra.World
         Control Classify(Vector2 point)
         {
             if (!WorldControlsVisible) return Control.Ui;
+            if (ButtonRect(Control.Map).Contains(point)) return Control.Map;
             if (ButtonRect(Control.Pause).Contains(point)) return Control.Pause;
             if (ButtonRect(Control.Shoot).Contains(point)) return Control.Shoot;
             if (ButtonRect(Control.Aim).Contains(point)) return Control.Aim;
@@ -174,7 +177,7 @@ namespace Nexoterra.World
         static Rect ButtonRect(Control action)
         {
             var safe = Screen.safeArea;
-            float s = UiScale, d = (action == Control.Shoot || action == Control.Dodge ? 76f : 68f) * s;
+            float s = UiScale, d = (action == Control.Map || action == Control.Pause ? 52f : action == Control.Shoot || action == Control.Dodge ? 76f : 68f) * s;
             Vector2 center = action switch
             {
                 Control.Shoot => new Vector2(safe.xMax - safe.width * .075f, safe.yMin + safe.height * .30f),
@@ -182,10 +185,10 @@ namespace Nexoterra.World
                 Control.Aim => new Vector2(safe.xMax - safe.width * .18f, safe.yMin + safe.height * .46f),
                 Control.Dodge => new Vector2(safe.xMax - safe.width * .075f, safe.yMin + safe.height * .46f),
                 Control.Companion => new Vector2(safe.xMax - safe.width * .285f, safe.yMin + safe.height * .30f),
-                Control.Pause => new Vector2(safe.xMin + safe.width * .50f, safe.yMax - 36f * s),
+                Control.Map => new Vector2(safe.xMin + safe.width * .44f, safe.yMax - 36f * s),
+                Control.Pause => new Vector2(safe.xMin + safe.width * .56f, safe.yMax - 36f * s),
                 _ => Vector2.zero
             };
-            if (action == Control.Pause) d = 52f * s;
             return new Rect(center.x - d * .5f, center.y - d * .5f, d, d);
         }
 
@@ -242,6 +245,7 @@ namespace Nexoterra.World
             DrawButton(Control.Shoot, "DISPARAR", shootPressed);
             DrawButton(Control.Aim, "APUNTAR", aimHeld);
             DrawButton(Control.Dodge, "ESQUIVA", dodgePressed);
+            DrawButton(Control.Map, "MAPA", mapPressed);
             DrawButton(Control.Pause, "Ⅱ", pausePressed);
             var safe = Screen.safeArea;
             Vector2 stick = new Vector2(safe.xMin + safe.width * .15f, safe.yMin + safe.height * .27f);
